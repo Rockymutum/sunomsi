@@ -423,7 +423,7 @@ export default function WorkersPage() {
               </div>
             )}
 
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Available Workers</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Available Workers</h1>
             
             {loading ? (
               <div className="flex justify-center items-center h-64">
@@ -431,7 +431,7 @@ export default function WorkersPage() {
               </div>
             ) : workers.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="max-w-2xl mx-auto flex flex-col gap-5">
                   {workers.slice(0, 3).map((worker) => (
                     <WorkerCard key={worker.id} worker={worker} />
                   ))}
@@ -439,13 +439,13 @@ export default function WorkersPage() {
                 
                 {/* Inline ad after first 3 workers */}
                 {workers.length > 3 && (
-                  <div className="my-6">
+                  <div className="my-5 max-w-2xl mx-auto">
                     <AdPlaceholder type="inline" height="250px" />
                   </div>
                 )}
                 
                 {workers.length > 3 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="max-w-2xl mx-auto flex flex-col gap-5">
                     {workers.slice(3).map((worker) => (
                       <WorkerCard key={worker.id} worker={worker} />
                     ))}
