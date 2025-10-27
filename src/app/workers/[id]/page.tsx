@@ -175,28 +175,28 @@ export default function WorkerDetailPage() {
     <div className="min-h-[100svh] bg-background">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden md:rounded-md md:border-0 md:bg-[rgb(var(--color-card))] md:shadow-sm p-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
               {profile?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={profile.avatar_url} alt={profile?.full_name || "Avatar"} className="h-full w-full object-cover" />
               ) : (
-                <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold text-xl">
+                <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold text-sm">
                   {(profile?.full_name?.charAt(0) || "W").toUpperCase()}
                 </div>
               )}
             </div>
-            <div>
-              <div className="text-lg font-semibold text-gray-900">{profile?.full_name || "Worker"}</div>
+            <div className="min-w-0">
+              <div className="text-sm font-medium text-gray-900 truncate">{profile?.full_name || "Worker"}</div>
               {typeof worker.rating === "number" && (
-                <div className="text-sm text-gray-600">Rating: {worker.rating?.toFixed(1)}</div>
+                <div className="text-[12px] text-gray-600">Rating: {worker.rating?.toFixed(1)}</div>
               )}
             </div>
           </div>
 
           {worker.title && (
-            <div className="mt-4 text-base font-semibold text-gray-900">{worker.title}</div>
+            <div className="mt-3 text-[15px] font-semibold text-gray-900">{worker.title}</div>
           )}
 
           {worker.location && (
