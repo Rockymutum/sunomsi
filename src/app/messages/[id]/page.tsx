@@ -175,8 +175,8 @@ export default function ConversationPage({ params }: ConversationParams) {
     <div className="min-h-[100svh] bg-background">
       <Navbar />
       
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="card p-0 overflow-hidden">
           {/* Conversation header */}
           <div className="px-4 py-3 border-b border-gray-200 flex items-center">
             <button 
@@ -188,7 +188,7 @@ export default function ConversationPage({ params }: ConversationParams) {
               </svg>
             </button>
             
-            <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+            <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
               {partnerProfile?.avatar_url ? (
                 <img 
                   src={partnerProfile.avatar_url} 
@@ -208,7 +208,7 @@ export default function ConversationPage({ params }: ConversationParams) {
               </p>
               <button 
                 onClick={() => router.push(`/profile/${partnerId}`)}
-                className="text-xs text-primary hover:text-primary-dark"
+                className="text-xs text-primary hover:opacity-80"
               >
                 View Profile
               </button>
@@ -235,7 +235,7 @@ export default function ConversationPage({ params }: ConversationParams) {
                         }`}
                       >
                         <p className="text-sm">{message.content}</p>
-                        <p className={`text-xs mt-1 ${isOwnMessage ? 'text-primary-light' : 'text-gray-500'}`}>
+                        <p className={`text-xs mt-1 ${isOwnMessage ? 'text-white/80' : 'text-gray-500'}`}>
                           {formatTimeAgo(message.created_at)}
                         </p>
                       </div>
