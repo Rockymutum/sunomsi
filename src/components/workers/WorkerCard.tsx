@@ -92,9 +92,9 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="p-0 sm:p-0 md:p-6">
-        <Link href={`/profile/${worker.user_id}`} className="flex items-center mb-4 cursor-pointer">
-          <div className="h-16 w-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+      <div className="p-4">
+        <Link href={`/profile/${worker.user_id}`} className="flex items-center gap-2 mb-4 cursor-pointer">
+          <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
             {worker?.profiles?.avatar_url ? (
               <img 
                 src={worker.profiles.avatar_url} 
@@ -102,16 +102,16 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
                 className="h-full w-full object-cover"
               />
             ) : (
-              <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold text-xl">
+              <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold text-sm">
                 {(worker?.profiles?.full_name?.charAt(0) || 'W').toUpperCase()}
               </div>
             )}
           </div>
-          <div className="ml-4">
-            <h3 className="text-lg font-semibold text-gray-900">{worker?.profiles?.full_name || 'Worker'}</h3>
-            <div className="flex items-center mt-1">
+          <div className="ml-2 min-w-0">
+            <h3 className="text-sm font-medium text-gray-900 truncate">{worker?.profiles?.full_name || 'Worker'}</h3>
+            <div className="flex items-center mt-0.5">
               {renderStars((worker as any).rating ?? 0)}
-              <span className="ml-1 text-sm text-gray-600">({(((worker as any).rating ?? 0) as number).toFixed(1)})</span>
+              <span className="ml-1 text-[12px] text-gray-600">({(((worker as any).rating ?? 0) as number).toFixed(1)})</span>
             </div>
           </div>
         </Link>
