@@ -116,11 +116,11 @@ export default function MessagesPage() {
     <div className="min-h-[100svh] bg-background">
       <Navbar />
       
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Messages</h1>
         
         {conversations.length > 0 ? (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="card p-0 overflow-hidden">
             <ul className="divide-y divide-gray-200">
               {conversations.map((conversation) => (
                 <li 
@@ -130,7 +130,7 @@ export default function MessagesPage() {
                 >
                   <div className="px-4 py-4 sm:px-6">
                     <div className="flex items-center">
-                      <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                      <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
                         {conversation.partnerAvatar ? (
                           <img 
                             src={conversation.partnerAvatar} 
@@ -144,7 +144,7 @@ export default function MessagesPage() {
                         )}
                       </div>
                       
-                      <div className="ml-4 flex-1">
+                      <div className="ml-3 flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <p className="text-sm font-medium text-gray-900 truncate">
                             {conversation.partnerName}
@@ -173,7 +173,7 @@ export default function MessagesPage() {
             </ul>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-md p-6 text-center">
+          <div className="card text-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
