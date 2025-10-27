@@ -91,9 +91,9 @@ export default function ProfileHomePage() {
     <div className="min-h-[100svh] bg-background">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="card">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden md:rounded-md md:border-0 md:bg-[rgb(var(--color-card))] md:shadow-sm p-4">
           <div className="flex items-center gap-3">
-            <div className="h-16 w-16 rounded-full overflow-hidden bg-gray-100">
+            <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200">
               {profile?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
@@ -102,18 +102,18 @@ export default function ProfileHomePage() {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-lg font-semibold text-gray-900">{profile?.full_name || "User"}</div>
-              <div className="mt-1">
+              <div className="text-sm font-medium text-gray-900 truncate">{profile?.full_name || "User"}</div>
+              <div className="mt-0.5">
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isWorker ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
                   {isWorker ? 'Worker' : 'Poster'}
                 </span>
               </div>
               
               {email && (
-                <div className="text-xs text-gray-500">Email: {email}</div>
+                <div className="text-[12px] text-gray-500">Email: {email}</div>
               )}
               {profile?.created_at && (
-                <div className="text-xs text-gray-500">Joined: {new Date(profile.created_at).toLocaleDateString()}</div>
+                <div className="text-[12px] text-gray-500">Joined: {new Date(profile.created_at).toLocaleDateString()}</div>
               )}
             </div>
             <button
