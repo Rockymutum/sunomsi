@@ -339,7 +339,7 @@ export default function TaskCard({ task }: TaskCardProps) {
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2 min-w-0">
             <Link href={`/profile/${(task as any).poster_id}`} className="flex items-center gap-2 min-w-0 cursor-pointer">
-              <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+              <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
                 {(task as any).poster?.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={(task as any).poster.avatar_url as string} alt={(task as any).poster.full_name as string} className="h-full w-full object-cover" />
@@ -430,7 +430,7 @@ export default function TaskCard({ task }: TaskCardProps) {
               <div className="space-y-2">
                 {comments.map((c) => (
                   <div key={c.id} className="flex items-start gap-2">
-                    <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                    <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
                       {c.user?.avatar_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={c.user.avatar_url} alt={c.user.full_name} className="h-full w-full object-cover" />
