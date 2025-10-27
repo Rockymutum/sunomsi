@@ -138,10 +138,10 @@ export default function NewTaskPage() {
     <div className="min-h-[100svh] bg-background">
       <Navbar />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Post a New Task</h1>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
+        <form onSubmit={handleSubmit} className="card">
           <div className="space-y-6">
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
@@ -273,19 +273,9 @@ export default function NewTaskPage() {
               )}
             </div>
 
-            <div className="flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn-primary"
-                disabled={loading}
-              >
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={() => router.back()} className="btn-secondary">Cancel</button>
+              <button type="submit" className="btn-primary" disabled={loading}>
                 {loading ? 'Posting...' : 'Post Task'}
               </button>
             </div>
