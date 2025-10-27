@@ -90,7 +90,7 @@ export default function ProfileHomePage() {
   return (
     <div className="min-h-[100svh] bg-background">
       <Navbar />
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden md:rounded-md md:border-0 md:bg-[rgb(var(--color-card))] md:shadow-sm p-4">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200">
@@ -133,6 +133,7 @@ export default function ProfileHomePage() {
               )}
             </button>
           </div>
+          <div className="mt-3 border-t border-gray-100" />
 
           {!isWorker && (
             <div className="mt-4 bg-blue-50 rounded-md border border-blue-100 p-4">
@@ -149,19 +150,22 @@ export default function ProfileHomePage() {
             </div>
           )}
 
-          <div className="mt-6 grid gap-4">
-            <div>
-              <div className="text-sm font-medium text-gray-700">Bio</div>
+          <div className="mt-4 space-y-4">
+            <div className="border border-gray-100 rounded-md p-3">
+              <div className="text-sm font-medium text-gray-700 mb-1">Bio</div>
               <div className="text-gray-800 text-sm whitespace-pre-line">{profile?.bio || "—"}</div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <div className="text-sm font-medium text-gray-700">Place</div>
-                <div className="text-gray-800 text-sm">{profile?.place || "—"}</div>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-gray-700">Contact</div>
-                <div className="text-gray-800 text-sm">{profile?.contact || email || "—"}</div>
+            <div className="border border-gray-100 rounded-md p-3">
+              <div className="text-sm font-medium text-gray-700 mb-2">Details</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <div className="text-[12px] text-gray-500">Place</div>
+                  <div className="text-gray-800 text-sm">{profile?.place || "—"}</div>
+                </div>
+                <div>
+                  <div className="text-[12px] text-gray-500">Contact</div>
+                  <div className="text-gray-800 text-sm">{profile?.contact || email || "—"}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -182,7 +186,7 @@ export default function ProfileHomePage() {
           </div>
         </div>
       </div>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
         <div className="card mt-4">
           <div className="flex flex-wrap justify-center gap-6 text-sm">
             <Link href="/about" className="text-gray-600 hover:text-primary">About</Link>
