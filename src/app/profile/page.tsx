@@ -158,13 +158,25 @@ export default function ProfileHomePage() {
             <div className="border border-gray-100 rounded-md p-3">
               <div className="text-sm font-medium text-gray-700 mb-2">Details</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <div className="text-[12px] text-gray-500">Place</div>
-                  <div className="text-gray-800 text-sm">{profile?.place || "—"}</div>
+                <div className="flex items-start gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mt-0.5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <div>
+                    <div className="text-[12px] text-gray-500">Place</div>
+                    <div className="text-gray-800 text-sm">{profile?.place || "—"}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-[12px] text-gray-500">Contact</div>
-                  <div className="text-gray-800 text-sm">{profile?.contact || email || "—"}</div>
+                <div className="flex items-start gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mt-0.5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 12a10 10 0 11-20 0 10 10 0 0120 0z" />
+                  </svg>
+                  <div>
+                    <div className="text-[12px] text-gray-500">Contact</div>
+                    <div className="text-gray-800 text-sm">{profile?.contact || email || "—"}</div>
+                  </div>
                 </div>
               </div>
             </div>
