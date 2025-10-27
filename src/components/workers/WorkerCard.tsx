@@ -107,7 +107,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
               </div>
             )}
           </div>
-          <div className="ml-2 min-w-0">
+          <div className="min-w-0 ml-2">
             <h3 className="text-sm font-medium text-gray-900 truncate">{worker?.profiles?.full_name || 'Worker'}</h3>
             <div className="flex items-center mt-0.5">
               {renderStars((worker as any).rating ?? 0)}
