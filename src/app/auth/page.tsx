@@ -55,12 +55,13 @@ export default function AuthPage() {
   return (
     <div className="min-h-[100svh] flex items-center justify-center px-4 py-12 bg-background">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold">Welcome to SUNOMSI</h1>
-          <p className="mt-2 text-gray-600">Sign in or create an account to get started</p>
+        <div className="card">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">Welcome to SUNOMSI</h1>
+            <p className="mt-1 text-gray-600">Sign in or create an account to get started</p>
+          </div>
+          <AuthForm /> {/* No onRoleSelect prop needed */}
         </div>
-        
-        <AuthForm /> {/* No onRoleSelect prop needed */}
       </div>
     </div>
   );
