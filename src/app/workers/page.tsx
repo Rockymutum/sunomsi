@@ -170,7 +170,7 @@ export default function WorkersPage() {
       if (userIds.length > 0) {
         const runJoin = async () => await supabase
           .from('profiles')
-          .select('user_id, id, full_name, avatar_url')
+          .select('user_id, id, full_name, avatar_url, updated_at')
           .in('user_id', userIds);
         let { data: profs, error: profErr } = await runJoin();
         if (profErr && (profErr.message?.toLowerCase().includes('jwt') || profErr.message?.toLowerCase().includes('token'))) {
@@ -189,6 +189,7 @@ export default function WorkersPage() {
                   id: byUserId[w.user_id].id,
                   full_name: byUserId[w.user_id].full_name,
                   avatar_url: byUserId[w.user_id].avatar_url,
+                  updated_at: byUserId[w.user_id].updated_at,
                 }
               : null,
           }));
@@ -294,26 +295,6 @@ export default function WorkersPage() {
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-2xl mx-auto mb-6">
-          <PageShell
-            header={(
-              <div className="text-center">
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">Available Workers</h1>
-                <p className="text-sm text-gray-500 mt-1">Browse worker portfolios and contact the right person for your task.</p>
-              </div>
-            )}
-            darkSection={(
-              <div className="flex items-center gap-2">
-                {userId && !showComposer && (
-                  <button type="button" onClick={() => setShowComposer(true)} className="btn-primary">Create Portfolio</button>
-                )}
-                {publishSuccess && (
-                  <div className="ml-auto text-xs text-green-300">{publishSuccess}</div>
-                )}
-              </div>
-            )}
-          />
-        </div>
         {publishSuccess && (
           <div className="mb-4 rounded-md border border-green-200 bg-green-50 text-green-800 px-4 py-3 text-sm">
             {publishSuccess}
