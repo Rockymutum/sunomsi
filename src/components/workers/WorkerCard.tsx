@@ -22,8 +22,6 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
   const [hidden, setHidden] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [showProfileCard, setShowProfileCard] = useState(false);
-  const [social, setSocial] = useState<{ behance?: string | null; dribbble?: string | null; linkedin?: string | null; instagram?: string | null }>({});
   const [userProfile, setUserProfile] = useState<{ full_name?: string; avatar_url?: string; updated_at?: string } | null>(null);
   const supabase = createClientComponentClient();
 
@@ -41,24 +39,11 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
       
       setUserProfile(profile);
       
-      // Extract social links from contact
-      const contactStr = profile?.contact as string | null | undefined;
-      if (contactStr) {
-        setSocial({
-          behance: /behance\.net\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*behance[^\s]*/i)?.[0] || null : null,
-          dribbble: /dribbble\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*dribbble[^\s]*/i)?.[0] || null : null,
-          linkedin: /linkedin\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*linkedin[^\s]*/i)?.[0] || null : null,
-          instagram: /instagram\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*instagram[^\s]*/i)?.[0] || null : null
-        });
-      }
     })();
   }, [supabase, worker.user_id]);
 
   const canDelete = userId && worker?.user_id === userId;
 
-  const openProfileCard = () => {
-    setShowProfileCard(true);
-  };
 
   const handleDelete = async () => {
     if (!canDelete || deleting) return;
@@ -123,7 +108,6 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
       <div className="p-4">
         <Link href={`/workers/${worker.user_id}`} className="flex items-center gap-2 mb-4 cursor-pointer">
           <div className="flex items-center gap-3">
-            <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100 cursor-pointer" onClick={openProfileCard}>
               {userProfile?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img 
@@ -132,13 +116,13 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold">
+                <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100">
                   {(userProfile?.full_name?.charAt(0) || 'W').toUpperCase()}
                 </div>
               )}
             </div>
             <div>
-              <div className="font-medium text-gray-900 cursor-pointer hover:underline" onClick={openProfileCard}>
+              <div className="font-medium text-gray-900 hover:underline">
                 {userProfile?.full_name || 'Worker'}
               </div>
               <div className="flex items-center mt-0.5">
