@@ -26,6 +26,11 @@ export default function EditProfilePage() {
   const [contact, setContact] = useState('');
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
+  // Social links (stored inside profiles.contact on save)
+  const [behance, setBehance] = useState('');
+  const [dribbble, setDribbble] = useState('');
+  const [linkedin, setLinkedin] = useState('');
+  const [instagram, setInstagram] = useState('');
   
   const AVAILABLE_SKILLS = [
     'Cleaning',
@@ -70,6 +75,12 @@ export default function EditProfilePage() {
         setBio(profileData.bio || '');
         setLocation(profileData.place || '');
         setContact(profileData.contact || '');
+        // Prefill social links from contact field if present
+        const c = (profileData.contact || '').toString();
+        setBehance(c.match(/https?:\/\/[^\s]*behance[^\s]*/i)?.[0] || '');
+        setDribbble(c.match(/https?:\/\/[^\s]*dribbble[^\s]*/i)?.[0] || '');
+        setLinkedin(c.match(/https?:\/\/[^\s]*linkedin[^\s]*/i)?.[0] || '');
+        setInstagram(c.match(/https?:\/\/[^\s]*instagram[^\s]*/i)?.[0] || '');
       }
       
       // Check if user is a worker
@@ -166,6 +177,9 @@ export default function EditProfilePage() {
           (currentUser?.user_metadata && (currentUser.user_metadata.full_name || currentUser.user_metadata.name)) ||
           currentUser?.email ||
           'User';
+        // Merge generic contact + social links
+        const socials = [behance, dribbble, linkedin, instagram].filter(Boolean).join(' ');
+        const combinedContact = [contact, socials].filter(Boolean).join(' ');
         const { error: profInsertErr } = await supabase
           .from('profiles')
           .insert({
@@ -175,7 +189,7 @@ export default function EditProfilePage() {
             avatar_url: finalAvatarUrl,
             bio,
             place: location,
-            contact,
+            contact: combinedContact,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           });
@@ -186,6 +200,8 @@ export default function EditProfilePage() {
         }
       } else {
         // Update profile
+        const socials = [behance, dribbble, linkedin, instagram].filter(Boolean).join(' ');
+        const combinedContact = [contact, socials].filter(Boolean).join(' ');
         const { error: profileError } = await supabase
           .from('profiles')
           .update({
@@ -193,7 +209,7 @@ export default function EditProfilePage() {
             avatar_url: finalAvatarUrl,
             bio,
             place: location,
-            contact,
+            contact: combinedContact,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', userId);
@@ -305,7 +321,51 @@ export default function EditProfilePage() {
                 className="input-field"
                 placeholder="Phone, WhatsApp, or link"
               />
-              <p className="mt-1 text-xs text-gray-500">Contact details will be displayed on your profile. We can store a dedicated contact field in the database upon your confirmation.</p>
+              <p className="mt-1 text-xs text-gray-500">Add social links below; they will be saved along with contact.</p>
+            </div>
+
+            {/* Social links */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Behance</label>
+                <input
+                  type="url"
+                  value={behance}
+                  onChange={(e) => setBehance(e.target.value)}
+                  className="input-field"
+                  placeholder="https://behance.net/username"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Dribbble</label>
+                <input
+                  type="url"
+                  value={dribbble}
+                  onChange={(e) => setDribbble(e.target.value)}
+                  className="input-field"
+                  placeholder="https://dribbble.com/username"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
+                <input
+                  type="url"
+                  value={linkedin}
+                  onChange={(e) => setLinkedin(e.target.value)}
+                  className="input-field"
+                  placeholder="https://linkedin.com/in/username"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Instagram</label>
+                <input
+                  type="url"
+                  value={instagram}
+                  onChange={(e) => setInstagram(e.target.value)}
+                  className="input-field"
+                  placeholder="https://instagram.com/username"
+                />
+              </div>
             </div>
           </div>
 
