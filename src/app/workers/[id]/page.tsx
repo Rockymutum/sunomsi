@@ -28,7 +28,7 @@ export default function WorkerDetailPage() {
 
   const [loading, setLoading] = useState(true);
   const [worker, setWorker] = useState<WorkerProfile | null>(null);
-  const [profile, setProfile] = useState<{ id?: string; full_name?: string; avatar_url?: string } | null>(null);
+  const [profile, setProfile] = useState<{ id?: string; full_name?: string; avatar_url?: string; updated_at?: string } | null>(null);
   const [reviews, setReviews] = useState<Array<{ id: string; rating: number; comment: string; created_at: string; reviewer_id: string }>>([]);
   const [avgRating, setAvgRating] = useState<number | null>(null);
   const [pastJobs, setPastJobs] = useState<Array<{ id: string; title: string; location: string; created_at: string }>>([]);
