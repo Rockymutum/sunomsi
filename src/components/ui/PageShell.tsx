@@ -11,7 +11,7 @@ interface PageShellProps {
 
 export default function PageShell({ header, darkSection, children, className = "" }: PageShellProps) {
   return (
-    <div className={`relative rounded-[20px] shadow-lg overflow-hidden bg-white border border-gray-200 md:border-0 md:bg-[rgb(var(--color-card))] md:shadow-sm ${className}`}>
+    <div className={`relative rounded-[28px] shadow-2xl overflow-hidden bg-white border border-gray-200 md:border-0 md:bg-[rgb(var(--color-card))] md:shadow-sm ${className}`}>
       {/* Header area */}
       {header && (
         <div className="p-5 pb-4">
