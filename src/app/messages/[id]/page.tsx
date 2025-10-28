@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Navbar from '@/components/layout/Navbar';
 import { formatTimeAgo } from '@/utils/dateUtils';
+import PageShell from '@/components/ui/PageShell';
 
 interface ConversationParams {
   params: {
@@ -176,68 +177,58 @@ export default function ConversationPage({ params }: ConversationParams) {
       <Navbar />
       
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="card p-0 overflow-hidden">
-          {/* Conversation header */}
-          <div className="px-4 py-3 border-b border-gray-200 flex items-center">
-            <button 
-              onClick={() => router.push('/messages')}
-              className="mr-4 text-gray-500 hover:text-gray-700"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-            
-            <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
-              {partnerProfile?.avatar_url ? (
-                <img 
-                  src={partnerProfile.avatar_url} 
-                  alt={partnerProfile.full_name} 
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold text-sm">
-                  {partnerProfile?.full_name.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-            
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">
-                {partnerProfile?.full_name}
-              </p>
+        <PageShell
+          header={(
+            <div className="flex items-center">
               <button 
-                onClick={() => router.push(`/profile/${partnerId}`)}
-                className="text-xs text-primary hover:opacity-80"
+                onClick={() => router.push('/messages')}
+                className="mr-4 text-gray-500 hover:text-gray-700"
+                aria-label="Back"
               >
-                View Profile
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                </svg>
               </button>
+              <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
+                {partnerProfile?.avatar_url ? (
+                  <img 
+                    src={partnerProfile.avatar_url} 
+                    alt={partnerProfile.full_name} 
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold text-sm">
+                    {partnerProfile?.full_name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-900">
+                  {partnerProfile?.full_name}
+                </p>
+                <button 
+                  onClick={() => router.push(`/profile/${partnerId}`)}
+                  className="text-xs text-primary hover:opacity-80"
+                >
+                  View Profile
+                </button>
+              </div>
             </div>
-          </div>
-          
+          )}
+        >
           {/* Messages */}
           <div className="p-4 h-[calc(100svh-300px)] overflow-y-auto">
             {messages.length > 0 ? (
               <div className="space-y-4">
                 {messages.map((message) => {
                   const isOwnMessage = message.sender_id === userId;
-                  
                   return (
-                    <div 
-                      key={message.id}
-                      className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
-                    >
+                    <div key={message.id} className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
                       <div 
-                        className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                          isOwnMessage 
-                            ? 'bg-primary text-white rounded-br-none' 
-                            : 'bg-gray-100 text-gray-800 rounded-bl-none'
-                        }`}
+                        className={`max-w-[70%] rounded-lg px-4 py-2 ${isOwnMessage ? 'bg-primary text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}
                       >
                         <p className="text-sm">{message.content}</p>
-                        <p className={`text-xs mt-1 ${isOwnMessage ? 'text-white/80' : 'text-gray-500'}`}>
-                          {formatTimeAgo(message.created_at)}
-                        </p>
+                        <p className={`text-xs mt-1 ${isOwnMessage ? 'text-white/80' : 'text-gray-500'}`}>{formatTimeAgo(message.created_at)}</p>
                       </div>
                     </div>
                   );
@@ -250,29 +241,15 @@ export default function ConversationPage({ params }: ConversationParams) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
                 <h3 className="text-lg font-medium text-gray-900">No messages yet</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Send a message to start the conversation.
-                </p>
+                <p className="mt-1 text-sm text-gray-500">Send a message to start the conversation.</p>
               </div>
             )}
           </div>
-          
           {/* Message input */}
           <div className="border-t border-gray-200 p-4">
             <form onSubmit={sendMessage} className="flex items-center">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message..."
-                className="input-field flex-1 py-2"
-                disabled={sending}
-              />
-              <button
-                type="submit"
-                className="ml-2 btn-primary py-2"
-                disabled={!newMessage.trim() || sending}
-              >
+              <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Type a message..." className="input-field flex-1 py-2" disabled={sending} />
+              <button type="submit" className="ml-2 btn-primary py-2" disabled={!newMessage.trim() || sending}>
                 {sending ? (
                   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -286,7 +263,7 @@ export default function ConversationPage({ params }: ConversationParams) {
               </button>
             </form>
           </div>
-        </div>
+        </PageShell>
       </div>
     </div>
   );
