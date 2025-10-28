@@ -22,6 +22,8 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
   const [hidden, setHidden] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [showProfileCard, setShowProfileCard] = useState(false);
+  const [social, setSocial] = useState<{ behance?: string | null; dribbble?: string | null; linkedin?: string | null; instagram?: string | null }>({});
   const supabase = createClientComponentClient();
 
   useEffect(() => {
@@ -32,6 +34,23 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
   }, [supabase]);
 
   const canDelete = userId && worker?.user_id === userId;
+
+  const openProfileCard = async () => {
+    // Fetch latest contact from profiles to get socials
+    const { data: p } = await supabase
+      .from('profiles')
+      .select('full_name, avatar_url, updated_at, contact')
+      .eq('user_id', worker.user_id)
+      .maybeSingle();
+    const contactStr = (p as any)?.contact as string | null;
+    setSocial({
+      behance: contactStr && /behance\.net\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*behance[^\s]*/i)?.[0] || null : null,
+      dribbble: contactStr && /dribbble\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*dribbble[^\s]*/i)?.[0] || null : null,
+      linkedin: contactStr && /linkedin\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*linkedin[^\s]*/i)?.[0] || null : null,
+      instagram: contactStr && /instagram\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*instagram[^\s]*/i)?.[0] || null : null,
+    });
+    setShowProfileCard(true);
+  };
 
   const handleDelete = async () => {
     if (!canDelete || deleting) return;
@@ -95,7 +114,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
     >
       <div className="p-4">
         <Link href={`/workers/${worker.user_id}`} className="flex items-center gap-2 mb-4 cursor-pointer">
-          <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
+          <div onClick={(e) => { e.preventDefault(); openProfileCard(); }} className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0 cursor-pointer">
             {worker?.profiles?.avatar_url ? (
               <img 
                 src={`${worker.profiles.avatar_url}${worker.profiles.updated_at ? `?t=${encodeURIComponent(worker.profiles.updated_at)}` : ''}`}
@@ -109,7 +128,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
             )}
           </div>
           <div className="min-w-0 ml-2">
-            <h3 className="text-base font-semibold text-gray-900 truncate">{worker?.profiles?.full_name || 'Worker'}</h3>
+            <h3 onClick={(e) => { e.preventDefault(); openProfileCard(); }} className="text-base font-semibold text-gray-900 truncate cursor-pointer hover:underline">{worker?.profiles?.full_name || 'Worker'}</h3>
             <div className="flex items-center mt-0.5">
               {renderStars((worker as any).rating ?? 0)}
               <span className="ml-1 text-[12px] text-gray-600">({(((worker as any).rating ?? 0) as number).toFixed(1)})</span>
