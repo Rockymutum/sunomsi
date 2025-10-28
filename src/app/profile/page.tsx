@@ -180,7 +180,7 @@ export default function ProfileHomePage() {
               </div>
               <div>
                 <div className="text-sm text-gray-600 mb-1">Contact</div>
-                <div className="text-base font-medium pb-2 break-words">{profile?.contact || email || '—'}</div>
+                <div className="text-base font-medium pb-2 break-words">{(() => { const v = (profile?.contact || email || '').toString().replace(/https?:\/\/[^\s]*instagram[^\s]*/gi, '').replace(/\s{2,}/g, ' ').trim(); return v || '—'; })()}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-600 mb-1">Joined</div>
