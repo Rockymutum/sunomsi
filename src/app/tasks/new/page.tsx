@@ -136,7 +136,7 @@ export default function NewTaskPage() {
   };
 
   return (
-    <div className="min-h-[100svh] bg-background">
+    <div className="min-h-[100svh] bg-background overflow-x-hidden">
       <Navbar />
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
