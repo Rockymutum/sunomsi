@@ -116,6 +116,79 @@ export default function WorkerDetailPage() {
     load();
   }, [supabase, userId]);
 
+  // Realtime updates: refresh when profiles or worker_profiles change for this user
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`worker-detail-${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `user_id=eq.${userId}` }, () => {
+        // refetch profile and keep other state
+        (async () => {
+          const { data: p } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, behance, dribbble, linkedin, instagram')
+            .eq('user_id', userId)
+            .maybeSingle();
+          setProfile(p || null);
+          if (p) {
+            setSocial({
+              behance: (p as any).behance ?? null,
+              dribbble: (p as any).dribbble ?? null,
+              linkedin: (p as any).linkedin ?? null,
+              instagram: (p as any).instagram ?? null,
+            });
+          }
+        })();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'worker_profiles', filter: `user_id=eq.${userId}` }, () => {
+        (async () => {
+          const { data: w } = await supabase
+            .from('worker_profiles')
+            .select('id, user_id, title, location, bio, skills, rating, created_at, updated_at')
+            .eq('user_id', userId)
+            .maybeSingle();
+          if (w) setWorker(w as any);
+        })();
+      })
+      .subscribe();
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        // refresh both models on focus
+        (async () => {
+          const [{ data: w }, { data: p }] = await Promise.all([
+            supabase
+              .from('worker_profiles')
+              .select('id, user_id, title, location, bio, skills, rating, created_at, updated_at')
+              .eq('user_id', userId)
+              .maybeSingle(),
+            supabase
+              .from('profiles')
+              .select('id, full_name, avatar_url, behance, dribbble, linkedin, instagram')
+              .eq('user_id', userId)
+              .maybeSingle(),
+          ]);
+          if (w) setWorker(w as any);
+          setProfile(p || null);
+          if (p) {
+            setSocial({
+              behance: (p as any).behance ?? null,
+              dribbble: (p as any).dribbble ?? null,
+              linkedin: (p as any).linkedin ?? null,
+              instagram: (p as any).instagram ?? null,
+            });
+          }
+        })();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      supabase.removeChannel(channel);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [supabase, userId]);
+
   const submitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUserId || !worker) return;
