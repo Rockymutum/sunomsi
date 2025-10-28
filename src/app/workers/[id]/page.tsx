@@ -75,22 +75,32 @@ export default function WorkerDetailPage() {
           setSocial({});
         }
 
+        // Toggle profile card modal
+        const openProfileCard = () => {
+          setShowProfileCard(true);
+        };
+
         // Fetch reviews where this user is the reviewee
-        const { data: revs } = await supabase
-          .from("reviews")
-          .select("id, rating, comment, created_at, reviewer_id")
-          .eq("reviewee_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(5);
-        if (revs) {
-          setReviews(revs as any);
-          if (revs.length > 0) {
-            const avg = (revs.reduce((s: number, r: any) => s + (r.rating || 0), 0) / revs.length);
-            setAvgRating(Number(avg.toFixed(2)));
-          } else {
-            setAvgRating(null);
-          }
-        }
+        useEffect(() => {
+          const loadReviews = async () => {
+            if (!userId) return;
+            const { data: revs } = await supabase
+              .from("reviews")
+              .select("id, rating, comment, created_at, reviewer_id")
+              .eq("reviewee_id", userId)
+              .order("created_at", { ascending: false });
+            if (revs) {
+              setReviews(revs);
+              if (revs.length > 0) {
+                const avg = revs.reduce((sum, r) => sum + r.rating, 0) / revs.length;
+                setAvgRating(Number(avg.toFixed(1)));
+              } else {
+                setAvgRating(null);
+              }
+            }
+          };
+          loadReviews();
+        }, [userId, supabase]);
 
         // Fetch past accepted jobs: applications where worker is this user and status accepted, then fetch tasks by ids
         const { data: apps } = await supabase
@@ -294,13 +304,20 @@ export default function WorkerDetailPage() {
 
             {/* Avatar */}
             <div className="mt-2 flex justify-center">
-              <div className="h-24 w-24 rounded-full overflow-hidden ring-2 ring-white shadow-md bg-gray-100 cursor-pointer" onClick={() => setShowProfileCard(true)}>
+              <div 
+                className="h-24 w-24 rounded-full overflow-hidden ring-2 ring-white shadow-md bg-gray-100 cursor-pointer"
+                onClick={openProfileCard}
+              >
                 {profile?.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={`${profile.avatar_url}${profile.updated_at ? `?t=${encodeURIComponent(profile.updated_at)}` : ''}`} alt={profile?.full_name || "Avatar"} className="h-full w-full object-cover" />
+                  <img 
+                    src={`${profile.avatar_url}${profile.updated_at ? `?t=${encodeURIComponent(profile.updated_at)}` : ''}`} 
+                    alt={profile?.full_name || 'Avatar'} 
+                    className="h-full w-full object-cover" 
+                  />
                 ) : (
-                  <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold text-2xl">
-                    {(profile?.full_name?.charAt(0) || "W").toUpperCase()}
+                  <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold text-3xl">
+                    {(profile?.full_name?.charAt(0) || 'W').toUpperCase()}
                   </div>
                 )}
               </div>
@@ -308,9 +325,12 @@ export default function WorkerDetailPage() {
 
             {/* Name + Title */}
             <div className="mt-4 text-center">
-              <button type="button" className="text-lg font-semibold text-gray-900 hover:underline" onClick={() => setShowProfileCard(true)}>
-                {profile?.full_name || "Worker"}
-              </button>
+              <h1 
+                className="text-2xl font-bold text-gray-900 cursor-pointer hover:underline"
+                onClick={openProfileCard}
+              >
+                {profile?.full_name || 'Worker'}
+              </h1>
               <div className="text-sm text-gray-500">{worker?.title || '—'}</div>
             </div>
 
