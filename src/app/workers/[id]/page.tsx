@@ -58,7 +58,7 @@ export default function WorkerDetailPage() {
         // Fetch basic user profile for name/avatar (display only)
         const { data: p } = await supabase
           .from("profiles")
-          .select("id, full_name, avatar_url, behance, dribbble, linkedin, instagram")
+          .select("id, full_name, avatar_url, updated_at, behance, dribbble, linkedin, instagram")
           .eq("user_id", userId)
           .maybeSingle();
         setProfile(p || null);
@@ -126,7 +126,7 @@ export default function WorkerDetailPage() {
         (async () => {
           const { data: p } = await supabase
             .from('profiles')
-            .select('id, full_name, avatar_url, behance, dribbble, linkedin, instagram')
+            .select('id, full_name, avatar_url, updated_at, behance, dribbble, linkedin, instagram')
             .eq('user_id', userId)
             .maybeSingle();
           setProfile(p || null);
@@ -164,7 +164,7 @@ export default function WorkerDetailPage() {
               .maybeSingle(),
             supabase
               .from('profiles')
-              .select('id, full_name, avatar_url, behance, dribbble, linkedin, instagram')
+              .select('id, full_name, avatar_url, updated_at, behance, dribbble, linkedin, instagram')
               .eq('user_id', userId)
               .maybeSingle(),
           ]);
@@ -284,7 +284,7 @@ export default function WorkerDetailPage() {
               <div className="h-24 w-24 rounded-full overflow-hidden ring-2 ring-white shadow-md bg-gray-100">
                 {profile?.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={profile.avatar_url} alt={profile?.full_name || "Avatar"} className="h-full w-full object-cover" />
+                  <img src={`${profile.avatar_url}${profile.updated_at ? `?t=${encodeURIComponent(profile.updated_at)}` : ''}`} alt={profile?.full_name || "Avatar"} className="h-full w-full object-cover" />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold text-2xl">
                     {(profile?.full_name?.charAt(0) || "W").toUpperCase()}
