@@ -52,6 +52,8 @@ iframe { max-width: 100%; }
   }
 
   .btn-primary:hover { filter: brightness(0.95); }
+  .btn-primary:active { filter: brightness(0.9); }
+  .btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgb(var(--color-primary) / 0.25); }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center font-medium px-4 py-2 border transition-colors;
@@ -103,6 +105,20 @@ iframe { max-width: 100%; }
     border-radius: var(--radius);
   }
   .card:hover { box-shadow: var(--shadow-md); }
+
+  /* Chips */
+  .chip {
+    @apply inline-flex items-center px-3 py-1.5 rounded-xl text-sm font-medium border;
+    background-color: rgb(243 244 246); /* gray-100 */
+    color: rgb(55 65 81); /* gray-700 */
+    border-color: rgb(var(--color-border));
+  }
+  .chip-soft {
+    @apply inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium;
+    background-color: rgb(249 250 251); /* gray-50 */
+    color: rgb(75 85 99); /* gray-600 */
+    border: 1px solid rgb(var(--color-border));
+  }
 
   /* Hover lift utility for tiles/cards */
   .hover-lift { transition: box-shadow 200ms, transform 200ms; }
