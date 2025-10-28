@@ -26,10 +26,12 @@ export default function Navbar() {
       if (session?.user) {
         const uid = session.user.id;
         const [{ data: prof }, { data: worker }] = await Promise.all([
-          supabase.from('profiles').select('avatar_url').eq('user_id', uid).maybeSingle(),
+          supabase.from('profiles').select('avatar_url, updated_at').eq('user_id', uid).maybeSingle(),
           supabase.from('worker_profiles').select('id').eq('user_id', uid).maybeSingle(),
         ]);
-        setAvatarUrl(prof?.avatar_url || null);
+        const avatar = prof?.avatar_url || null;
+        const ts = (prof as any)?.updated_at ? `?t=${encodeURIComponent((prof as any).updated_at)}` : '';
+        setAvatarUrl(avatar ? `${avatar}${ts}` : null);
         setUserRole(worker ? 'worker' : 'poster');
       } else {
         setUserRole(null);
