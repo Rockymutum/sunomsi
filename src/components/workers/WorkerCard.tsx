@@ -93,7 +93,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="p-4">
-        <Link href={`/profile/${worker.user_id}`} className="flex items-center gap-2 mb-4 cursor-pointer">
+        <Link href={`/workers/${worker.user_id}`} className="flex items-center gap-2 mb-4 cursor-pointer">
           <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
             {worker?.profiles?.avatar_url ? (
               <img 
@@ -108,7 +108,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
             )}
           </div>
           <div className="min-w-0 ml-2">
-            <h3 className="text-sm font-medium text-gray-900 truncate">{worker?.profiles?.full_name || 'Worker'}</h3>
+            <h3 className="text-base font-semibold text-gray-900 truncate">{worker?.profiles?.full_name || 'Worker'}</h3>
             <div className="flex items-center mt-0.5">
               {renderStars((worker as any).rating ?? 0)}
               <span className="ml-1 text-[12px] text-gray-600">({(((worker as any).rating ?? 0) as number).toFixed(1)})</span>
