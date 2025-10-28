@@ -225,7 +225,16 @@ export default function WorkerDetailPage() {
       setReviews((revs || []) as any);
       if (revs && revs.length > 0) {
         const avg = (revs.reduce((s: number, r: any) => s + (r.rating || 0), 0) / revs.length);
-        setAvgRating(Number(avg.toFixed(2)));
+        const avgFixed = Number(avg.toFixed(2));
+        setAvgRating(avgFixed);
+        // Attempt to persist rating on worker_profiles so discovery cards reflect it
+        // This may be blocked by RLS if the reviewer is not allowed to update the worker's profile; ignore errors
+        try {
+          await supabase
+            .from('worker_profiles')
+            .update({ rating: avgFixed, updated_at: new Date().toISOString() })
+            .eq('user_id', userId);
+        } catch (_) {}
       }
     } catch (err: any) {
       alert(err?.message || 'Failed to submit review');
