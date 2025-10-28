@@ -9,6 +9,7 @@ interface ExtendedWorkerProfile extends WorkerProfile {
   profiles?: {
     full_name?: string;
     avatar_url?: string;
+    updated_at?: string;
   } | null;
 }
 
@@ -97,7 +98,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
           <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
             {worker?.profiles?.avatar_url ? (
               <img 
-                src={worker.profiles.avatar_url} 
+                src={`${worker.profiles.avatar_url}${worker.profiles.updated_at ? `?t=${encodeURIComponent(worker.profiles.updated_at)}` : ''}`}
                 alt={worker.profiles?.full_name || 'Worker avatar'} 
                 className="h-full w-full object-cover"
               />
