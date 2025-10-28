@@ -105,7 +105,6 @@ export default function WorkerDetailPage() {
     if (!userId) return;
     const channel = supabase
       .channel(`worker-detail-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `user_id=eq.${userId}` }, () => {
         // refetch profile and keep other state
         (async () => {
           const { data: p } = await supabase
