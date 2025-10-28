@@ -92,7 +92,7 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
                 </div>
                 <div>
                   <div className="text-sm text-gray-600 mb-1">Contact</div>
-                  <div className="text-base font-medium border-b border-gray-200 pb-2">{profile.contact || profile.email || '—'}</div>
+                  <div className="text-base font-medium border-b border-gray-200 pb-2">{(() => { const v = (profile.contact || profile.email || '').toString().replace(/https?:\/\/[^\s]*instagram[^\s]*/gi, '').replace(/\s{2,}/g, ' ').trim(); return v || '—'; })()}</div>
                 </div>
               </div>
             )}
