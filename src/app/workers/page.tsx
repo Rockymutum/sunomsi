@@ -69,6 +69,11 @@ export default function WorkersPage() {
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'worker_profiles' }, (payload: any) => {
         setWorkers((prev) => prev.filter((w: any) => w.id !== payload.old.id));
       })
+      // Also listen to profile updates so avatar/name changes reflect in the list
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        // Refetch to re-merge latest profiles (full_name, avatar_url, updated_at)
+        fetchWorkers();
+      })
       .subscribe();
 
     return () => {
