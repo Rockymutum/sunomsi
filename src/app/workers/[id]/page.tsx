@@ -253,12 +253,12 @@ export default function WorkerDetailPage() {
             )}
           </div>
 
-          {/* Dark section */}
-          <div className="bg-gray-900 text-white p-5 pt-12 rounded-t-[28px] -mt-10">
+          {/* Details section (flattened, light) */}
+          <div className="bg-white text-gray-900 p-5 pt-6 border-t border-gray-200">
             {/* Skills */}
             {worker.skills && worker.skills.length > 0 && (
               <div className="mb-5">
-                <div className="text-sm text-gray-300 mb-2">Skill</div>
+                <div className="text-sm text-gray-600 mb-2">Skill</div>
                 <div className="flex flex-wrap gap-2">
                   {worker.skills.map((s) => (
                     <span key={s} className="px-3 py-2 rounded-xl bg-white text-gray-900 text-sm font-semibold shadow-sm">
@@ -271,24 +271,24 @@ export default function WorkerDetailPage() {
 
             {/* Profession / Title */}
             <div className="mb-5">
-              <div className="text-sm text-gray-300 mb-1">Profession</div>
-              <div className="text-base font-medium border-b border-gray-700 pb-2">{worker?.title || '—'}</div>
+              <div className="text-sm text-gray-600 mb-1">Profession</div>
+              <div className="text-base font-medium border-b border-gray-200 pb-2">{worker?.title || '—'}</div>
             </div>
 
             {/* Experience placeholder based on past jobs */}
             <div>
-              <div className="text-sm text-gray-300 mb-2">Experience</div>
+              <div className="text-sm text-gray-600 mb-2">Experience</div>
               {pastJobs.length > 0 ? (
                 <div className="space-y-2">
                   {pastJobs.map((t) => (
-                    <div key={t.id} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-800/80 border border-gray-700 text-sm">
+                    <div key={t.id} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 border border-gray-200 text-gray-800 text-sm">
                       <span className="font-medium">{t.title}</span>
-                      <span className="text-gray-400">{new Date(t.created_at).toLocaleDateString()}</span>
+                      <span className="text-gray-500">{new Date(t.created_at).toLocaleDateString()}</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-gray-400 text-sm">No experience listed.</div>
+                <div className="text-gray-500 text-sm">No experience listed.</div>
               )}
             </div>
 
@@ -301,7 +301,7 @@ export default function WorkerDetailPage() {
                 Contact
               </button>
               {worker.location && (
-                <div className="ml-auto flex items-center text-sm text-gray-300">
+                <div className="ml-auto flex items-center text-sm text-gray-600">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
