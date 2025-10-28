@@ -129,7 +129,6 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
                 {renderStars((worker as any).rating ?? 0)}
                 <span className="ml-1 text-[12px] text-gray-600">({(((worker as any).rating ?? 0) as number).toFixed(1)})</span>
               </div>
-            </div>
           </div>
         </Link>
         { (worker as any).title && (
