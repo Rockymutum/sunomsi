@@ -375,8 +375,8 @@ export default function TaskCard({ task }: TaskCardProps) {
 
       {/* Body: text first */}
       <div className="px-4 pb-3">
-        <h3 className="text-[15px] font-semibold text-gray-900 mb-1">{task.title}</h3>
-        <p className="text-gray-700 text-[14px] whitespace-pre-line">{task.description}</p>
+        <h3 className="text-base font-semibold text-gray-900 mb-1">{task.title}</h3>
+        <p className="text-gray-700 text-sm whitespace-pre-line">{task.description}</p>
       </div>
 
       {/* Media */}
@@ -406,7 +406,7 @@ export default function TaskCard({ task }: TaskCardProps) {
       </div>
 
       {/* Footer actions */}
-      <div className="px-2 py-1 border-t border-gray-100 grid grid-cols-3 gap-1">
+      <div className="px-2 py-1 grid grid-cols-3 gap-1">
         <Link href={`/tasks/${task.id}`} className="btn-subtle w-full text-center">
           View details
         </Link>
