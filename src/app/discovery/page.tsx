@@ -237,16 +237,6 @@ export default function DiscoveryPage() {
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="max-w-2xl mx-auto mb-6">
-          <PageShell
-            header={(
-              <div className="text-center">
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">Available Tasks</h1>
-                <p className="text-sm text-gray-500 mt-1">Find tasks to work on or post your own.</p>
-              </div>
-            )}
-          />
-        </div>
         {/* Top banner ad */}
         <div className="mb-6">
           <AdPlaceholder type="banner" height="90px" />
@@ -374,7 +364,7 @@ export default function DiscoveryPage() {
               </div>
             )}
 
-            {/* Title moved to PageShell header */}
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Available Tasks</h1>
             
             {loading ? (
               <div className="flex justify-center items-center h-64">
