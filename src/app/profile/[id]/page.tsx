@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import PageShell from '@/components/ui/PageShell';
+import Link from 'next/link';
+import { BsBehance, BsDribbble, BsLinkedin, BsInstagram } from 'react-icons/bs';
 
 export default function ProfilePage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -56,6 +58,30 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
                     <div className="text-xs text-gray-500">Joined: {new Date(profile.created_at).toLocaleDateString()}</div>
                   )}
                 </div>
+                {(profile.behance || profile.dribbble || profile.linkedin || profile.instagram) && (
+                  <div className="mt-4 flex items-center justify-center gap-3">
+                    {profile.behance && (
+                      <Link href={profile.behance} target="_blank" className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-[#1769FF]">
+                        <BsBehance className="h-5 w-5" />
+                      </Link>
+                    )}
+                    {profile.dribbble && (
+                      <Link href={profile.dribbble} target="_blank" className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-[#EA4C89]">
+                        <BsDribbble className="h-5 w-5" />
+                      </Link>
+                    )}
+                    {profile.linkedin && (
+                      <Link href={profile.linkedin} target="_blank" className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-[#0A66C2]">
+                        <BsLinkedin className="h-5 w-5" />
+                      </Link>
+                    )}
+                    {profile.instagram && (
+                      <Link href={profile.instagram} target="_blank" className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-[#C13584]">
+                        <BsInstagram className="h-5 w-5" />
+                      </Link>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             darkSection={(
