@@ -245,19 +245,6 @@ export default function DiscoveryPage() {
                 <p className="text-sm text-gray-500 mt-1">Find tasks to work on or post your own.</p>
               </div>
             )}
-            darkSection={(
-              <div className="flex items-center gap-2 justify-center sm:justify-start">
-                {!showComposer && (
-                  <button
-                    type="button"
-                    onClick={() => setShowComposer(true)}
-                    className="btn-primary"
-                  >
-                    Create Task
-                  </button>
-                )}
-              </div>
-            )}
           />
         </div>
         {/* Top banner ad */}
@@ -387,7 +374,7 @@ export default function DiscoveryPage() {
               </div>
             )}
 
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Available Tasks</h1>
+            {/* Title moved to PageShell header */}
             
             {loading ? (
               <div className="flex justify-center items-center h-64">
