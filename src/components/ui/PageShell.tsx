@@ -11,17 +11,17 @@ interface PageShellProps {
 
 export default function PageShell({ header, darkSection, children, className = "" }: PageShellProps) {
   return (
-    <div className={`relative rounded-[28px] shadow-lg overflow-hidden bg-white border border-gray-200 md:border-0 md:bg-[rgb(var(--color-card))] md:shadow-sm ${className}`}>
+    <div className={`relative rounded-[20px] shadow-lg overflow-hidden bg-white border border-gray-200 md:border-0 md:bg-[rgb(var(--color-card))] md:shadow-sm ${className}`}>
       {/* Header area */}
       {header && (
-        <div className="p-5 pb-20">
+        <div className="p-5 pb-4">
           {header}
         </div>
       )}
 
-      {/* Dark section */}
+      {/* Section below header (flattened, light) */}
       {darkSection && (
-        <div className="bg-gray-900 text-white p-5 pt-12 rounded-t-[28px] -mt-10">
+        <div className="bg-white text-gray-900 p-5 pt-4 border-t border-gray-200">
           {darkSection}
         </div>
       )}
