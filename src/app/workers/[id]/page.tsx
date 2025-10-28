@@ -348,25 +348,10 @@ export default function WorkerDetailPage() {
             {/* Profession / Title */}
             <div className="mb-5">
               <div className="text-sm text-gray-600 mb-1">Profession</div>
-              <div className="text-base font-medium border-b border-gray-200 pb-2">{worker?.title || '—'}</div>
+              <div className="text-base font-medium pb-2">{worker?.title || '—'}</div>
             </div>
 
-            {/* Experience placeholder based on past jobs */}
-            <div>
-              <div className="text-sm text-gray-600 mb-2">Experience</div>
-              {pastJobs.length > 0 ? (
-                <div className="space-y-2">
-                  {pastJobs.map((t) => (
-                    <div key={t.id} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 border border-gray-200 text-gray-800 text-sm">
-                      <span className="font-medium">{t.title}</span>
-                      <span className="text-gray-500">{new Date(t.created_at).toLocaleDateString()}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-gray-500 text-sm">No experience listed.</div>
-              )}
-            </div>
+            {/* Experience section removed as requested */}
 
             {/* Contact and location */}
             <div className="mt-6 flex flex-wrap gap-2">
