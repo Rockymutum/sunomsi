@@ -74,9 +74,17 @@ export default function EditProfilePage() {
         setAvatarUrl(profileData.avatar_url || '');
         setBio(profileData.bio || '');
         setLocation(profileData.place || '');
-        setContact(profileData.contact || '');
         // Prefill social links from contact field if present
         const c = (profileData.contact || '').toString();
+        // Strip known social URLs from contact so only non-social contact info remains visible in the input
+        const contactWithoutSocials = c
+          .replace(/https?:\/\/[^\s]*behance[^\s]*/gi, '')
+          .replace(/https?:\/\/[^\s]*dribbble[^\s]*/gi, '')
+          .replace(/https?:\/\/[^\s]*linkedin[^\s]*/gi, '')
+          .replace(/https?:\/\/[^\s]*instagram[^\s]*/gi, '')
+          .replace(/\s{2,}/g, ' ')
+          .trim();
+        setContact(contactWithoutSocials);
         setBehance(c.match(/https?:\/\/[^\s]*behance[^\s]*/i)?.[0] || '');
         setDribbble(c.match(/https?:\/\/[^\s]*dribbble[^\s]*/i)?.[0] || '');
         setLinkedin(c.match(/https?:\/\/[^\s]*linkedin[^\s]*/i)?.[0] || '');
