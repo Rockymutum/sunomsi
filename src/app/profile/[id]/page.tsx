@@ -61,12 +61,12 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
             darkSection={(
               <div className="space-y-5">
                 <div>
-                  <div className="text-sm text-gray-300 mb-1">Place</div>
-                  <div className="text-base font-medium border-b border-gray-700 pb-2">{profile.place || '—'}</div>
+                  <div className="text-sm text-gray-600 mb-1">Place</div>
+                  <div className="text-base font-medium border-b border-gray-200 pb-2">{profile.place || '—'}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-300 mb-1">Contact</div>
-                  <div className="text-base font-medium border-b border-gray-700 pb-2">{profile.contact || profile.email || '—'}</div>
+                  <div className="text-sm text-gray-600 mb-1">Contact</div>
+                  <div className="text-base font-medium border-b border-gray-200 pb-2">{profile.contact || profile.email || '—'}</div>
                 </div>
               </div>
             )}
