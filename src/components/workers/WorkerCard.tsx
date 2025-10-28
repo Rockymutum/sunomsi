@@ -24,31 +24,39 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
   const [userId, setUserId] = useState<string | null>(null);
   const [showProfileCard, setShowProfileCard] = useState(false);
   const [social, setSocial] = useState<{ behance?: string | null; dribbble?: string | null; linkedin?: string | null; instagram?: string | null }>({});
+  const [userProfile, setUserProfile] = useState<{ full_name?: string; avatar_url?: string; updated_at?: string } | null>(null);
   const supabase = createClientComponentClient();
 
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUserId(session?.user?.id ?? null);
+      
+      // Fetch user profile data
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url, updated_at, contact')
+        .eq('user_id', worker.user_id)
+        .maybeSingle();
+      
+      setUserProfile(profile);
+      
+      // Extract social links from contact
+      const contactStr = profile?.contact as string | null | undefined;
+      if (contactStr) {
+        setSocial({
+          behance: /behance\.net\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*behance[^\s]*/i)?.[0] || null : null,
+          dribbble: /dribbble\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*dribbble[^\s]*/i)?.[0] || null : null,
+          linkedin: /linkedin\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*linkedin[^\s]*/i)?.[0] || null : null,
+          instagram: /instagram\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*instagram[^\s]*/i)?.[0] || null : null
+        });
+      }
     })();
-  }, [supabase]);
+  }, [supabase, worker.user_id]);
 
   const canDelete = userId && worker?.user_id === userId;
 
-  const openProfileCard = async () => {
-    // Fetch latest contact from profiles to get socials
-    const { data: p } = await supabase
-      .from('profiles')
-      .select('full_name, avatar_url, updated_at, contact')
-      .eq('user_id', worker.user_id)
-      .maybeSingle();
-    const contactStr = (p as any)?.contact as string | null;
-    setSocial({
-      behance: contactStr && /behance\.net\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*behance[^\s]*/i)?.[0] || null : null,
-      dribbble: contactStr && /dribbble\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*dribbble[^\s]*/i)?.[0] || null : null,
-      linkedin: contactStr && /linkedin\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*linkedin[^\s]*/i)?.[0] || null : null,
-      instagram: contactStr && /instagram\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*instagram[^\s]*/i)?.[0] || null : null,
-    });
+  const openProfileCard = () => {
     setShowProfileCard(true);
   };
 
@@ -114,24 +122,29 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
     >
       <div className="p-4">
         <Link href={`/workers/${worker.user_id}`} className="flex items-center gap-2 mb-4 cursor-pointer">
-          <div onClick={(e) => { e.preventDefault(); openProfileCard(); }} className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0 cursor-pointer">
-            {worker?.profiles?.avatar_url ? (
-              <img 
-                src={`${worker.profiles.avatar_url}${worker.profiles.updated_at ? `?t=${encodeURIComponent(worker.profiles.updated_at)}` : ''}`}
-                alt={worker.profiles?.full_name || 'Worker avatar'} 
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold text-sm">
-                {(worker?.profiles?.full_name?.charAt(0) || 'W').toUpperCase()}
+          <div className="flex items-center gap-3">
+            <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100 cursor-pointer" onClick={openProfileCard}>
+              {userProfile?.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img 
+                  src={`${userProfile.avatar_url}${userProfile.updated_at ? `?t=${encodeURIComponent(userProfile.updated_at)}` : ''}`} 
+                  alt={userProfile.full_name || 'Avatar'} 
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold">
+                  {(userProfile?.full_name?.charAt(0) || 'W').toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="font-medium text-gray-900 cursor-pointer hover:underline" onClick={openProfileCard}>
+                {userProfile?.full_name || 'Worker'}
               </div>
-            )}
-          </div>
-          <div className="min-w-0 ml-2">
-            <h3 onClick={(e) => { e.preventDefault(); openProfileCard(); }} className="text-base font-semibold text-gray-900 truncate cursor-pointer hover:underline">{worker?.profiles?.full_name || 'Worker'}</h3>
-            <div className="flex items-center mt-0.5">
-              {renderStars((worker as any).rating ?? 0)}
-              <span className="ml-1 text-[12px] text-gray-600">({(((worker as any).rating ?? 0) as number).toFixed(1)})</span>
+              <div className="flex items-center mt-0.5">
+                {renderStars((worker as any).rating ?? 0)}
+                <span className="ml-1 text-[12px] text-gray-600">({(((worker as any).rating ?? 0) as number).toFixed(1)})</span>
+              </div>
             </div>
           </div>
         </Link>
