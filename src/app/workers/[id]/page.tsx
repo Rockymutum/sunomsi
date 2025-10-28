@@ -38,6 +38,7 @@ export default function WorkerDetailPage() {
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   // Optional social links if present in profiles table (non-breaking if absent)
   const [social, setSocial] = useState<{ behance?: string | null; dribbble?: string | null; linkedin?: string | null; instagram?: string | null }>({});
+  const [showProfileCard, setShowProfileCard] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -262,7 +263,7 @@ export default function WorkerDetailPage() {
   }
 
   return (
-    <div className="min-h-[100svh] bg-background">
+    <div className="min-h-[100svh] bg-background overflow-x-hidden">
       <Navbar />
       <div className="max-w-sm sm:max-w-md md:max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Card container mimicking the mock */}
@@ -284,7 +285,7 @@ export default function WorkerDetailPage() {
 
             {/* Avatar */}
             <div className="mt-2 flex justify-center">
-              <div className="h-24 w-24 rounded-full overflow-hidden ring-2 ring-white shadow-md bg-gray-100">
+              <div className="h-24 w-24 rounded-full overflow-hidden ring-2 ring-white shadow-md bg-gray-100 cursor-pointer" onClick={() => setShowProfileCard(true)}>
                 {profile?.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={`${profile.avatar_url}${profile.updated_at ? `?t=${encodeURIComponent(profile.updated_at)}` : ''}`} alt={profile?.full_name || "Avatar"} className="h-full w-full object-cover" />
@@ -298,7 +299,9 @@ export default function WorkerDetailPage() {
 
             {/* Name + Title */}
             <div className="mt-4 text-center">
-              <div className="text-lg font-semibold text-gray-900">{profile?.full_name || "Worker"}</div>
+              <button type="button" className="text-lg font-semibold text-gray-900 hover:underline" onClick={() => setShowProfileCard(true)}>
+                {profile?.full_name || "Worker"}
+              </button>
               <div className="text-sm text-gray-500">{worker?.title || '—'}</div>
             </div>
 
@@ -328,6 +331,53 @@ export default function WorkerDetailPage() {
               </div>
             )}
           </div>
+
+          {showProfileCard && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowProfileCard(false)}>
+              <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+                <div className="p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200">
+                      {profile?.avatar_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={`${profile.avatar_url}${profile.updated_at ? `?t=${encodeURIComponent(profile.updated_at)}` : ''}`} alt={profile?.full_name || 'Avatar'} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold">
+                          {(profile?.full_name?.charAt(0) || 'W').toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-base font-semibold text-gray-900">{profile?.full_name || 'Worker'}</div>
+                      <div className="text-sm text-gray-600">{worker?.title || '—'}</div>
+                    </div>
+                  </div>
+
+                  {(social.behance || social.dribbble || social.linkedin || social.instagram) && (
+                    <div className="mt-4 grid grid-cols-4 gap-2">
+                      {social.behance && (
+                        <a href={social.behance!} target="_blank" className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-[#1769FF] text-center text-sm font-medium">Behance</a>
+                      )}
+                      {social.dribbble && (
+                        <a href={social.dribbble!} target="_blank" className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-[#EA4C89] text-center text-sm font-medium">Dribbble</a>
+                      )}
+                      {social.linkedin && (
+                        <a href={social.linkedin!} target="_blank" className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-[#0A66C2] text-center text-sm font-medium">LinkedIn</a>
+                      )}
+                      {social.instagram && (
+                        <a href={social.instagram!} target="_blank" className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-[#C13584] text-center text-sm font-medium">Instagram</a>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button type="button" className="btn-secondary-compact" onClick={() => setShowProfileCard(false)}>Close</button>
+                    <a href={`/workers/${userId}`} className="btn-primary">View Full Profile</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Details section (flattened, light) */}
           <div className="bg-white text-gray-900 p-5 pt-6 border-t border-gray-200">
@@ -377,7 +427,7 @@ export default function WorkerDetailPage() {
           {worker.bio && (
             <div className="px-5 py-4 bg-white">
               <h2 className="text-sm font-medium text-gray-700 mb-1">About</h2>
-              <p className="text-gray-800 text-sm whitespace-pre-line">{worker.bio}</p>
+              <p className="text-gray-800 text-sm whitespace-pre-line break-words">{worker.bio}</p>
             </div>
           )}
 
@@ -394,7 +444,7 @@ export default function WorkerDetailPage() {
                 {reviews.map((r) => (
                   <div key={r.id} className="border border-gray-100 rounded-md p-3">
                     <div className="text-sm font-medium text-gray-900">Rating: {r.rating}/5</div>
-                    {r.comment && <div className="text-sm text-gray-700 mt-1">{r.comment}</div>}
+                    {r.comment && <div className="text-sm text-gray-700 mt-1 break-words">{r.comment}</div>}
                     <div className="text-xs text-gray-500 mt-1">{new Date(r.created_at).toLocaleDateString()}</div>
                   </div>
                 ))}
