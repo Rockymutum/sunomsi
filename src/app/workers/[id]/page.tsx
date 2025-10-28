@@ -75,32 +75,21 @@ export default function WorkerDetailPage() {
           setSocial({});
         }
 
-        // Toggle profile card modal
-        const openProfileCard = () => {
-          setShowProfileCard(true);
-        };
-
-        // Fetch reviews where this user is the reviewee
-        useEffect(() => {
-          const loadReviews = async () => {
-            if (!userId) return;
-            const { data: revs } = await supabase
-              .from("reviews")
-              .select("id, rating, comment, created_at, reviewer_id")
-              .eq("reviewee_id", userId)
-              .order("created_at", { ascending: false });
-            if (revs) {
-              setReviews(revs);
-              if (revs.length > 0) {
-                const avg = revs.reduce((sum, r) => sum + r.rating, 0) / revs.length;
-                setAvgRating(Number(avg.toFixed(1)));
-              } else {
-                setAvgRating(null);
-              }
-            }
-          };
-          loadReviews();
-        }, [userId, supabase]);
+              // Fetch reviews where this user is the reviewee
+        const { data: revs } = await supabase
+          .from("reviews")
+          .select("id, rating, comment, created_at, reviewer_id")
+          .eq("reviewee_id", userId)
+          .order("created_at", { ascending: false });
+        if (revs) {
+          setReviews(revs);
+          if (revs.length > 0) {
+            const avg = revs.reduce((sum, r) => sum + r.rating, 0) / revs.length;
+            setAvgRating(Number(avg.toFixed(1)));
+          } else {
+            setAvgRating(null);
+          }
+        }
 
         // Fetch past accepted jobs: applications where worker is this user and status accepted, then fetch tasks by ids
         const { data: apps } = await supabase
@@ -127,6 +116,11 @@ export default function WorkerDetailPage() {
     };
     load();
   }, [supabase, userId]);
+
+  // Toggle profile card modal
+  const openProfileCard = () => {
+    setShowProfileCard(true);
+  };
 
   // Realtime updates: refresh when profiles or worker_profiles change for this user
   useEffect(() => {
@@ -536,6 +530,77 @@ export default function WorkerDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Profile Card Modal */}
+      {showProfileCard && profile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowProfileCard(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="p-5">
+              <div className="flex items-center gap-3">
+                <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200">
+                  {profile.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img 
+                      src={`${profile.avatar_url}${profile.updated_at ? `?t=${encodeURIComponent(profile.updated_at)}` : ''}`} 
+                      alt={profile.full_name || 'Avatar'} 
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold">
+                      {(profile.full_name?.charAt(0) || 'W').toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <div className="text-base font-semibold text-gray-900">{profile.full_name || 'Worker'}</div>
+                  <div className="text-sm text-gray-600">{worker?.title || '—'}</div>
+                </div>
+              </div>
+
+              {(social.behance || social.dribbble || social.linkedin || social.instagram) && (
+                <div className="mt-4 grid grid-cols-4 gap-2">
+                  {social.behance && (
+                    <a href={social.behance} target="_blank" rel="noopener noreferrer" className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-[#1769FF] text-center text-sm font-medium">
+                      <BsBehance className="h-5 w-5 mx-auto" />
+                    </a>
+                  )}
+                  {social.dribbble && (
+                    <a href={social.dribbble} target="_blank" rel="noopener noreferrer" className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-[#EA4C89] text-center text-sm font-medium">
+                      <BsDribbble className="h-5 w-5 mx-auto" />
+                    </a>
+                  )}
+                  {social.linkedin && (
+                    <a href={social.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-[#0A66C2] text-center text-sm font-medium">
+                      <BsLinkedin className="h-5 w-5 mx-auto" />
+                    </a>
+                  )}
+                  {social.instagram && (
+                    <a href={social.instagram} target="_blank" rel="noopener noreferrer" className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-[#C13584] text-center text-sm font-medium">
+                      <BsInstagram className="h-5 w-5 mx-auto" />
+                    </a>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-4 flex justify-end gap-2">
+                <button 
+                  type="button" 
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  onClick={() => setShowProfileCard(false)}
+                >
+                  Close
+                </button>
+                <Link 
+                  href={`/workers/${userId}`} 
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  View Full Profile
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
