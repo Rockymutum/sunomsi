@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import WorkerCard from '@/components/workers/WorkerCard';
 import AdPlaceholder from '@/components/ads/AdPlaceholder';
+import PageShell from '@/components/ui/PageShell';
 
 export default function WorkersPage() {
   const supabase = createClientComponentClient();
@@ -293,6 +294,26 @@ export default function WorkersPage() {
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-2xl mx-auto mb-6">
+          <PageShell
+            header={(
+              <div className="text-center">
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">Available Workers</h1>
+                <p className="text-sm text-gray-500 mt-1">Browse worker portfolios and contact the right person for your task.</p>
+              </div>
+            )}
+            darkSection={(
+              <div className="flex items-center gap-2">
+                {userId && !showComposer && (
+                  <button type="button" onClick={() => setShowComposer(true)} className="btn-primary">Create Portfolio</button>
+                )}
+                {publishSuccess && (
+                  <div className="ml-auto text-xs text-green-300">{publishSuccess}</div>
+                )}
+              </div>
+            )}
+          />
+        </div>
         {publishSuccess && (
           <div className="mb-4 rounded-md border border-green-200 bg-green-50 text-green-800 px-4 py-3 text-sm">
             {publishSuccess}
