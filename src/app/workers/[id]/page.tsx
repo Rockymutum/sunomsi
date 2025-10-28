@@ -29,16 +29,10 @@ export default function WorkerDetailPage() {
   const [loading, setLoading] = useState(true);
   const [worker, setWorker] = useState<WorkerProfile | null>(null);
   const [profile, setProfile] = useState<{ id?: string; full_name?: string; avatar_url?: string; updated_at?: string } | null>(null);
-  const [reviews, setReviews] = useState<Array<{ id: string; rating: number; comment: string; created_at: string; reviewer_id: string }>>([]);
-  const [avgRating, setAvgRating] = useState<number | null>(null);
   const [pastJobs, setPastJobs] = useState<Array<{ id: string; title: string; location: string; created_at: string }>>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [reviewRating, setReviewRating] = useState<number>(5);
   const [reviewComment, setReviewComment] = useState<string>('');
-  const [reviewSubmitting, setReviewSubmitting] = useState(false);
-  // Optional social links if present in profiles table (non-breaking if absent)
-  const [social, setSocial] = useState<{ behance?: string | null; dribbble?: string | null; linkedin?: string | null; instagram?: string | null }>({});
-  const [showProfileCard, setShowProfileCard] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -62,18 +56,6 @@ export default function WorkerDetailPage() {
           .select("id, full_name, avatar_url, updated_at, contact")
           .eq("user_id", userId)
           .maybeSingle();
-        setProfile(p || null);
-        if (p) {
-          const contactStr = (p as any).contact as string | null;
-          setSocial({
-            behance: contactStr && /behance\.net\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*behance[^\s]*/i)?.[0] || null : null,
-            dribbble: contactStr && /dribbble\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*dribbble[^\s]*/i)?.[0] || null : null,
-            linkedin: contactStr && /linkedin\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*linkedin[^\s]*/i)?.[0] || null : null,
-            instagram: contactStr && /instagram\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*instagram[^\s]*/i)?.[0] || null : null,
-          });
-        } else {
-          setSocial({});
-        }
 
               // Fetch reviews where this user is the reviewee
         const { data: revs } = await supabase
@@ -117,10 +99,6 @@ export default function WorkerDetailPage() {
     load();
   }, [supabase, userId]);
 
-  // Toggle profile card modal
-  const openProfileCard = () => {
-    setShowProfileCard(true);
-  };
 
   // Realtime updates: refresh when profiles or worker_profiles change for this user
   useEffect(() => {
@@ -531,76 +509,6 @@ export default function WorkerDetailPage() {
         </div>
       </div>
 
-      {/* Profile Card Modal */}
-      {showProfileCard && profile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowProfileCard(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <div className="p-5">
-              <div className="flex items-center gap-3">
-                <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200">
-                  {profile.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img 
-                      src={`${profile.avatar_url}${profile.updated_at ? `?t=${encodeURIComponent(profile.updated_at)}` : ''}`} 
-                      alt={profile.full_name || 'Avatar'} 
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold">
-                      {(profile.full_name?.charAt(0) || 'W').toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <div className="text-base font-semibold text-gray-900">{profile.full_name || 'Worker'}</div>
-                  <div className="text-sm text-gray-600">{worker?.title || '—'}</div>
-                </div>
-              </div>
-
-              {(social.behance || social.dribbble || social.linkedin || social.instagram) && (
-                <div className="mt-4 grid grid-cols-4 gap-2">
-                  {social.behance && (
-                    <a href={social.behance} target="_blank" rel="noopener noreferrer" className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-[#1769FF] text-center text-sm font-medium">
-                      <BsBehance className="h-5 w-5 mx-auto" />
-                    </a>
-                  )}
-                  {social.dribbble && (
-                    <a href={social.dribbble} target="_blank" rel="noopener noreferrer" className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-[#EA4C89] text-center text-sm font-medium">
-                      <BsDribbble className="h-5 w-5 mx-auto" />
-                    </a>
-                  )}
-                  {social.linkedin && (
-                    <a href={social.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-[#0A66C2] text-center text-sm font-medium">
-                      <BsLinkedin className="h-5 w-5 mx-auto" />
-                    </a>
-                  )}
-                  {social.instagram && (
-                    <a href={social.instagram} target="_blank" rel="noopener noreferrer" className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-[#C13584] text-center text-sm font-medium">
-                      <BsInstagram className="h-5 w-5 mx-auto" />
-                    </a>
-                  )}
-                </div>
-              )}
-
-              <div className="mt-4 flex justify-end gap-2">
-                <button 
-                  type="button" 
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                  onClick={() => setShowProfileCard(false)}
-                >
-                  Close
-                </button>
-                <Link 
-                  href={`/workers/${userId}`} 
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-                >
-                  View Full Profile
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
