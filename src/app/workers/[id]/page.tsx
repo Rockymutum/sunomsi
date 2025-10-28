@@ -58,16 +58,17 @@ export default function WorkerDetailPage() {
         // Fetch basic user profile for name/avatar (display only)
         const { data: p } = await supabase
           .from("profiles")
-          .select("id, full_name, avatar_url, updated_at, behance, dribbble, linkedin, instagram")
+          .select("id, full_name, avatar_url, updated_at, contact")
           .eq("user_id", userId)
           .maybeSingle();
         setProfile(p || null);
         if (p) {
+          const contactStr = (p as any).contact as string | null;
           setSocial({
-            behance: (p as any).behance ?? null,
-            dribbble: (p as any).dribbble ?? null,
-            linkedin: (p as any).linkedin ?? null,
-            instagram: (p as any).instagram ?? null,
+            behance: contactStr && /behance\.net\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*behance[^\s]*/i)?.[0] || null : null,
+            dribbble: contactStr && /dribbble\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*dribbble[^\s]*/i)?.[0] || null : null,
+            linkedin: contactStr && /linkedin\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*linkedin[^\s]*/i)?.[0] || null : null,
+            instagram: contactStr && /instagram\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*instagram[^\s]*/i)?.[0] || null : null,
           });
         } else {
           setSocial({});
@@ -126,16 +127,17 @@ export default function WorkerDetailPage() {
         (async () => {
           const { data: p } = await supabase
             .from('profiles')
-            .select('id, full_name, avatar_url, updated_at, behance, dribbble, linkedin, instagram')
+            .select('id, full_name, avatar_url, updated_at, contact')
             .eq('user_id', userId)
             .maybeSingle();
           setProfile(p || null);
           if (p) {
+            const contactStr = (p as any).contact as string | null;
             setSocial({
-              behance: (p as any).behance ?? null,
-              dribbble: (p as any).dribbble ?? null,
-              linkedin: (p as any).linkedin ?? null,
-              instagram: (p as any).instagram ?? null,
+              behance: contactStr && /behance\.net\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*behance[^\s]*/i)?.[0] || null : null,
+              dribbble: contactStr && /dribbble\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*dribbble[^\s]*/i)?.[0] || null : null,
+              linkedin: contactStr && /linkedin\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*linkedin[^\s]*/i)?.[0] || null : null,
+              instagram: contactStr && /instagram\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*instagram[^\s]*/i)?.[0] || null : null,
             });
           }
         })();
@@ -164,18 +166,19 @@ export default function WorkerDetailPage() {
               .maybeSingle(),
             supabase
               .from('profiles')
-              .select('id, full_name, avatar_url, updated_at, behance, dribbble, linkedin, instagram')
+              .select('id, full_name, avatar_url, updated_at, contact')
               .eq('user_id', userId)
               .maybeSingle(),
           ]);
           if (w) setWorker(w as any);
           setProfile(p || null);
           if (p) {
+            const contactStr = (p as any).contact as string | null;
             setSocial({
-              behance: (p as any).behance ?? null,
-              dribbble: (p as any).dribbble ?? null,
-              linkedin: (p as any).linkedin ?? null,
-              instagram: (p as any).instagram ?? null,
+              behance: contactStr && /behance\.net\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*behance[^\s]*/i)?.[0] || null : null,
+              dribbble: contactStr && /dribbble\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*dribbble[^\s]*/i)?.[0] || null : null,
+              linkedin: contactStr && /linkedin\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*linkedin[^\s]*/i)?.[0] || null : null,
+              instagram: contactStr && /instagram\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*instagram[^\s]*/i)?.[0] || null : null,
             });
           }
         })();
