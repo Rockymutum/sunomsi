@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Navbar from "@/components/layout/Navbar";
+import Link from "next/link";
+import { BsBehance, BsDribbble, BsLinkedin, BsInstagram } from "react-icons/bs";
 
 interface WorkerProfile {
   id: string;
@@ -34,6 +36,8 @@ export default function WorkerDetailPage() {
   const [reviewRating, setReviewRating] = useState<number>(5);
   const [reviewComment, setReviewComment] = useState<string>('');
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  // Optional social links if present in profiles table (non-breaking if absent)
+  const [social, setSocial] = useState<{ behance?: string | null; dribbble?: string | null; linkedin?: string | null; instagram?: string | null }>({});
 
   useEffect(() => {
     const load = async () => {
@@ -54,10 +58,20 @@ export default function WorkerDetailPage() {
         // Fetch basic user profile for name/avatar (display only)
         const { data: p } = await supabase
           .from("profiles")
-          .select("id, full_name, avatar_url")
+          .select("id, full_name, avatar_url, behance, dribbble, linkedin, instagram")
           .eq("user_id", userId)
           .maybeSingle();
         setProfile(p || null);
+        if (p) {
+          setSocial({
+            behance: (p as any).behance ?? null,
+            dribbble: (p as any).dribbble ?? null,
+            linkedin: (p as any).linkedin ?? null,
+            instagram: (p as any).instagram ?? null,
+          });
+        } else {
+          setSocial({});
+        }
 
         // Fetch reviews where this user is the reviewee
         const { data: revs } = await supabase
@@ -174,72 +188,140 @@ export default function WorkerDetailPage() {
   return (
     <div className="min-h-[100svh] bg-background">
       <Navbar />
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden md:rounded-md md:border-0 md:bg-[rgb(var(--color-card))] md:shadow-sm p-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
-              {profile?.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatar_url} alt={profile?.full_name || "Avatar"} className="h-full w-full object-cover" />
+      <div className="max-w-sm sm:max-w-md md:max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Card container mimicking the mock */}
+        <div className="relative rounded-[28px] shadow-lg overflow-hidden bg-white border border-gray-200 md:border-0 md:bg-[rgb(var(--color-card))] md:shadow-sm">
+          {/* Header area */}
+          <div className="p-5 pb-20">
+            <div className="flex items-center justify-between text-gray-500">
+              <button onClick={() => router.back()} aria-label="Back" className="p-2 hover:bg-gray-100 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                  <path d="M10.828 12l4.95-4.95a.75.75 0 10-1.06-1.06l-5.48 5.47a.75.75 0 000 1.06l5.48 5.48a.75.75 0 101.06-1.06L10.828 12z" />
+                </svg>
+              </button>
+              <button aria-label="More" className="p-2 hover:bg-gray-100 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                  <path d="M5 12a2 2 0 114 0 2 2 0 01-4 0zm5 0a2 2 0 114 0 2 2 0 01-4 0zm7-2a2 2 0 100 4 2 2 0 000-4z" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Avatar */}
+            <div className="mt-2 flex justify-center">
+              <div className="h-24 w-24 rounded-full overflow-hidden ring-2 ring-white shadow-md bg-gray-100">
+                {profile?.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={profile.avatar_url} alt={profile?.full_name || "Avatar"} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold text-2xl">
+                    {(profile?.full_name?.charAt(0) || "W").toUpperCase()}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Name + Title */}
+            <div className="mt-4 text-center">
+              <div className="text-lg font-semibold text-gray-900">{profile?.full_name || "Worker"}</div>
+              <div className="text-sm text-gray-500">{worker?.title || '—'}</div>
+            </div>
+
+            {/* Social icons */}
+            {(social.behance || social.dribbble || social.linkedin || social.instagram) && (
+              <div className="mt-4 flex items-center justify-center gap-3">
+                {social.behance && (
+                  <Link href={social.behance} target="_blank" className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-[#1769FF]">
+                    <BsBehance className="h-5 w-5" />
+                  </Link>
+                )}
+                {social.dribbble && (
+                  <Link href={social.dribbble} target="_blank" className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-[#EA4C89]">
+                    <BsDribbble className="h-5 w-5" />
+                  </Link>
+                )}
+                {social.linkedin && (
+                  <Link href={social.linkedin} target="_blank" className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-[#0A66C2]">
+                    <BsLinkedin className="h-5 w-5" />
+                  </Link>
+                )}
+                {social.instagram && (
+                  <Link href={social.instagram} target="_blank" className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-[#C13584]">
+                    <BsInstagram className="h-5 w-5" />
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Dark section */}
+          <div className="bg-gray-900 text-white p-5 pt-12 rounded-t-[28px] -mt-10">
+            {/* Skills */}
+            {worker.skills && worker.skills.length > 0 && (
+              <div className="mb-5">
+                <div className="text-sm text-gray-300 mb-2">Skill</div>
+                <div className="flex flex-wrap gap-2">
+                  {worker.skills.map((s) => (
+                    <span key={s} className="px-3 py-2 rounded-xl bg-white text-gray-900 text-sm font-semibold shadow-sm">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Profession / Title */}
+            <div className="mb-5">
+              <div className="text-sm text-gray-300 mb-1">Profession</div>
+              <div className="text-base font-medium border-b border-gray-700 pb-2">{worker?.title || '—'}</div>
+            </div>
+
+            {/* Experience placeholder based on past jobs */}
+            <div>
+              <div className="text-sm text-gray-300 mb-2">Experience</div>
+              {pastJobs.length > 0 ? (
+                <div className="space-y-2">
+                  {pastJobs.map((t) => (
+                    <div key={t.id} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-800/80 border border-gray-700 text-sm">
+                      <span className="font-medium">{t.title}</span>
+                      <span className="text-gray-400">{new Date(t.created_at).toLocaleDateString()}</span>
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold text-sm">
-                  {(profile?.full_name?.charAt(0) || "W").toUpperCase()}
+                <div className="text-gray-400 text-sm">No experience listed.</div>
+              )}
+            </div>
+
+            {/* Contact and location */}
+            <div className="mt-6 flex flex-wrap gap-2">
+              <button
+                onClick={() => profile?.id ? (window.location.href = `/messages/${profile.id}`) : undefined}
+                className="btn-primary"
+              >
+                Contact
+              </button>
+              {worker.location && (
+                <div className="ml-auto flex items-center text-sm text-gray-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{worker.location}</span>
                 </div>
               )}
             </div>
-            <div className="min-w-0">
-              <div className="text-sm font-medium text-gray-900 truncate">{profile?.full_name || "Worker"}</div>
-              {typeof worker.rating === "number" && (
-                <div className="text-[12px] text-gray-600">Rating: {worker.rating?.toFixed(1)}</div>
-              )}
-            </div>
           </div>
 
-          {worker.title && (
-            <div className="mt-3 text-[15px] font-semibold text-gray-900">{worker.title}</div>
-          )}
-
-          {worker.location && (
-            <div className="mt-1 flex items-center text-sm text-gray-600">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span>{worker.location}</span>
-            </div>
-          )}
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button
-              onClick={() => profile?.id ? (window.location.href = `/messages/${profile.id}`) : undefined}
-              className="btn-primary"
-            >
-              Contact
-            </button>
-          </div>
-
+          {/* Details below dark section */}
           {worker.bio && (
-            <div className="mt-4">
+            <div className="px-5 py-4 bg-white">
               <h2 className="text-sm font-medium text-gray-700 mb-1">About</h2>
               <p className="text-gray-800 text-sm whitespace-pre-line">{worker.bio}</p>
             </div>
           )}
 
-          {worker.skills && worker.skills.length > 0 && (
-            <div className="mt-4">
-              <h2 className="text-sm font-medium text-gray-700 mb-2">Skills</h2>
-              <div className="flex flex-wrap gap-2">
-                {worker.skills.map((s) => (
-                  <span key={s} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    {s}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Reviews */}
-          <div className="mt-6">
+          <div className="px-5 py-5">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-sm font-medium text-gray-700">Reviews</h2>
               {typeof avgRating === 'number' && (
@@ -292,7 +374,7 @@ export default function WorkerDetailPage() {
           </div>
 
           {/* Past Jobs */}
-          <div className="mt-6">
+          <div className="px-5 pb-6">
             <h2 className="text-sm font-medium text-gray-700 mb-2">Past Jobs</h2>
             {pastJobs.length > 0 ? (
               <div className="space-y-2">
@@ -309,7 +391,7 @@ export default function WorkerDetailPage() {
             )}
           </div>
 
-          <div className="mt-6">
+          <div className="px-5 pb-5">
             <button onClick={() => router.back()} className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">Back</button>
           </div>
         </div>
