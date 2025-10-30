@@ -104,7 +104,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="p-4">
-        <Link href={`/workers/${worker.user_id}`} className="flex items-center gap-3 mb-4">
+        <Link href={`/profile/${worker.user_id}`} className="flex items-center gap-3 mb-4">
           <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
             {userProfile?.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
