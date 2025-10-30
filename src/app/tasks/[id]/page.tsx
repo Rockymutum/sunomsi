@@ -171,7 +171,24 @@ export default function TaskDetailsPage({ params }: TaskParams) {
       if (error) {
         throw error;
       }
-      
+
+      if (task?.poster_id) {
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            user_id: task.poster_id,
+            type: 'new_application',
+            task_id: id,
+            sender_id: userId,
+            title: 'New application received',
+            message: `You have a new application for "${task?.title ?? 'your task'}".`
+          });
+
+        if (notificationError) {
+          console.error('Error creating notification:', notificationError);
+        }
+      }
+
       setHasApplied(true);
       setApplicationNote('');
       
