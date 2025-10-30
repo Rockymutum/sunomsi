@@ -71,8 +71,8 @@ export default function MessagesPage() {
       if (partnerIds.length > 0) {
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, full_name, avatar_url')
-          .in('id', partnerIds);
+          .select('id, user_id, full_name, avatar_url')
+          .in('user_id', partnerIds);
         
         if (profilesError) {
           console.error('Error fetching profiles:', profilesError);
@@ -80,7 +80,7 @@ export default function MessagesPage() {
           // Combine conversation data with profile data
           const conversationsWithProfiles = partnerIds.map(partnerId => {
             const conversation = conversationPartners.get(partnerId);
-            const profile = profilesData.find((p: any) => p.id === partnerId);
+            const profile = profilesData.find((p: any) => p.user_id === partnerId);
             
             return {
               ...conversation,
