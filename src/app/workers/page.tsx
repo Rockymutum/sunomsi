@@ -1,12 +1,37 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import WorkerCard from '@/components/workers/WorkerCard';
 import AdPlaceholder from '@/components/ads/AdPlaceholder';
-import PageShell from '@/components/ui/PageShell';
+
+const BASE_SKILL_OPTIONS = [
+  'Carpentry',
+  'Electrical',
+  'Plumbing',
+  'Painting',
+  'Cleaning',
+  'Landscaping',
+  'Cooking',
+  'Babysitting',
+  'Tutoring',
+  'Graphic Design',
+  'Photography',
+  'Web Development',
+  'Content Writing',
+  'Digital Marketing',
+  'Translation',
+  'Event Planning',
+];
+
+interface FilterState {
+  skills: string[];
+  minRating: number;
+  location: string;
+  searchTerm: string;
+}
 
 export default function WorkersPage() {
   const supabase = createClientComponentClient();
@@ -15,24 +40,33 @@ export default function WorkersPage() {
   
   const [workers, setWorkers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<FilterState>({
     skills: [],
     minRating: 0,
     location: '',
     searchTerm: initialQ
   });
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [showComposer, setShowComposer] = useState(false);
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [locationInput, setLocationInput] = useState('');
   const [bioInput, setBioInput] = useState('');
   const [titleInput, setTitleInput] = useState('');
-  const [skillInput, setSkillInput] = useState('');
   const [skillsInput, setSkillsInput] = useState<string[]>([]);
   const [composeError, setComposeError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0); // 0: Basic, 1: Skills, 2: Review
   const [publishSuccess, setPublishSuccess] = useState<string | null>(null);
-  
+
+  const availableSkillOptions = useMemo(() => {
+    const set = new Set<string>(BASE_SKILL_OPTIONS);
+    categories.forEach((category) => {
+      if (category) set.add(category);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [categories]);
+
   useEffect(() => {
     const init = async () => {
       const { data: { session: s } } = await supabase.auth.getSession();
@@ -172,21 +206,28 @@ export default function WorkersPage() {
         data.map((w: any) => w.user_id).filter((x: any) => !!x)
       ));
       let merged = data;
+      const ratingByUser: Record<string, { sum: number; count: number }> = {};
+
       if (userIds.length > 0) {
-        const runJoin = async () => await supabase
-          .from('profiles')
-          .select('user_id, id, full_name, avatar_url, updated_at')
-          .in('user_id', userIds);
-        let { data: profs, error: profErr } = await runJoin();
+        const runProfilesJoin = async () =>
+          await supabase
+            .from('profiles')
+            .select('user_id, id, full_name, avatar_url, updated_at')
+            .in('user_id', userIds);
+
+        let { data: profs, error: profErr } = await runProfilesJoin();
         if (profErr && (profErr.message?.toLowerCase().includes('jwt') || profErr.message?.toLowerCase().includes('token'))) {
           try {
             await supabase.auth.refreshSession();
-            ({ data: profs, error: profErr } = await runJoin());
+            ({ data: profs, error: profErr } = await runProfilesJoin());
           } catch (_e) {}
         }
+
         if (!profErr && profs) {
           const byUserId: Record<string, any> = {};
-          for (const p of profs) byUserId[p.user_id] = p;
+          for (const p of profs) {
+            byUserId[p.user_id] = p;
+          }
           merged = data.map((w: any) => ({
             ...w,
             profiles: byUserId[w.user_id]
@@ -199,32 +240,75 @@ export default function WorkersPage() {
               : null,
           }));
         }
+
+        const { data: reviewRows, error: reviewErr } = await supabase
+          .from('reviews')
+          .select('reviewee_id, rating')
+          .in('reviewee_id', userIds);
+        if (!reviewErr && reviewRows) {
+          for (const row of reviewRows) {
+            const id = row.reviewee_id as string | null;
+            const rating = typeof row.rating === 'number' ? row.rating : Number(row.rating) || 0;
+            if (!id) continue;
+            if (!ratingByUser[id]) {
+              ratingByUser[id] = { sum: 0, count: 0 };
+            }
+            ratingByUser[id].sum += rating;
+            ratingByUser[id].count += 1;
+          }
+        }
       }
-      setWorkers(merged || []);
+
+      const enrichedWorkers = merged.map((worker: any) => {
+        const stats = worker?.user_id ? ratingByUser[worker.user_id] : undefined;
+        const storedRating = Number(worker?.rating ?? 0);
+        const hasStoredRating = Number.isFinite(storedRating) && storedRating > 0;
+        const average = stats && stats.count > 0
+          ? Number((stats.sum / stats.count).toFixed(1))
+          : hasStoredRating
+            ? Number(storedRating.toFixed(1))
+            : 0;
+
+        return {
+          ...worker,
+          average_rating: average,
+          review_count: stats?.count ?? (hasStoredRating ? 1 : 0),
+        };
+      });
+
+      setWorkers(enrichedWorkers);
+      const skillsSet = new Set<string>();
+      enrichedWorkers.forEach((w: any) => {
+        if (Array.isArray(w.skills)) {
+          w.skills.forEach((skill: string) => {
+            if (skill) skillsSet.add(skill);
+          });
+        }
+      });
+      const nextCategories = Array.from(skillsSet).sort((a, b) => a.localeCompare(b));
+      setCategories(nextCategories);
+      if (selectedCategory && !nextCategories.includes(selectedCategory)) {
+        setSelectedCategory('');
+        setFilters((prev) => ({ ...prev, skills: [] }));
+      }
     } else {
       setWorkers([]);
+      setCategories([]);
     }
     
     setLoading(false);
   };
   
-  const addSkill = () => {
-    const v = skillInput.trim();
-    if (v && !skillsInput.includes(v)) {
-      setSkillsInput([...skillsInput, v]);
-      setSkillInput('');
-    }
-  };
-
-  const removeSkill = (s: string) => {
-    setSkillsInput(skillsInput.filter(x => x !== s));
+  const toggleSkillSelection = (skill: string) => {
+    setSkillsInput((prev) =>
+      prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]
+    );
   };
 
   const handleClearFilters = () => {
     setFilters({ skills: [], minRating: 0, location: '', searchTerm: '' });
+    setSelectedCategory('');
   };
-
-  // No avatar upload within the portfolio composer
 
   const handleCreatePortfolio = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -276,15 +360,14 @@ export default function WorkersPage() {
       }
 
       // Reset inputs and refresh list
-      setLocationInput('');
-      setBioInput('');
       setTitleInput('');
+      setBioInput('');
+      setLocationInput('');
       setSkillsInput([]);
-      setSkillInput('');
       setShowComposer(false);
       setPublishSuccess('Your portfolio has been published and will appear in the list shortly.');
-      // Clear any filters that might hide the new card
       setFilters({ skills: [], minRating: 0, location: '', searchTerm: '' });
+      setSelectedCategory('');
       fetchWorkers();
     } catch (err: any) {
       setComposeError(err?.message || 'Failed to save portfolio');
@@ -292,9 +375,22 @@ export default function WorkersPage() {
       setSaving(false);
     }
   };
-  
-  // Filter UI removed; filtering is now driven by URL (?q=) and internal fetch logic
-  
+
+  const handleCategoryClick = (category: string) => {
+    if (!category) {
+      setSelectedCategory('');
+      setFilters((prev) => ({ ...prev, skills: [] }));
+      return;
+    }
+    if (selectedCategory === category) {
+      setSelectedCategory('');
+      setFilters((prev) => ({ ...prev, skills: [] }));
+    } else {
+      setSelectedCategory(category);
+      setFilters((prev) => ({ ...prev, skills: [category] }));
+    }
+  };
+
   return (
     <div className="min-h-[100svh] bg-background">
       <Navbar />
@@ -365,25 +461,32 @@ export default function WorkersPage() {
 
                   {currentStep === 1 && (
                     <>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={skillInput}
-                          onChange={(e) => setSkillInput(e.target.value)}
-                          placeholder="Add a skill (e.g., Plumbing, React)"
-                          className="input-field flex-1"
-                        />
-                        <button type="button" onClick={addSkill} className="btn-secondary-compact">Add</button>
+                      <p className="text-sm text-gray-600">Select all skills that best describe your work. You can tap to toggle each option.</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {availableSkillOptions.map((option) => {
+                          const active = skillsInput.includes(option);
+                          return (
+                            <button
+                              key={option}
+                              type="button"
+                              onClick={() => toggleSkillSelection(option)}
+                              className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+                                active
+                                  ? 'border-primary bg-primary text-white shadow-sm'
+                                  : 'border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary'
+                              }`}
+                            >
+                              {option}
+                            </button>
+                          );
+                        })}
                       </div>
-                      {skillsInput.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {skillsInput.map((s) => (
-                            <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                              {s}
-                              <button type="button" className="ml-1 text-gray-500 hover:text-gray-700" onClick={() => removeSkill(s)}>×</button>
-                            </span>
-                          ))}
+                      {skillsInput.length > 0 ? (
+                        <div className="mt-3 text-xs text-gray-500">
+                          Selected: {skillsInput.join(', ')}
                         </div>
+                      ) : (
+                        <div className="mt-3 text-xs text-amber-600">Choose at least one skill to help clients find you faster.</div>
                       )}
                     </>
                   )}
@@ -431,6 +534,37 @@ export default function WorkersPage() {
             )}
 
             <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Available Workers</h1>
+            {categories.length > 0 && (
+              <div className="mb-5 overflow-x-auto">
+                <div className="flex w-full min-w-max items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleCategoryClick('')}
+                    className={`inline-flex items-center whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+                      selectedCategory === ''
+                        ? 'border-primary bg-primary text-white shadow-sm'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary'
+                    }`}
+                  >
+                    All
+                  </button>
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => handleCategoryClick(category)}
+                      className={`inline-flex items-center whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+                        selectedCategory === category
+                          ? 'border-primary bg-primary text-white shadow-sm'
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary'
+                      }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             
             {loading ? (
               <div className="flex justify-center items-center h-64">
