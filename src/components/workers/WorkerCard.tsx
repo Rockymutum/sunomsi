@@ -11,6 +11,8 @@ interface ExtendedWorkerProfile extends WorkerProfile {
     avatar_url?: string;
     updated_at?: string;
   } | null;
+  average_rating?: number;
+  review_count?: number;
 }
 
 interface WorkerCardProps {
@@ -42,6 +44,11 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
   }, [supabase, worker.user_id]);
 
   const canDelete = userId && worker?.user_id === userId;
+  const rawAverage = typeof (worker as any).average_rating === 'number' ? (worker as any).average_rating : Number((worker as any).rating ?? 0) || 0;
+  const averageRating = Number.isFinite(rawAverage) ? Number(rawAverage.toFixed(1)) : 0;
+  const reviewCount = typeof (worker as any).review_count === 'number' && (worker as any).review_count > 0
+    ? (worker as any).review_count
+    : (averageRating > 0 ? 1 : 0);
 
   const handleDelete = async () => {
     if (!canDelete || deleting) return;
@@ -124,8 +131,14 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
               {userProfile?.full_name || 'Worker'}
             </div>
             <div className="flex items-center mt-0.5">
-              {renderStars((worker as any).rating ?? 0)}
-              <span className="ml-1 text-[12px] text-gray-600">({(((worker as any).rating ?? 0) as number).toFixed(1)})</span>
+              {renderStars(averageRating)}
+              {reviewCount > 0 ? (
+                <span className="ml-1 text-[12px] text-gray-600">
+                  {averageRating.toFixed(1)} · {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+                </span>
+              ) : (
+                <span className="ml-1 text-[12px] text-gray-500">No reviews yet</span>
+              )}
             </div>
           </div>
         </Link>
