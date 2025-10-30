@@ -49,8 +49,8 @@ export default function ConversationPage({ params }: ConversationParams) {
       // Fetch partner profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id, full_name, avatar_url')
-        .eq('id', partnerId)
+        .select('id, user_id, full_name, avatar_url')
+        .eq('user_id', partnerId)
         .single();
       
       if (profileError) {
