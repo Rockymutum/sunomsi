@@ -31,6 +31,7 @@ export default function EditProfilePage() {
   const [dribbble, setDribbble] = useState('');
   const [linkedin, setLinkedin] = useState('');
   const [instagram, setInstagram] = useState('');
+  const [facebook, setFacebook] = useState('');
   
   const AVAILABLE_SKILLS = [
     'Cleaning',
@@ -82,6 +83,7 @@ export default function EditProfilePage() {
           .replace(/https?:\/\/[^\s]*dribbble[^\s]*/gi, '')
           .replace(/https?:\/\/[^\s]*linkedin[^\s]*/gi, '')
           .replace(/https?:\/\/[^\s]*instagram[^\s]*/gi, '')
+          .replace(/https?:\/\/[^\s]*facebook[^\s]*/gi, '')
           .replace(/\s{2,}/g, ' ')
           .trim();
         setContact(contactWithoutSocials);
@@ -89,6 +91,7 @@ export default function EditProfilePage() {
         setDribbble(c.match(/https?:\/\/[^\s]*dribbble[^\s]*/i)?.[0] || '');
         setLinkedin(c.match(/https?:\/\/[^\s]*linkedin[^\s]*/i)?.[0] || '');
         setInstagram(c.match(/https?:\/\/[^\s]*instagram[^\s]*/i)?.[0] || '');
+        setFacebook(c.match(/https?:\/\/[^\s]*facebook[^\s]*/i)?.[0] || '');
       }
       
       // Check if user is a worker
@@ -186,7 +189,7 @@ export default function EditProfilePage() {
           currentUser?.email ||
           'User';
         // Merge generic contact + social links
-        const socials = [behance, dribbble, linkedin, instagram].filter(Boolean).join(' ');
+        const socials = [behance, dribbble, linkedin, instagram, facebook].filter(Boolean).join(' ');
         const combinedContact = [contact, socials].filter(Boolean).join(' ');
         const { error: profInsertErr } = await supabase
           .from('profiles')
@@ -208,7 +211,7 @@ export default function EditProfilePage() {
         }
       } else {
         // Update profile
-        const socials = [behance, dribbble, linkedin, instagram].filter(Boolean).join(' ');
+        const socials = [behance, dribbble, linkedin, instagram, facebook].filter(Boolean).join(' ');
         const combinedContact = [contact, socials].filter(Boolean).join(' ');
         const { error: profileError } = await supabase
           .from('profiles')
@@ -319,19 +322,6 @@ export default function EditProfilePage() {
                 placeholder="City, State"
               />
             </div>
-            <div>
-              <label htmlFor="contact" className="block text-sm font-medium text-gray-700 mb-1">Contact Details</label>
-              <input
-                type="text"
-                id="contact"
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
-                className="input-field"
-                placeholder="Phone, WhatsApp, or link"
-              />
-              <p className="mt-1 text-xs text-gray-500">Add social links below; they will be saved along with contact.</p>
-            </div>
-
             {/* Social links */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -372,6 +362,16 @@ export default function EditProfilePage() {
                   onChange={(e) => setInstagram(e.target.value)}
                   className="input-field"
                   placeholder="https://instagram.com/username"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Facebook</label>
+                <input
+                  type="url"
+                  value={facebook}
+                  onChange={(e) => setFacebook(e.target.value)}
+                  className="input-field"
+                  placeholder="https://facebook.com/username"
                 />
               </div>
             </div>
