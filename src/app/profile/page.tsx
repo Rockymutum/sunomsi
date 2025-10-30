@@ -193,6 +193,11 @@ export default function ProfileHomePage() {
                       {email}
                     </span>
                   )}
+                </div>
+              </div>
+
+              {hasSocialLinks && (
+                <div className="mt-5 flex w-full flex-wrap items-center justify-center gap-3">
                   {social.facebook && (
                     <Link
                       href={social.facebook}
@@ -202,11 +207,6 @@ export default function ProfileHomePage() {
                       <FaFacebook className="h-5 w-5" />
                     </Link>
                   )}
-                </div>
-              </div>
-
-              {hasSocialLinks && (
-                <div className="mt-5 flex w-full flex-wrap items-center justify-center gap-3">
                   {social.behance && (
                     <Link
                       href={social.behance}
