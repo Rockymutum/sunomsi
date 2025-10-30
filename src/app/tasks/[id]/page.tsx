@@ -303,7 +303,7 @@ export default function TaskDetailsPage({ params }: TaskParams) {
                             : 'bg-slate-500/80'
                         }`}
                       >
-                        {task.status.replace(/\b\w/g, (char) => char.toUpperCase())}
+                        {task.status.replace(/\b\w/g, (char: string) => char.toUpperCase())}
                       </span>
                       <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
                         <FiClock className="h-3.5 w-3.5" />
@@ -327,7 +327,7 @@ export default function TaskDetailsPage({ params }: TaskParams) {
                               : 'bg-slate-500'
                           }`}
                         >
-                          {task.status.replace(/\b\w/g, (char) => char.toUpperCase())}
+                          {task.status.replace(/\b\w/g, (char: string) => char.toUpperCase())}
                         </span>
                       )}
                       <h1 className="mt-3 text-2xl font-semibold text-slate-900 sm:text-3xl">{task.title}</h1>
