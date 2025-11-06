@@ -130,6 +130,28 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user();
 
 -- Keep other tables' RLS and functions as they are not directly related to the current issue
+-- Messages: Users can only see messages they sent or received
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+-- Policy to allow users to view messages where they are either sender or receiver
+CREATE POLICY "Users can view their own messages"
+  ON messages FOR SELECT
+  USING (
+    auth.uid() = sender_id OR 
+    auth.uid() = receiver_id
+  );
+
+-- Policy to allow users to insert messages where they are the sender
+CREATE POLICY "Users can send messages"
+  ON messages FOR INSERT
+  WITH CHECK (auth.uid() = sender_id);
+
+-- Policy to allow users to update read status of messages they received
+CREATE POLICY "Users can mark messages as read"
+  ON messages FOR UPDATE
+  USING (auth.uid() = receiver_id)
+  WITH CHECK (auth.uid() = receiver_id);
+
 -- Notes: Users can only access their own notes
 ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
 
