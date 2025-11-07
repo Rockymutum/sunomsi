@@ -320,83 +320,62 @@ export default function Navbar() {
 
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50 border-t border-gray-100">
-        <div className="flex justify-around items-center h-16 px-2">
+        <div className="flex justify-around items-center h-14 px-2">
           <Link
             href="/discovery"
             aria-label="Discover Tasks"
-            className={`relative flex flex-col items-center justify-center flex-1 h-full transition-all duration-200 ${
-              pathname === '/discovery' 
-                ? 'text-primary' 
-                : 'text-gray-500 hover:text-gray-700'
+            className={`flex flex-col items-center justify-center flex-1 h-full border-t-2 pt-1 ${
+              pathname === '/discovery'
+                ? 'border-primary text-gray-900'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            {pathname === '/discovery' && (
-              <span className="absolute -top-1 w-1.5 h-1.5 bg-primary rounded-full"></span>
-            )}
-            <div className={`p-2.5 rounded-full transition-all duration-200 ${
-              pathname === '/discovery' ? 'bg-primary/10' : 'hover:bg-gray-100'
-            }`}>
-              <BsGlobeAsiaAustralia className="h-5 w-5" />
-            </div>
+            <BsGlobeAsiaAustralia className="h-5 w-5" />
             <span className="text-[11px] font-medium mt-0.5">Discover</span>
           </Link>
           
           <Link 
             href="/workers"
             aria-label="Find Workers"
-            className={`relative flex flex-col items-center justify-center flex-1 h-full transition-all duration-200 ${
-              pathname === '/workers' 
-                ? 'text-primary' 
-                : 'text-gray-500 hover:text-gray-700'
+            className={`flex flex-col items-center justify-center flex-1 h-full border-t-2 pt-1 ${
+              pathname === '/workers'
+                ? 'border-primary text-gray-900'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            {pathname === '/workers' && (
-              <span className="absolute -top-1 w-1.5 h-1.5 bg-primary rounded-full"></span>
-            )}
-            <div className={`p-2.5 rounded-full transition-all duration-200 ${
-              pathname === '/workers' ? 'bg-primary/10' : 'hover:bg-gray-100'
-            }`}>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                className="h-5 w-5"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth="2" 
-                  d="M17 20v-1a4 4 0 00-4-4H7a4 4 0 00-4 4v1m8-10a4 4 0 100-8 4 4 0 000 8z" 
-                />
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth="2" 
-                  d="M12 11a4 4 0 100-8 4 4 0 000 8zm9 9v-1a6 6 0 00-5-5.91" 
-                />
-              </svg>
-            </div>
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              className="h-5 w-5"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth="2" 
+                d="M17 20v-1a4 4 0 00-4-4H7a4 4 0 00-4 4v1m8-10a4 4 0 100-8 4 4 0 000 8z" 
+              />
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth="2" 
+                d="M12 11a4 4 0 100-8 4 4 0 000 8zm9 9v-1a6 6 0 00-5-5.91" 
+              />
+            </svg>
             <span className="text-[11px] font-medium mt-0.5">Workers</span>
           </Link>
           
           <Link
             href="/messages"
             aria-label="Messages"
-            className={`relative flex flex-col items-center justify-center flex-1 h-full transition-all duration-200 ${
-              pathname.startsWith('/messages') 
-                ? 'text-primary' 
-                : 'text-gray-500 hover:text-gray-700'
+            className={`flex flex-col items-center justify-center flex-1 h-full border-t-2 pt-1 ${
+              pathname.startsWith('/messages')
+                ? 'border-primary text-gray-900'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            {pathname.startsWith('/messages') && (
-              <span className="absolute -top-1 w-1.5 h-1.5 bg-primary rounded-full"></span>
-            )}
-            <div className={`p-2.5 rounded-full transition-all duration-200 ${
-              pathname.startsWith('/messages') ? 'bg-primary/10' : 'hover:bg-gray-100'
-            }`}>
-              <BsChatDots className="h-5 w-5" />
-            </div>
+            <BsChatDots className="h-5 w-5" />
             <span className="text-[11px] font-medium mt-0.5">Messages</span>
           </Link>
         </div>
