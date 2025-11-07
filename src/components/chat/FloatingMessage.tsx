@@ -14,6 +14,8 @@ export default function FloatingMessage() {
   const [connectionStatus, setConnectionStatus] = useState<string>('disconnected');
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [message, setMessage] = useState<any>(null);
+  const [isVisible, setIsVisible] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const messageRef = useRef<HTMLDivElement>(null);
