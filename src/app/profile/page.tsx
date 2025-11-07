@@ -25,7 +25,6 @@ export default function ProfileHomePage() {
     instagram?: string | null;
     facebook?: string | null;
   }>({});
-  const [isDark, setIsDark] = useState<boolean>(false);
 
   useEffect(() => {
     const init = async () => {
@@ -69,27 +68,13 @@ export default function ProfileHomePage() {
     init();
   }, [supabase, router]);
 
-  // Initialize theme from localStorage and system preference
+  // Ensure light theme is applied
   useEffect(() => {
-    const stored = typeof window !== 'undefined' ? localStorage.getItem('theme') : null;
-    const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialDark = stored ? stored === 'dark' : prefersDark;
-    setIsDark(initialDark);
-    if (initialDark) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
-  }, []);
-
-  const toggleTheme = () => {
-    const next = !isDark;
-    setIsDark(next);
-    if (next) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    document.documentElement.classList.remove('dark');
+    if (typeof window !== 'undefined') {
       localStorage.setItem('theme', 'light');
     }
-  };
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -138,29 +123,14 @@ export default function ProfileHomePage() {
     <div className="min-h-[100svh] bg-background">
       <Navbar />
       <main className="mx-auto w-full max-w-sm px-4 pb-12 pt-8 sm:max-w-md md:max-w-2xl sm:px-6 lg:px-8">
-        <section className="relative overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900/90">
-          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-r from-primary/90 via-primary to-primary/70 opacity-90 dark:from-primary/70 dark:via-primary/60" aria-hidden="true" />
+        <section className="relative overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-xl">
+          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-r from-primary/90 via-primary to-primary/70 opacity-90" aria-hidden="true" />
 
           <header className="relative p-5 pb-8">
             <div className="flex items-start justify-between">
               <span className="text-xs font-semibold uppercase tracking-[0.35em] text-white/80">
                 Profile
               </span>
-              <button
-                onClick={toggleTheme}
-                aria-label="Toggle dark mode"
-                className="rounded-full bg-white/20 p-2 text-white backdrop-blur transition hover:bg-white/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-              >
-                {isDark ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M21.752 15.002A9.718 9.718 0 0112.003 22C6.486 22 2 17.514 2 12a9.718 9.718 0 016.998-9.749.75.75 0 01.948.94 8.219 8.219 0 00.396 6.23 8.219 8.219 0 006.23 4.796.75.75 0 01.18 1.485z" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 3.75a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V4.5A.75.75 0 0112 3.75zm0 13.5a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5zM5.47 5.47a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06L5.47 6.53a.75.75 0 010-1.06zm12 12a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zM3.75 12a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5H4.5A.75.75 0 013.75 12zm13.5 0a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zM5.47 18.53a.75.75 0 010-1.06l1.06-1.06a.75.75 0 111.06 1.06L6.53 18.53a.75.75 0 01-1.06 0zM16.41 6.53a.75.75 0 010-1.06l1.06-1.06a.75.75 0 111.06 1.06L17.47 6.53a.75.75 0 01-1.06 0zM12 18a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0112 18z" />
-                  </svg>
-                )}
-              </button>
             </div>
 
             <div className="mt-10 flex flex-col items-center text-center">
@@ -176,7 +146,7 @@ export default function ProfileHomePage() {
               </div>
 
               <div className="mt-4 space-y-2">
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <h1 className="text-xl font-semibold text-gray-900">
                   {profile?.full_name || "User"}
                 </h1>
                 <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-medium uppercase tracking-wider">
@@ -188,7 +158,7 @@ export default function ProfileHomePage() {
                     {isWorker ? "Worker" : "Poster"}
                   </span>
                   {email && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 text-[11px] font-semibold text-slate-600 shadow-sm backdrop-blur dark:bg-white/10 dark:text-slate-300">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 text-[11px] font-semibold text-slate-600 shadow-sm backdrop-blur">
                       <FiMail className="h-3.5 w-3.5" />
                       {email}
                     </span>
@@ -202,7 +172,7 @@ export default function ProfileHomePage() {
                     <Link
                       href={social.facebook}
                       target="_blank"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#0866FF] shadow-sm transition hover:-translate-y-0.5 hover:border-[#0866FF]/50 hover:bg-[#0866FF]/5 dark:border-slate-700 dark:bg-slate-900"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#0866FF] shadow-sm transition hover:-translate-y-0.5 hover:border-[#0866FF]/50 hover:bg-[#0866FF]/5"
                     >
                       <FaFacebook className="h-5 w-5" />
                     </Link>
@@ -211,7 +181,7 @@ export default function ProfileHomePage() {
                     <Link
                       href={social.behance}
                       target="_blank"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#1769FF] shadow-sm transition hover:-translate-y-0.5 hover:border-[#1769FF]/50 hover:bg-[#1769FF]/5 dark:border-slate-700 dark:bg-slate-900"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#1769FF] shadow-sm transition hover:-translate-y-0.5 hover:border-[#1769FF]/50 hover:bg-[#1769FF]/5"
                     >
                       <BsBehance className="h-5 w-5" />
                     </Link>
@@ -220,7 +190,7 @@ export default function ProfileHomePage() {
                     <Link
                       href={social.dribbble}
                       target="_blank"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#EA4C89] shadow-sm transition hover:-translate-y-0.5 hover:border-[#EA4C89]/50 hover:bg-[#EA4C89]/5 dark:border-slate-700 dark:bg-slate-900"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#EA4C89] shadow-sm transition hover:-translate-y-0.5 hover:border-[#EA4C89]/50 hover:bg-[#EA4C89]/5"
                     >
                       <BsDribbble className="h-5 w-5" />
                     </Link>
@@ -229,7 +199,7 @@ export default function ProfileHomePage() {
                     <Link
                       href={social.linkedin}
                       target="_blank"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#0A66C2] shadow-sm transition hover:-translate-y-0.5 hover:border-[#0A66C2]/50 hover:bg-[#0A66C2]/5 dark:border-slate-700 dark:bg-slate-900"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#0A66C2] shadow-sm transition hover:-translate-y-0.5 hover:border-[#0A66C2]/50 hover:bg-[#0A66C2]/5"
                     >
                       <BsLinkedin className="h-5 w-5" />
                     </Link>
@@ -238,7 +208,7 @@ export default function ProfileHomePage() {
                     <Link
                       href={social.instagram}
                       target="_blank"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#C13584] shadow-sm transition hover:-translate-y-0.5 hover:border-[#C13584]/50 hover:bg-[#C13584]/5 dark:border-slate-700 dark:bg-slate-900"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#C13584] shadow-sm transition hover:-translate-y-0.5 hover:border-[#C13584]/50 hover:bg-[#C13584]/5"
                     >
                       <BsInstagram className="h-5 w-5" />
                     </Link>
@@ -248,47 +218,49 @@ export default function ProfileHomePage() {
             </div>
           </header>
 
-          <div className="relative border-t border-slate-100 bg-white/90 p-5 dark:border-slate-800 dark:bg-slate-900/90">
+          <div className="relative border-t border-slate-100 bg-white p-5">
             <div className="space-y-5">
-              <section>
+              <section className="bg-white">
                 <h2 className="text-xs font-semibold uppercase tracking-[0.45em] text-slate-500">
                   About
                 </h2>
-                <p className="mt-2 whitespace-pre-line rounded-2xl bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 dark:bg-slate-800/80 dark:text-slate-200">
-                  {profile?.bio || "Share a short introduction to let others get to know you."}
-                </p>
+                <div className="mt-2 rounded-2xl bg-white border border-slate-100 shadow-sm">
+                  <p className="whitespace-pre-line px-4 py-3 text-sm font-medium text-slate-700">
+                    {profile?.bio || "Share a short introduction to let others get to know you."}
+                  </p>
+                </div>
               </section>
 
-              <section className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                <div className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
-                  <span className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-primary shadow-sm dark:bg-slate-900">
+              <section className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2 bg-white">
+                <div className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+                  <span className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-primary shadow-sm">
                     <FiMapPin className="h-4 w-4" />
                   </span>
                   <div>
                     <div className="text-xs uppercase tracking-wide text-slate-500">Place</div>
-                    <p className="mt-1 font-medium text-slate-800 dark:text-slate-100">
+                    <p className="mt-1 font-medium text-slate-800">
                       {profile?.place || "—"}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
-                  <span className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-primary shadow-sm dark:bg-slate-900">
+                <div className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+                  <span className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-primary shadow-sm">
                     <FiMail className="h-4 w-4" />
                   </span>
                   <div>
                     <div className="text-xs uppercase tracking-wide text-slate-500">Contact</div>
-                    <p className="mt-1 break-words font-medium text-slate-800 dark:text-slate-100">
+                    <p className="mt-1 break-words font-medium text-slate-800">
                       {contactDisplay}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-800/50 sm:col-span-2">
-                  <span className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-primary shadow-sm dark:bg-slate-900">
+                <div className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 sm:col-span-2">
+                  <span className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-primary shadow-sm">
                     <FiCalendar className="h-4 w-4" />
                   </span>
                   <div>
                     <div className="text-xs uppercase tracking-wide text-slate-500">Joined</div>
-                    <p className="mt-1 font-medium text-slate-800 dark:text-slate-100">{joinedDate}</p>
+                    <p className="mt-1 font-medium text-slate-800">{joinedDate}</p>
                   </div>
                 </div>
               </section>
