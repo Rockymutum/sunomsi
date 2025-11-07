@@ -2,46 +2,38 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
 
 export default function PageLoader() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const [currentPath, setCurrentPath] = useState(pathname);
+  const [prevPath, setPrevPath] = useState(pathname);
   const [isNavigating, setIsNavigating] = useState(false);
 
   // Handle route changes
   useEffect(() => {
-    const handleStart = (url: string) => {
-      if (url !== pathname + searchParams.toString()) {
-        setIsNavigating(true);
-      }
-    };
+    // Check if the route has changed
+    if (pathname !== prevPath) {
+      setIsNavigating(true);
+      setPrevPath(pathname);
+      
+      // Set a minimum loading time for better UX
+      const timer = setTimeout(() => {
+        setIsNavigating(false);
+      }, 200);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [pathname, searchParams, prevPath]);
 
-    const handleComplete = () => {
-      setIsLoading(false);
-      setIsNavigating(false);
-    };
-
-    // Set up event listeners for route changes
-    router.events?.on('routeChangeStart', handleStart);
-    router.events?.on('routeChangeComplete', handleComplete);
-    router.events?.on('routeChangeError', handleComplete);
-
-    // Initial load
+  // Handle initial load
+  useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 100);
-
-    return () => {
-      clearTimeout(timer);
-      router.events?.off('routeChangeStart', handleStart);
-      router.events?.off('routeChangeComplete', handleComplete);
-      router.events?.off('routeChangeError', handleComplete);
-    };
-  }, [pathname, searchParams, router.events]);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Only show loader if navigating or initial loading
   if (!isLoading && !isNavigating) return null;
