@@ -1,10 +1,51 @@
 import { createClient } from '@supabase/supabase-js';
+import { Database } from '@/types/supabase';
 
 // These environment variables need to be set in a .env.local file
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Enhanced Supabase client with better WebSocket settings
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+      reconnect: true,
+      timeout: 10000, // 10 seconds
+    },
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'sunomsi-web'
+    }
+  }
+});
+
+// Enable Realtime for messages table
+export const enableRealtimeForMessages = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .limit(1);
+    
+    if (error) {
+      console.error('Error checking messages table:', error);
+      return false;
+    }
+    
+    console.log('Messages table is accessible. Realtime should be enabled in Supabase dashboard.');
+    return true;
+  } catch (error) {
+    console.error('Error enabling realtime for messages:', error);
+    return false;
+  }
+};
 
 export type UserRole = 'poster' | 'worker';
 
