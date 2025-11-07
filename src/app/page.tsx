@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
@@ -8,6 +8,8 @@ import Link from 'next/link';
 export default function Home() {
   const router = useRouter();
   const supabase = createClientComponentClient();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -15,11 +17,17 @@ export default function Home() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
+          setIsAuthenticated(true);
           // If user is authenticated, redirect to discovery page
           router.replace('/discovery');
+        } else {
+          setIsAuthenticated(false);
         }
       } catch (error) {
         console.error('Error checking auth status:', error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -27,13 +35,23 @@ export default function Home() {
   }, [router, supabase]);
 
   // Show loading state while checking auth
-  const LoadingState = () => (
-    <div className="min-h-[100svh] flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-    </div>
-  );
+  if (isLoading) {
+    return (
+      <div className="min-h-[100svh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   // Only show the landing page if not authenticated
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-[100svh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-background min-h-[100svh] flex flex-col">
       {/* Hero Section */}
