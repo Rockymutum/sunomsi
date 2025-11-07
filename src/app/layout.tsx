@@ -9,6 +9,7 @@ import { reportWebVitals } from '@/lib/performance';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/react';
 import { getEnv } from '@/lib/env';
+import { AuthProvider } from '@/context/AuthContext';
 import './globals.css';
 
 // Add this type definition
@@ -126,13 +127,15 @@ export default function RootLayout({ children }: Props) {
       </head>
       <body className={`${inter.className} antialiased`}>
         <ErrorBoundary>
-          <Suspense fallback={
-            <div className="flex items-center justify-center min-h-screen">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
-          }>
-            {children}
-          </Suspense>
+          <AuthProvider>
+            <Suspense fallback={
+              <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            }>
+              {children}
+            </Suspense>
+          </AuthProvider>
           <Toaster 
             position="top-center"
             toastOptions={{
