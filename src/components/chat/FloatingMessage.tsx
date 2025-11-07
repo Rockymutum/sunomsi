@@ -465,9 +465,12 @@ export default function FloatingMessage() {
                   <div 
                     key={msg.id} 
                     className={`p-3 rounded-lg max-w-[80%] ${
-                      msg.sender_id === supabase.auth.user()?.id 
-                        ? 'ml-auto bg-blue-100 dark:bg-blue-900 text-right' 
-                        : 'mr-auto bg-gray-100 dark:bg-gray-700'
+                      (async () => {
+                        const { data: { session } } = await supabase.auth.getSession();
+                        return msg.sender_id === session?.user?.id 
+                          ? 'ml-auto bg-blue-100 dark:bg-blue-900 text-right' 
+                          : 'mr-auto bg-gray-100 dark:bg-gray-700';
+                      })()
                     }`}
                   >
                     <div className="text-sm text-gray-800 dark:text-gray-200">
