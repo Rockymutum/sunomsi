@@ -2,7 +2,13 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import Script from 'next/script';
-import { ReactNode } from 'react';
+import { ReactNode, Suspense } from 'react';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { performanceMonitor } from '@/lib/performance';
+import { reportWebVitals } from '@/lib/performance';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/react';
+import { getEnv } from '@/lib/env';
 import './globals.css';
 
 // Add this type definition
@@ -20,17 +26,58 @@ export const viewport: Viewport = {
   userScalable: false
 };
 
+// Preload critical resources
+const preloadResources = [
+  { href: '/fonts/Inter.var.woff2', as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' },
+  { href: '/images/logo.svg', as: 'image', type: 'image/svg+xml' },
+];
+
 export const metadata: Metadata = {
   title: 'SUNOMSI - Find Help or Work',
   description: 'Connect with people who need help or can offer their skills',
   manifest: '/site.webmanifest',
+  metadataBase: new URL(getEnv().supabase.url),
+  applicationName: 'SUNOMSI',
+  authors: [{ name: 'SUNOMSI Team' }],
+  generator: 'Next.js',
+  keywords: ['tasks', 'freelance', 'work', 'help', 'services'],
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Sunomsi',
+    title: 'SUNOMSI',
+    startupImage: '/splash-screens/iphone5_splash.png',
   },
   formatDetection: {
     telephone: false,
+    email: false,
+    address: false,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://sunomsi.vercel.app',
+    siteName: 'SUNOMSI',
+    title: 'SUNOMSI - Find Help or Work',
+    description: 'Connect with people who need help or can offer their skills',
+    images: [
+      {
+        url: '/images/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'SUNOMSI - Find Help or Work',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SUNOMSI - Find Help or Work',
+    description: 'Connect with people who need help or can offer their skills',
+    images: ['/images/og-image.jpg'],
+    creator: '@sunomsi',
   },
   icons: {
     icon: [
@@ -42,6 +89,9 @@ export const metadata: Metadata = {
     ],
     apple: [
       { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/splash-screens/iphone5_splash.png', sizes: '320x568', type: 'image/png' },
+      { url: '/splash-screens/iphone6_splash.png', sizes: '375x667', type: 'image/png' },
+      { url: '/splash-screens/iphoneplus_splash.png', sizes: '414x736', type: 'image/png' },
     ],
   },
 };
@@ -73,16 +123,68 @@ export default function RootLayout({ children }: Props) {
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        
-        <Script 
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9848284460634380"
-          strategy="afterInteractive"
-          crossOrigin="anonymous"
-        />
       </head>
-      <body className={`${inter.className} min-h-screen`}>
-        {children}
-        <Toaster position="bottom-center" />
+      <body className={`${inter.className} antialiased`}>
+        <ErrorBoundary>
+          <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          }>
+            {children}
+          </Suspense>
+          <Toaster 
+            position="top-center"
+            toastOptions={{
+              duration: 5000,
+              style: {
+                background: '#1a1a1a',
+                color: '#fff',
+                borderRadius: '8px',
+                padding: '12px 16px',
+                fontSize: '14px',
+                lineHeight: '1.5',
+                maxWidth: '100%',
+                width: 'auto',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#10B981',
+                  secondary: '#fff',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#EF4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
+          <SpeedInsights />
+          <Analytics />
+        </ErrorBoundary>
+        
+        {/* Service Worker Registration */}
+        <Script
+          id="service-worker-registration"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator && window.location.hostname !== 'localhost') {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(error => {
+                      console.log('ServiceWorker registration failed: ', error);
+                    });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
