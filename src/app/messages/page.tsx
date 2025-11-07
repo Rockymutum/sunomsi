@@ -18,87 +18,70 @@ export default function MessagesPage() {
     const fetchConversations = async () => {
       setLoading(true);
       
-      // Check authentication status
-      const { data: { session } } = await supabase.auth.getSession();
-      const currentUserId = session?.user?.id;
-      
-      if (!currentUserId) {
-        router.push('/auth');
-        return;
-      }
-      
-      setUserId(currentUserId);
-      
-      // Get all conversations where the user is either sender or receiver
-      const { data: messagesData, error: messagesError } = await supabase
-        .from('messages')
-        .select(`
-          id,
-          sender_id,
-          receiver_id,
-          created_at,
-          content,
-          read
-        `)
-        .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
-        .order('created_at', { ascending: false });
-      
-      if (messagesError) {
-        console.error('Error fetching messages:', messagesError);
-        setLoading(false);
-        return;
-      }
-      
-      // Extract unique conversation partners
-      const conversationPartners = new Map();
-      
-      for (const message of messagesData) {
-        const partnerId = message.sender_id === currentUserId ? message.receiver_id : message.sender_id;
+      try {
+        // Check authentication status
+        const { data: { session } } = await supabase.auth.getSession();
+        const currentUserId = session?.user?.id;
         
-        if (!conversationPartners.has(partnerId)) {
-          conversationPartners.set(partnerId, {
-            partnerId,
-            lastMessage: message.content,
-            lastMessageTime: message.created_at,
-            unread: message.sender_id !== currentUserId && message.read === false ? 1 : 0
-          });
+        if (!currentUserId) {
+          router.push('/auth');
+          return;
         }
-      }
-      
-      // Fetch user details for all conversation partners
-      const partnerIds = Array.from(conversationPartners.keys());
-      
-      if (partnerIds.length > 0) {
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, user_id, full_name, avatar_url')
-          .in('user_id', partnerIds);
         
-        if (profilesError) {
-          console.error('Error fetching profiles:', profilesError);
-        } else {
-          // Combine conversation data with profile data
-          const conversationsWithProfiles = partnerIds.map(partnerId => {
-            const conversation = conversationPartners.get(partnerId);
-            const profile = profilesData.find((p: any) => p.user_id === partnerId);
-            
-            return {
-              ...conversation,
-              partnerName: profile?.full_name || 'Unknown User',
-              partnerAvatar: profile?.avatar_url
-            };
-          });
+        setUserId(currentUserId);
+        
+        // Get all conversations where the user is either sender or receiver
+        const { data: messagesData, error: messagesError } = await supabase
+          .from('messages')
+          .select(`
+            id,
+            sender_id,
+            receiver_id,
+            created_at,
+            content,
+            read
+          `)
+          .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
+          .order('created_at', { ascending: false });
+        
+        if (messagesError) throw messagesError;
+        
+        // Process conversations
+        const conversationMap = new Map();
+        
+        for (const message of messagesData || []) {
+          const partnerId = message.sender_id === currentUserId ? message.receiver_id : message.sender_id;
           
-          setConversations(conversationsWithProfiles);
+          if (!conversationMap.has(partnerId)) {
+            // Get partner's profile
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('full_name, avatar_url')
+              .eq('user_id', partnerId)
+              .single();
+              
+            conversationMap.set(partnerId, {
+              partnerId,
+              partnerName: profile?.full_name || 'Unknown User',
+              partnerAvatar: profile?.avatar_url,
+              lastMessage: message.content,
+              lastMessageTime: message.created_at,
+              unread: message.receiver_id === currentUserId && !message.read ? 1 : 0
+            });
+          }
         }
+        
+        setConversations(Array.from(conversationMap.values()));
+      } catch (error) {
+        console.error('Error fetching conversations:', error);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
     
     fetchConversations();
   }, [router, supabase]);
-  
+
   if (loading) {
     return (
       <div className="min-h-[100svh] bg-background">
@@ -111,7 +94,7 @@ export default function MessagesPage() {
       </div>
     );
   }
-  
+
   return (
     <div className="min-h-[100svh] bg-background">
       <Navbar />
@@ -120,7 +103,7 @@ export default function MessagesPage() {
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Messages</h1>
         
         {conversations.length > 0 ? (
-          <div className="card p-0 overflow-hidden">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
             <ul className="divide-y divide-gray-200">
               {conversations.map((conversation) => (
                 <li 
@@ -138,8 +121,8 @@ export default function MessagesPage() {
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold text-sm">
-                            {conversation.partnerName.charAt(0).toUpperCase()}
+                          <div className="h-full w-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold text-sm">
+                            {conversation.partnerName?.charAt(0)?.toUpperCase() || 'U'}
                           </div>
                         )}
                       </div>
@@ -147,10 +130,10 @@ export default function MessagesPage() {
                       <div className="ml-3 flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <p className="text-sm font-medium text-gray-900 truncate">
-                            {conversation.partnerName}
+                            {conversation.partnerName || 'Unknown User'}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {formatDistanceToNow(new Date(conversation.lastMessageTime))}
+                            {formatDistanceToNow(new Date(conversation.lastMessageTime))} ago
                           </p>
                         </div>
                         <div className="flex items-center justify-between mt-1">
@@ -158,7 +141,7 @@ export default function MessagesPage() {
                             {conversation.lastMessage}
                           </p>
                           {conversation.unread > 0 && (
-                            <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary">
+                            <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-blue-600">
                               <span className="text-xs font-medium text-white">
                                 {conversation.unread}
                               </span>
@@ -173,7 +156,7 @@ export default function MessagesPage() {
             </ul>
           </div>
         ) : (
-          <div className="card text-center">
+          <div className="bg-white rounded-lg shadow p-8 text-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
@@ -183,7 +166,7 @@ export default function MessagesPage() {
             </p>
             <button 
               onClick={() => router.push('/discovery')}
-              className="mt-4 btn-primary"
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               Browse Tasks
             </button>
