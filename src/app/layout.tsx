@@ -128,7 +128,6 @@ export default function RootLayout({ children }: Props) {
       <body className={`${inter.className} antialiased`}>
         <ErrorBoundary>
           <AuthProvider>
-            <PageLoader />
             <Suspense fallback={null}>
               {children}
             </Suspense>
