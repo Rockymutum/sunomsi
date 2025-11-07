@@ -21,10 +21,7 @@ type Props = {
 const inter = Inter({ subsets: ['latin'] });
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#000000' },
-  ],
+  themeColor: '#ffffff',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -106,7 +103,7 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: Props) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="h-full bg-white">
       <head>
         <meta name="application-name" content="SUNOMSI" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -125,7 +122,7 @@ export default function RootLayout({ children }: Props) {
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${inter.className} antialiased h-full bg-white`}>
         <ErrorBoundary>
           <AuthProvider>
             <Suspense fallback={null}>
