@@ -123,7 +123,12 @@ export async function getNotes(userId: string) {
 export async function createNote(userId: string, title: string, content: string) {
   const { data, error } = await supabase
     .from('notes')
-    .insert([{ title, content, user_id: userId }])
+    .insert([{ 
+      title, 
+      content, 
+      user_id: userId,
+      created_at: new Date().toISOString()
+    } as Omit<Note, 'id'>])
     .select();
     
   if (error) {
