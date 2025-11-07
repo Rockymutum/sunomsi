@@ -39,7 +39,7 @@ export default function PageLoader() {
   if (!isLoading && !isNavigating) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm transition-opacity duration-300">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/80 backdrop-blur-sm transition-opacity duration-300">
       <div className="flex flex-col items-center">
         <div className="h-12 w-12 border-4 border-primary/20 border-t-primary rounded-full animate-[spin_1s_linear_infinite]" />
       </div>
