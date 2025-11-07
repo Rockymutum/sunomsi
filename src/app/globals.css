@@ -2,50 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Fix for viewport units on mobile */
-:root {
-  --vh: 1vh; /* Will be updated by JS */
-}
-
-/* Base styles */
-html {
-  -webkit-text-size-adjust: 100%;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  -webkit-tap-highlight-color: transparent;
-  height: 100%;
-  width: 100%;
-  overflow-x: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  overflow-x: hidden;
-  position: relative;
-  background-color: rgb(var(--color-bg));
-}
-
-/* Safe area insets for notched devices */
-@supports (padding: max(0px)) {
-  body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
-}
-
 /* Design tokens */
 :root {
   /* Colors (minimal grays + primary dark) */
@@ -54,7 +10,7 @@ body {
   --color-muted: 107 114 128;        /* gray-500 */
   --color-border: 229 231 235;       /* gray-200 */
   --color-card: 255 255 255;         /* white */
-  --color-primary: 31 41 55;         /* gray-800 */
+  --color-primary: 31 41 55;          /* gray-800 */
   --color-primary-contrast: 255 255 255;
 
   /* Radii */
