@@ -287,7 +287,7 @@ export default function AuthForm() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input-field"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
@@ -300,15 +300,24 @@ export default function AuthForm() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-field"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   required
                 />
                 <div className="mt-2 text-right">
-                  <button type="button" onClick={handleResetPassword} className="text-xs text-primary hover:underline">
+                  <button 
+                    type="button" 
+                    onClick={handleResetPassword} 
+                    className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                  >
                     Forgot password?
                   </button>
                 </div>
               </div>
+              {errorMsg && (
+                <div className="text-red-500 text-sm text-center">
+                  {errorMsg}
+                </div>
+              )}
               <button
                 type="submit"
                 className={`w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 ${
@@ -333,7 +342,7 @@ export default function AuthForm() {
               <button
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
-                className="text-primary hover:underline"
+                className="w-full text-center text-blue-600 hover:underline dark:text-blue-400 text-sm mt-2"
               >
                 {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
               </button>
@@ -341,8 +350,6 @@ export default function AuthForm() {
           </div>
         </div>
       </div>
-      
-      {/* Removed alternate provider login to keep a single login option */}
     </div>
   );
 }
