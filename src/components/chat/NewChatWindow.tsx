@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow, isToday, isYesterday, isThisYear } from 'date-fns';
 
 export interface NewChatWindowProps {
   otherUserId: string;
@@ -290,6 +290,56 @@ export default function NewChatWindow({
     setupSubscription();
   }, [currentUser, otherUserId, supabase]);
 
+  // Group messages by date
+  const groupMessagesByDate = useCallback((messages: any[]) => {
+    if (!messages || messages.length === 0) return [];
+    
+    const grouped: {[key: string]: any[]} = {};
+    
+    messages.forEach(message => {
+      if (!message?.created_at) return;
+      
+      const messageDate = new Date(message.created_at);
+      let dateKey = '';
+      
+      if (isToday(messageDate)) {
+        dateKey = 'Today';
+      } else if (isYesterday(messageDate)) {
+        dateKey = 'Yesterday';
+      } else if (isThisYear(messageDate)) {
+        dateKey = format(messageDate, 'MMMM d'); // e.g., "October 15"
+      } else {
+        dateKey = format(messageDate, 'MMMM d, yyyy'); // e.g., "October 15, 2023"
+      }
+      
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      
+      grouped[dateKey].push(message);
+    });
+    
+    return Object.entries(grouped).map(([date, messages]) => ({
+      date,
+      messages: messages.sort((a, b) => 
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      )
+    }));
+  }, []);
+  
+  const groupedMessages = groupMessagesByDate(messages);
+  
+  // Format time for message timestamp
+  const formatMessageTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return format(date, 'h:mm a');
+  };
+  
+  // Format relative time (e.g., "2 hours ago")
+  const formatRelativeTime = (dateString: string) => {
+    return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+  };
+  
   // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
@@ -462,8 +512,8 @@ export default function NewChatWindow({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 ? (
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {groupedMessages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-center text-gray-500">
             <div>
               <p>No messages yet</p>
@@ -471,36 +521,63 @@ export default function NewChatWindow({
             </div>
           </div>
         ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.sender_id === currentUser?.id ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg relative ${
-                  message.sender_id === currentUser?.id
-                    ? `bg-blue-500 text-white rounded-br-none ${message.isSending ? 'opacity-70' : ''} ${message.error ? 'bg-red-100 border border-red-300' : ''}`
-                    : 'bg-gray-200 text-gray-800 rounded-bl-none'
-                }`}
-              >
-                <p className="text-sm">{message.content}</p>
-                <div className="flex justify-between items-center mt-1">
-                  <span className="text-xs opacity-75">
-                    {message.error ? (
-                      <span className="text-red-500">Failed to send</span>
-                    ) : message.isSending ? (
-                      <span className="text-blue-300">Sending...</span>
-                    ) : null}
-                  </span>
-                  <span className="text-xs opacity-75">
-                    {format(new Date(message.created_at), 'h:mm a')}
-                  </span>
+          <>
+            {groupedMessages.map(({ date, messages: dateMessages }) => (
+              <div key={date} className="space-y-4">
+                {/* Date header */}
+                <div className="relative flex items-center justify-center my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-200"></div>
+                  </div>
+                  <div className="relative px-3 bg-white dark:bg-gray-900 text-xs text-gray-500 dark:text-gray-400 rounded-full border border-gray-200 dark:border-gray-700">
+                    {date}
+                  </div>
+                </div>
+                
+                {/* Messages for this date */}
+                <div className="space-y-4">
+                  {dateMessages.map((message, index) => {
+                    const isCurrentUser = message.sender_id === currentUser?.id;
+                    const showTime = index === dateMessages.length - 1 || 
+                      new Date(message.created_at).getTime() - new Date(dateMessages[index + 1]?.created_at).getTime() < -5 * 60 * 1000; // 5 minutes
+                    
+                    return (
+                      <div key={message.id} className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                        <div 
+                          className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg relative group ${isCurrentUser 
+                            ? `bg-blue-500 text-white rounded-br-none ${message.isSending ? 'opacity-70' : ''} ${message.error ? 'bg-red-100 border border-red-300' : ''}` 
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-none'}`}
+                        >
+                          <p className="text-sm">{message.content}</p>
+                          <div className="flex justify-between items-center mt-1">
+                            <span className="text-xs opacity-75">
+                              {message.error ? (
+                                <span className="text-red-500">Failed to send</span>
+                              ) : message.isSending ? (
+                                <span className={isCurrentUser ? 'text-blue-200' : 'text-gray-500'}>
+                                  Sending...
+                                </span>
+                              ) : null}
+                            </span>
+                            <span className="text-xs opacity-75">
+                              {formatMessageTime(message.created_at)}
+                            </span>
+                          </div>
+                          
+                          {/* Hover timestamp */}
+                          <div className="absolute -bottom-5 right-0 text-xs text-gray-500 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {formatRelativeTime(message.created_at)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
-          ))
+            ))}
+            <div ref={messagesEndRef} />
+          </>
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Message input */}
