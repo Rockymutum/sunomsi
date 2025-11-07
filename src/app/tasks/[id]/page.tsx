@@ -353,8 +353,8 @@ export default function TaskDetailsPage({ params }: TaskParams) {
                       </p>
                     </div>
                     <div className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-lg font-semibold text-white shadow-lg">
-                      <FiDollarSign className="h-5 w-5 opacity-80" />
-                      <span>${task.budget}</span>
+                      <span className="text-xl">₹</span>
+                      <span>{task.budget}</span>
                     </div>
                   </div>
                   <dl className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -381,10 +381,10 @@ export default function TaskDetailsPage({ params }: TaskParams) {
                     </div>
                     <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
                       <dt className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
-                        <FiDollarSign className="h-4 w-4 text-primary" />
-                        Budget
+                        <span className="text-primary">₹</span>
+                        <span>Budget</span>
                       </dt>
-                      <dd className="mt-2 text-base font-medium text-slate-800">${task.budget}</dd>
+                      <dd className="mt-2 text-base font-medium text-slate-800">₹{task.budget}</dd>
                     </div>
                   </dl>
                   <div className="mt-8 border-t border-slate-200 pt-8">
