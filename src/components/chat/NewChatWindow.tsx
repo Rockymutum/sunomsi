@@ -494,14 +494,14 @@ export default function NewChatWindow({
   }
 
   return (
-    <div className={`flex flex-col h-full bg-gray-50 dark:bg-gray-900 ${className}`}>
+    <div className={`flex flex-col h-full bg-gray-50 ${className}`}>
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+      <div className="px-4 py-3 border-b border-gray-200 bg-white shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <button 
               onClick={onClose}
-              className="p-1.5 mr-2 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="p-1.5 mr-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
               aria-label="Close chat"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -509,8 +509,8 @@ export default function NewChatWindow({
               </svg>
             </button>
             <div>
-              <h2 className="font-semibold text-gray-900 dark:text-white">{otherUserName}</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <h2 className="font-semibold text-gray-900">{otherUserName}</h2>
+              <p className="text-xs text-gray-500">
                 {messages.length > 0 ? 'Active now' : 'Start a new conversation'}
               </p>
             </div>
@@ -522,13 +522,13 @@ export default function NewChatWindow({
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {groupedMessages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-6">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No messages yet</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md">
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No messages yet</h3>
+            <p className="text-sm text-gray-500 max-w-md">
               Start the conversation with {otherUserName.split(' ')[0]}. Say hello or ask a question!
             </p>
           </div>
@@ -539,9 +539,9 @@ export default function NewChatWindow({
                 {/* Date header */}
                 <div className="relative flex items-center justify-center my-6">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
+                    <div className="w-full border-t border-gray-200"></div>
                   </div>
-                  <span className="relative px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-700">
+                  <span className="relative px-3 py-1 text-xs font-medium text-gray-500 bg-gray-50 rounded-full border border-gray-200">
                     {date}
                   </span>
                 </div>
@@ -564,7 +564,7 @@ export default function NewChatWindow({
                               ? `bg-primary text-white rounded-br-sm shadow-md ${message.isSending ? 'opacity-80' : ''} ${
                                   message.error ? 'bg-red-50 border border-red-200' : ''
                                 }` 
-                              : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-sm shadow-sm border border-gray-100 dark:border-gray-700'
+                              : 'bg-white text-gray-800 rounded-bl-sm shadow-sm border border-gray-100'
                           }`}
                         >
                           <p className="text-sm leading-relaxed break-words">{message.content}</p>
@@ -574,7 +574,7 @@ export default function NewChatWindow({
                                 Failed to send
                               </span>
                             ) : message.isSending ? (
-                              <span className="text-xs text-blue-300 dark:text-blue-400">
+                              <span className="text-xs text-blue-500">
                                 Sending...
                               </span>
                             ) : null}
@@ -591,7 +591,7 @@ export default function NewChatWindow({
                           </div>
                           
                           {/* Hover timestamp */}
-                          <div className="absolute -bottom-5 right-0 text-[11px] text-gray-500 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <div className="absolute -bottom-5 right-0 text-[11px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             {formatRelativeTime(message.created_at)}
                           </div>
                         </div>
@@ -607,18 +607,18 @@ export default function NewChatWindow({
       </div>
 
       {/* Message input */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+      <div className="p-4 border-t border-gray-200 bg-white shadow-sm">
         <form 
           onSubmit={sendMessage} 
           className="flex items-end space-x-2"
         >
-          <div className="flex-1 bg-gray-50 dark:bg-gray-700 rounded-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-200">
+          <div className="flex-1 bg-gray-50 rounded-full px-4 py-2.5 border border-gray-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-200">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Type a message..."
-              className="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 text-sm"
+              className="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-gray-800 placeholder-gray-400 text-sm"
               disabled={sending}
               aria-label="Type your message"
             />
@@ -629,7 +629,7 @@ export default function NewChatWindow({
             className={`p-2.5 rounded-full flex-shrink-0 transition-all duration-200 ${
               newMessage.trim() 
                 ? 'bg-primary hover:bg-gray-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5' 
-                : 'bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }`}
             aria-label={sending ? 'Sending message...' : 'Send message'}
           >
