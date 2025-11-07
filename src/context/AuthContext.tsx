@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import type { Session, User } from '@supabase/supabase-js';
@@ -20,62 +20,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const initialLoad = useRef(true);
 
+  // Single effect to handle auth state and redirects
   useEffect(() => {
-    // Check active sessions and sets the user
-    const getSession = async () => {
+    let mounted = true;
+    let authListener: { subscription: any } | null = null;
+
+    const initializeAuth = async () => {
       try {
         const { data: { session: activeSession } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
         setSession(activeSession);
         setUser(activeSession?.user ?? null);
 
-        if (activeSession?.user) {
-          // If user is logged in, redirect to dashboard
-          if (window.location.pathname === '/') {
-            router.push('/dashboard');
+        // Handle initial redirect
+        if (initialLoad.current) {
+          if (activeSession?.user) {
+            router.push('/discovery');
+          } else if (window.location.pathname !== '/') {
+            router.push('/');
           }
-        } else if (window.location.pathname !== '/') {
-          // If not logged in and not on home page, redirect to home
-          router.push('/');
+          initialLoad.current = false;
         }
       } catch (error) {
-        console.error('Error getting session:', error);
+        console.error('Auth error:', error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
-    getSession();
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Set up auth state change listener
+    authListener = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
-
-      if (event === 'SIGNED_IN' && session?.user) {
-        // Redirect to dashboard after sign in
-        router.push('/dashboard');
+      
+      // Handle auth state changes
+      if (event === 'SIGNED_IN') {
+        router.push('/discovery');
       } else if (event === 'SIGNED_OUT') {
-        // Redirect to home after sign out
         router.push('/');
       }
     });
 
+    initializeAuth();
+
     return () => {
-      subscription?.unsubscribe();
+      mounted = false;
+      authListener?.subscription?.unsubscribe();
     };
   }, [supabase.auth, router]);
 
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-      router.push('/');
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
 
+  // Memoize the context value to prevent unnecessary re-renders
   const value = {
     session,
     user,
@@ -85,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }
