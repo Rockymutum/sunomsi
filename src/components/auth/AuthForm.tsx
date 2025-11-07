@@ -1,53 +1,48 @@
+'use client';
+
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { UserRole } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 
 interface AuthFormProps {} // No props needed anymore
 
 export default function AuthForm() {
   const router = useRouter();
   const supabase = createClientComponentClient();
+  const { user, loading } = useAuth();
   const [showRoleSelection, setShowRoleSelection] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isEmailSent, setIsEmailSent] = useState(false); // New state for email confirmation
+  const [isEmailSent, setIsEmailSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
-    console.log('[AuthForm] handleAuth called. isSignUp:', isSignUp);
+    setIsLoading(true);
 
-    if (!isSignUp) {
-      try {
-        console.log('[AuthForm] Attempting sign-in with:', { email, password: '***' });
-        
-        // Show loading state
-        const saveButton = document.querySelector('button[type="submit"]');
-        if (saveButton) {
-          saveButton.textContent = 'Signing in...';
-          saveButton.setAttribute('disabled', 'true');
-        }
-        
+    try {
+      if (!isSignUp) {
+        // Handle sign in
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        console.log('[AuthForm] signInWithPassword response - data:', data, 'error:', error);
 
         if (error) {
-          console.error('[Auth] signIn error:', error);
           setErrorMsg(error.message || 'Sign in failed');
-          
-          // Reset button
-          if (saveButton) {
-            saveButton.textContent = 'Sign In';
-            saveButton.removeAttribute('disabled');
-          }
-        } else if (data?.session) {
-          console.log('[AuthForm] Sign-in successful, session:', data.session);
+          setIsLoading(false);
+          return;
+        }
+
+        if (data?.session) {
+          // The AuthProvider will handle the redirection
+          return;
+        }
           
           // Redirect all successful sign-ins to discovery
           router.push('/discovery');
@@ -257,74 +252,83 @@ export default function AuthForm() {
   if (isEmailSent) {
     return (
       <div className="card max-w-md mx-auto p-6 text-center">
-        <h2 className="text-2xl font-bold mb-4">Check Your Email</h2>
-        <p className="text-gray-700 mb-6">
-          A confirmation link has been sent to <span className="font-semibold">{email}</span>.
-          Please click the link in the email to complete your signup.
-        </p>
-        <button onClick={() => router.push('/auth')} className="btn-primary">
-          Back to Sign In
-        </button>
-      </div>
-    );
-  }
-
-  // Role selection UI is deprecated; we no longer render it
 
   return (
-    <div className="card max-w-md mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-center">
-        {isSignUp ? 'Create an Account' : 'Sign In'}
-      </h2>
-      {errorMsg && (
-        <div className="mb-4 text-sm text-red-600">{errorMsg}</div>
-      )}
-      <form onSubmit={handleAuth} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="input-field"
-            required
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="input-field"
-            required
-          />
-          <div className="mt-2 text-right">
-            <button type="button" onClick={handleResetPassword} className="text-xs text-primary hover:underline">
-              Forgot password?
-            </button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+          <div className="p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                {isSignUp ? 'Create an account' : 'Welcome back'}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300">
+                {isSignUp ? 'Sign up to get started' : 'Sign in to your account'}
+              </p>
+            </div>
+            <form onSubmit={handleAuth} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium mb-1">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input-field"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium mb-1">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input-field"
+                  required
+                />
+                <div className="mt-2 text-right">
+                  <button type="button" onClick={handleResetPassword} className="text-xs text-primary hover:underline">
+                    Forgot password?
+                  </button>
+                </div>
+              </div>
+              <button
+                type="submit"
+                className={`w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 ${
+                  isLoading ? 'opacity-75 cursor-not-allowed' : ''
+                }`}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {isSignUp ? 'Creating account...' : 'Signing in...'}
+                  </span>
+                ) : isSignUp ? (
+                  'Create account'
+                ) : (
+                  'Sign in'
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-primary hover:underline"
+              >
+                {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
+              </button>
+            </form>
           </div>
         </div>
-        
-        <button type="submit" className="btn-primary w-full">
-          {isSignUp ? 'Sign Up' : 'Sign In'}
-        </button>
-      </form>
-      
-      <div className="mt-4 text-center">
-        <button
-          onClick={() => setIsSignUp(!isSignUp)}
-          className="text-primary hover:underline"
-        >
-          {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
-        </button>
       </div>
       
       {/* Removed alternate provider login to keep a single login option */}
