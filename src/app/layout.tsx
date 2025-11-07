@@ -4,13 +4,6 @@ import { Toaster } from 'react-hot-toast';
 import Script from 'next/script';
 import { ReactNode } from 'react';
 import './globals.css';
-import dynamic from 'next/dynamic';
-
-// Dynamically import FloatingMessage with SSR disabled
-const FloatingMessage = dynamic(
-  () => import('@/components/chat/FloatingMessage'),
-  { ssr: false }
-);
 
 // Add this type definition
 type Props = {
@@ -89,7 +82,6 @@ export default function RootLayout({ children }: Props) {
       </head>
       <body className={`${inter.className} min-h-screen`}>
         {children}
-        <FloatingMessage />
         <Toaster position="bottom-center" />
       </body>
     </html>
