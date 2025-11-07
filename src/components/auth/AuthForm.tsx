@@ -25,6 +25,8 @@ export default function AuthForm() {
     setErrorMsg(null);
     setIsLoading(true);
 
+    const saveButton = document.querySelector('button[type="submit"]');
+
     try {
       if (!isSignUp) {
         // Handle sign in
@@ -36,41 +38,27 @@ export default function AuthForm() {
         if (error) {
           setErrorMsg(error.message || 'Sign in failed');
           setIsLoading(false);
+          if (saveButton) {
+            saveButton.textContent = 'Sign In';
+            saveButton.removeAttribute('disabled');
+          }
           return;
         }
 
         if (data?.session) {
           // The AuthProvider will handle the redirection
           return;
-        }
-          
-          // Redirect all successful sign-ins to discovery
-          router.push('/discovery');
         } else {
           console.warn('[Auth] signIn returned no session');
           setErrorMsg('Sign in failed: no session');
-          
-          // Reset button
+          setIsLoading(false);
           if (saveButton) {
             saveButton.textContent = 'Sign In';
             saveButton.removeAttribute('disabled');
           }
         }
-      } catch (err: any) {
-        console.error('[Auth] signIn network error:', err);
-        setErrorMsg(err?.message || 'Network error. Check Supabase env.');
-        
-        // Reset button
-        const saveButton = document.querySelector('button[type="submit"]');
-        if (saveButton) {
-          saveButton.textContent = 'Sign In';
-          saveButton.removeAttribute('disabled');
-        }
-      }
-    } else {
-      // Sign Up flow: create account with default role 'worker' and send verification email
-      try {
-        const saveButton = document.querySelector('button[type="submit"]');
+      } else {
+        // Handle sign up
         if (saveButton) {
           saveButton.textContent = 'Signing up...';
           saveButton.setAttribute('disabled', 'true');
@@ -84,7 +72,7 @@ export default function AuthForm() {
               role: 'worker',
               full_name: 'New User',
             },
-            emailRedirectTo: window.location.origin + '/auth',
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         });
 
@@ -94,6 +82,7 @@ export default function AuthForm() {
             saveButton.textContent = 'Sign Up';
             saveButton.removeAttribute('disabled');
           }
+          setIsLoading(false);
           return;
         }
 
@@ -104,10 +93,19 @@ export default function AuthForm() {
             full_name: 'New User',
             email: email,
             role: 'worker',
+            created_at: new Date().toISOString()
           });
+          
           if (insertError) {
             // Non-fatal; user can complete profile later
             console.warn('[Auth] Profile creation warning:', insertError);
+          }
+          
+          // Show success message and redirect
+          setIsEmailSent(true);
+          if (saveButton) {
+            saveButton.textContent = 'Sign Up';
+            saveButton.removeAttribute('disabled');
           }
         }
 
@@ -242,16 +240,32 @@ export default function AuthForm() {
     }
   };
   
-  const resetButtons = () => {
-    const roleButtons = document.querySelectorAll('.role-button');
-    roleButtons.forEach(btn => {
-      btn.removeAttribute('disabled');
-    });
-  };
-
   if (isEmailSent) {
     return (
-      <div className="card max-w-md mx-auto p-6 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+        <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+          <div className="mb-6">
+            <svg className="mx-auto h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Check your email</h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            We've sent a verification link to <span className="font-medium">{email}</span>. Please check your inbox and click the link to verify your email address.
+          </p>
+          <button
+            onClick={() => {
+              setIsEmailSent(false);
+              setIsSignUp(false);
+            }}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+          >
+            Back to Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
