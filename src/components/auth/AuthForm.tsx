@@ -210,15 +210,15 @@ export default function AuthForm() {
   
   if (isEmailSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
-        <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+        <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8 text-center">
           <div className="mb-6">
             <svg className="mx-auto h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Check your email</h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h2>
+          <p className="text-gray-600 mb-6">
             We've sent a verification link to <span className="font-medium">{email}</span>. Please check your inbox and click the link to verify your email address.
           </p>
           <button
@@ -237,15 +237,15 @@ export default function AuthForm() {
 
   // Main form render
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="p-8">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 {isSignUp ? 'Create an account' : 'Welcome back'}
               </h1>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-gray-600">
                 {isSignUp ? 'Sign up to get started' : 'Sign in to your account'}
               </p>
             </div>
@@ -259,7 +259,7 @@ export default function AuthForm() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                   required
                 />
               </div>
@@ -272,14 +272,14 @@ export default function AuthForm() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                   required
                 />
                 <div className="mt-2 text-right">
                   <button 
                     type="button" 
                     onClick={handleResetPassword} 
-                    className="text-xs text-primary hover:underline dark:text-primary/80"
+                    className="text-xs text-primary hover:underline"
                   >
                     Forgot password?
                   </button>
