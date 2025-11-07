@@ -10,6 +10,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/react';
 import { getEnv } from '@/lib/env';
 import { AuthProvider } from '@/context/AuthContext';
+import PageLoader from '@/components/ui/PageLoader';
 import './globals.css';
 
 // Add this type definition
@@ -20,7 +21,10 @@ type Props = {
 const inter = Inter({ subsets: ['latin'] });
 
 export const viewport: Viewport = {
-  themeColor: '#000000',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -42,10 +46,6 @@ export const metadata: Metadata = {
   authors: [{ name: 'SUNOMSI Team' }],
   generator: 'Next.js',
   keywords: ['tasks', 'freelance', 'work', 'help', 'services'],
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#000000' },
-  ],
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -128,11 +128,8 @@ export default function RootLayout({ children }: Props) {
       <body className={`${inter.className} antialiased`}>
         <ErrorBoundary>
           <AuthProvider>
-            <Suspense fallback={
-              <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-              </div>
-            }>
+            <PageLoader />
+            <Suspense fallback={null}>
               {children}
             </Suspense>
           </AuthProvider>
