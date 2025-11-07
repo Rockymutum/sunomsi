@@ -226,7 +226,7 @@ export default function AuthForm() {
               setIsEmailSent(false);
               setIsSignUp(false);
             }}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+            className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
           >
             Back to Sign In
           </button>
@@ -259,7 +259,7 @@ export default function AuthForm() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
@@ -272,14 +272,14 @@ export default function AuthForm() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
                   required
                 />
                 <div className="mt-2 text-right">
                   <button 
                     type="button" 
                     onClick={handleResetPassword} 
-                    className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                    className="text-xs text-primary hover:underline dark:text-primary/80"
                   >
                     Forgot password?
                   </button>
@@ -292,7 +292,7 @@ export default function AuthForm() {
               )}
               <button
                 type="submit"
-                className={`w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 ${
+                className={`w-full py-3 px-4 bg-primary hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 ${
                   isLoading ? 'opacity-75 cursor-not-allowed' : ''
                 }`}
                 disabled={isLoading}
@@ -314,7 +314,7 @@ export default function AuthForm() {
               <button
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
-                className="w-full text-center text-blue-600 hover:underline dark:text-blue-400 text-sm mt-2"
+                className="w-full text-center text-primary hover:underline dark:text-primary/80 text-sm mt-2"
               >
                 {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
               </button>
