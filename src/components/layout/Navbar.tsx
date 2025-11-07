@@ -7,38 +7,15 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import { BsGlobeAsiaAustralia, BsChatDots } from 'react-icons/bs';
 
-// Cache for user data with session storage fallback
-const CACHE_KEY = 'userDataCache';
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+// Cache for user data
+let cachedUserData: {
+  isLoggedIn: boolean;
+  userRole: string | null;
+  avatarUrl: string | null;
+  timestamp: number;
+} | null = null;
 
-const getCachedUserData = () => {
-  if (typeof window === 'undefined') return null;
-  
-  const cached = sessionStorage.getItem(CACHE_KEY);
-  if (!cached) return null;
-  
-  try {
-    const { data, timestamp } = JSON.parse(cached);
-    if (Date.now() - timestamp < CACHE_DURATION) {
-      return data;
-    }
-  } catch (e) {
-    console.error('Error parsing cached user data:', e);
-  }
-  return null;
-};
-
-const setCachedUserData = (data: any) => {
-  if (typeof window === 'undefined') return;
-  try {
-    sessionStorage.setItem(CACHE_KEY, JSON.stringify({
-      data,
-      timestamp: Date.now()
-    }));
-  } catch (e) {
-    console.error('Error caching user data:', e);
-  }
-};
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -46,15 +23,12 @@ export default function Navbar() {
   const supabase = createClientComponentClient();
   
   // State with initial values from cache if available
-  const [authState, setAuthState] = useState(() => {
-    const cached = getCachedUserData();
-    return {
-      isLoggedIn: cached?.isLoggedIn || false,
-      userRole: cached?.userRole || null,
-      avatarUrl: cached?.avatarUrl || null,
-      isLoading: !cached
-    };
-  });
+  const [authState, setAuthState] = useState(() => ({
+    isLoggedIn: false,
+    userRole: null as string | null,
+    avatarUrl: null as string | null,
+    isLoading: true
+  }));
   
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -63,11 +37,10 @@ export default function Navbar() {
   const updateUserData = useCallback(async () => {
     try {
       // Check cache first
-      const cached = getCachedUserData();
-      if (cached) {
+      if (cachedUserData && (Date.now() - cachedUserData.timestamp) < CACHE_DURATION) {
         setAuthState(prev => ({
           ...prev,
-          ...cached,
+          ...cachedUserData,
           isLoading: false
         }));
         return;
@@ -78,14 +51,18 @@ export default function Navbar() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
-        const newState = {
+        cachedUserData = {
+          isLoggedIn: false,
+          userRole: null,
+          avatarUrl: null,
+          timestamp: Date.now()
+        };
+        setAuthState({
           isLoggedIn: false,
           userRole: null,
           avatarUrl: null,
           isLoading: false
-        };
-        setAuthState(newState);
-        setCachedUserData(newState);
+        });
         return;
       }
 
@@ -100,16 +77,20 @@ export default function Navbar() {
       const avatarUrl = avatar ? `${avatar}${ts}` : null;
       const userRole = worker ? 'worker' : 'poster';
       
-      // Update state and cache
-      const newState = {
+      // Update cache
+      cachedUserData = {
+        isLoggedIn: true,
+        userRole,
+        avatarUrl,
+        timestamp: Date.now()
+      };
+      
+      setAuthState({
         isLoggedIn: true,
         userRole,
         avatarUrl,
         isLoading: false
-      };
-      
-      setAuthState(newState);
-      setCachedUserData(newState);
+      });
       
     } catch (error) {
       console.error('Error updating user data:', error);
@@ -130,9 +111,7 @@ export default function Navbar() {
     unsubAuth = supabase.auth.onAuthStateChange((event) => {
       if (['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED'].includes(event)) {
         // Clear cache on auth state changes
-        if (typeof window !== 'undefined') {
-          sessionStorage.removeItem(CACHE_KEY);
-        }
+        cachedUserData = null;
         updateUserData();
       }
     }) as any;
@@ -162,33 +141,18 @@ export default function Navbar() {
 
   // Apply stored/system theme on mount (no UI here)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const applyTheme = () => {
-      const stored = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const isDark = stored ? stored === 'dark' : prefersDark;
-      document.documentElement.classList.toggle('dark', isDark);
-    };
-    
-    applyTheme();
-    
-    // Listen for system theme changes
-    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    darkModeMediaQuery.addEventListener('change', applyTheme);
-    
-    return () => {
-      darkModeMediaQuery.removeEventListener('change', applyTheme);
-    };
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('theme') : null;
+    const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = stored ? stored === 'dark' : prefersDark;
+    if (isDark) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
   }, []);
 
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
       // Clear cache on sign out
-      if (typeof window !== 'undefined') {
-        sessionStorage.removeItem(CACHE_KEY);
-      }
+      cachedUserData = null;
       setAuthState({
         isLoggedIn: false,
         userRole: null,
@@ -208,25 +172,12 @@ export default function Navbar() {
     e.preventDefault();
     const q = searchTerm.trim();
     const targetBase = pathname.startsWith('/workers') ? '/workers' : '/discovery';
-    
-    // Use shallow routing to prevent full page refresh
     if (!q) {
-      router.push(targetBase, { scroll: false });
+      router.push(targetBase);
     } else {
-      const searchParams = new URLSearchParams();
-      searchParams.set('q', q);
-      router.push(`${targetBase}?${searchParams.toString()}`, { scroll: false });
+      router.push(`${targetBase}?q=${encodeURIComponent(q)}`);
     }
-    
-    // Close search and reset input
     setShowSearch(false);
-    setSearchTerm('');
-    
-    // Blur the search input to dismiss mobile keyboard
-    const activeElement = document.activeElement as HTMLElement;
-    if (activeElement) {
-      activeElement.blur();
-    }
   };
 
   return (
