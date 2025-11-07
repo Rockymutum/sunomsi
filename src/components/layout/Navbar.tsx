@@ -1,61 +1,141 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import { BsGlobeAsiaAustralia, BsChatDots } from 'react-icons/bs';
 
+// Cache for user data
+let cachedUserData: {
+  isLoggedIn: boolean;
+  userRole: string | null;
+  avatarUrl: string | null;
+  timestamp: number;
+} | null = null;
+
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClientComponentClient();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  
+  // State with initial values from cache if available
+  const [authState, setAuthState] = useState(() => ({
+    isLoggedIn: false,
+    userRole: null as string | null,
+    avatarUrl: null as string | null,
+    isLoading: true
+  }));
+  
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  // Memoized function to update user data
+  const updateUserData = useCallback(async () => {
+    try {
+      // Check cache first
+      if (cachedUserData && (Date.now() - cachedUserData.timestamp) < CACHE_DURATION) {
+        setAuthState(prev => ({
+          ...prev,
+          ...cachedUserData,
+          isLoading: false
+        }));
+        return;
+      }
+
+      setAuthState(prev => ({ ...prev, isLoading: true }));
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        cachedUserData = {
+          isLoggedIn: false,
+          userRole: null,
+          avatarUrl: null,
+          timestamp: Date.now()
+        };
+        setAuthState({
+          isLoggedIn: false,
+          userRole: null,
+          avatarUrl: null,
+          isLoading: false
+        });
+        return;
+      }
+
+      const uid = session.user.id;
+      const [{ data: prof }, { data: worker }] = await Promise.all([
+        supabase.from('profiles').select('avatar_url, updated_at').eq('user_id', uid).maybeSingle(),
+        supabase.from('worker_profiles').select('id').eq('user_id', uid).maybeSingle(),
+      ]);
+      
+      const avatar = prof?.avatar_url || null;
+      const ts = prof?.updated_at ? `?t=${encodeURIComponent(prof.updated_at)}` : '';
+      const avatarUrl = avatar ? `${avatar}${ts}` : null;
+      const userRole = worker ? 'worker' : 'poster';
+      
+      // Update cache
+      cachedUserData = {
+        isLoggedIn: true,
+        userRole,
+        avatarUrl,
+        timestamp: Date.now()
+      };
+      
+      setAuthState({
+        isLoggedIn: true,
+        userRole,
+        avatarUrl,
+        isLoading: false
+      });
+      
+    } catch (error) {
+      console.error('Error updating user data:', error);
+      setAuthState(prev => ({
+        ...prev,
+        isLoading: false
+      }));
+    }
+  }, [supabase]);
 
   useEffect(() => {
     let unsubAuth: { data: { subscription: { unsubscribe: () => void } } } | null = null;
 
-    const refreshUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
-      if (session?.user) {
-        const uid = session.user.id;
-        const [{ data: prof }, { data: worker }] = await Promise.all([
-          supabase.from('profiles').select('avatar_url, updated_at').eq('user_id', uid).maybeSingle(),
-          supabase.from('worker_profiles').select('id').eq('user_id', uid).maybeSingle(),
-        ]);
-        const avatar = prof?.avatar_url || null;
-        const ts = (prof as any)?.updated_at ? `?t=${encodeURIComponent((prof as any).updated_at)}` : '';
-        setAvatarUrl(avatar ? `${avatar}${ts}` : null);
-        setUserRole(worker ? 'worker' : 'poster');
-      } else {
-        setUserRole(null);
-        setAvatarUrl(null);
+    // Initial load
+    updateUserData();
+
+    // Set up auth state change listener
+    unsubAuth = supabase.auth.onAuthStateChange((event) => {
+      if (['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED'].includes(event)) {
+        // Clear cache on auth state changes
+        cachedUserData = null;
+        updateUserData();
       }
-    };
-
-    refreshUser();
-
-    // Update on auth state change
-    unsubAuth = supabase.auth.onAuthStateChange((_event, _session) => {
-      refreshUser();
     }) as any;
 
-    // Update on focus/visibility (helps after portfolio creation)
-    const onFocus = () => refreshUser();
-    const onVis = () => { if (document.visibilityState === 'visible') refreshUser(); };
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', onVis);
+    // Set up visibility change listener
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        updateUserData();
+      }
+    };
+    
+    // Add visibility change listener
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
+    // Cleanup function
     return () => {
-      try { unsubAuth?.data?.subscription?.unsubscribe(); } catch {}
-      window.removeEventListener('focus', onFocus);
-      document.removeEventListener('visibilitychange', onVis);
+      try { 
+        if (unsubAuth?.data?.subscription?.unsubscribe) {
+          unsubAuth.data.subscription.unsubscribe(); 
+        }
+      } catch (error) {
+        console.error('Error unsubscribing from auth:', error);
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [supabase]);
 
@@ -69,10 +149,20 @@ export default function Navbar() {
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setIsLoggedIn(false);
-    setUserRole(null);
-    window.location.href = '/';
+    try {
+      await supabase.auth.signOut();
+      // Clear cache on sign out
+      cachedUserData = null;
+      setAuthState({
+        isLoggedIn: false,
+        userRole: null,
+        avatarUrl: null,
+        isLoading: false
+      });
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
   const goToWorkers = () => {
     router.push('/workers');
@@ -82,8 +172,11 @@ export default function Navbar() {
     e.preventDefault();
     const q = searchTerm.trim();
     const targetBase = pathname.startsWith('/workers') ? '/workers' : '/discovery';
-    if (!q) router.push(targetBase);
-    else router.push(`${targetBase}?q=${encodeURIComponent(q)}`);
+    if (!q) {
+      router.push(targetBase);
+    } else {
+      router.push(`${targetBase}?q=${encodeURIComponent(q)}`);
+    }
     setShowSearch(false);
   };
 
@@ -162,15 +255,37 @@ export default function Navbar() {
                 </svg>
               </button>
               
-              {isLoggedIn ? (
+              {authState.isLoading ? (
+                <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse"></div>
+              ) : authState.isLoggedIn ? (
                 <Link href="/profile" aria-label="Profile" className="flex items-center">
                   <span className="h-8 w-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                    {avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                    {authState.avatarUrl ? (
+                      <img 
+                        src={authState.avatarUrl} 
+                        alt="Profile" 
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          // Fallback to default avatar if image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = '/default-avatar.png';
+                        }}
+                      />
                     ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-5 w-5 text-gray-600">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20v-1a4 4 0 00-4-4H7a4 4 0 00-4 4v1M12 11a4 4 0 100-8 4 4 0 000 8" />
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        className="h-5 w-5 text-gray-600"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth="2" 
+                          d="M17 20v-1a4 4 0 00-4-4H7a4 4 0 00-4 4v1M12 11a4 4 0 100-8 4 4 0 000 8" 
+                        />
                       </svg>
                     )}
                   </span>
