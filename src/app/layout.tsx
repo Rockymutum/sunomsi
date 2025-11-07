@@ -16,10 +16,10 @@ export const viewport: Viewport = {
   themeColor: '#000000',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: 'cover',
+  minimumScale: 1,
+  maximumScale: 1,
   userScalable: false,
-  interactiveWidget: 'resizes-content',
   colorScheme: 'light',
 };
 
@@ -57,9 +57,37 @@ interface RootLayoutProps {
 // This is the root layout component for your Next.js app.
 // Learn more about this file: https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts#root-layout-required
 
+// Client component for the root layout
+'use client';
+
+import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import { useViewportHeight } from '@/hooks/useViewportHeight';
+
 export default function RootLayout({ children }: Props) {
+  const pathname = usePathname();
+  const vh = useViewportHeight();
+
+  // Prevent pinch zoom on mobile
+  useEffect(() => {
+    const preventZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchmove', preventZoom, { passive: false });
+    
+    // Reset scroll position on route change
+    window.scrollTo(0, 0);
+    
+    return () => {
+      document.removeEventListener('touchmove', preventZoom);
+    };
+  }, [pathname]);
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="h-full">
       <head>
         <meta name="application-name" content="SUNOMSI" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -69,8 +97,9 @@ export default function RootLayout({ children }: Props) {
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-tap-highlight" content="no" />
-        <meta name="theme-color" content="#000000" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
         
         {/* iOS specific */}
         <meta name="apple-mobile-web-app-status-bar" content="black-translucent" />
@@ -89,8 +118,24 @@ export default function RootLayout({ children }: Props) {
           crossOrigin="anonymous"
         />
       </head>
-      <body className={`${inter.className} min-h-screen`}>
-        {children}
+      <body 
+        className={`${inter.className} bg-white dark:bg-gray-900`}
+        style={{
+          minHeight: vh,
+          display: 'flex',
+          flexDirection: 'column',
+          WebkitTapHighlightColor: 'transparent',
+          touchAction: 'pan-y',
+          overscrollBehaviorY: 'contain',
+          width: '100%',
+          maxWidth: '100vw',
+          overflowX: 'hidden',
+          position: 'relative'
+        }}
+      >
+        <div className="flex-1 flex flex-col">
+          {children}
+        </div>
         <Toaster position="bottom-center" />
       </body>
     </html>
