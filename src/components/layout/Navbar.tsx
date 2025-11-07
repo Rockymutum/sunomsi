@@ -78,18 +78,14 @@ export default function Navbar() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
-        cachedUserData = {
-          isLoggedIn: false,
-          userRole: null,
-          avatarUrl: null,
-          timestamp: Date.now()
-        };
-        setAuthState({
+        const newState = {
           isLoggedIn: false,
           userRole: null,
           avatarUrl: null,
           isLoading: false
-        });
+        };
+        setAuthState(newState);
+        setCachedUserData(newState);
         return;
       }
 
@@ -134,7 +130,9 @@ export default function Navbar() {
     unsubAuth = supabase.auth.onAuthStateChange((event) => {
       if (['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED'].includes(event)) {
         // Clear cache on auth state changes
-        cachedUserData = null;
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem(CACHE_KEY);
+        }
         updateUserData();
       }
     }) as any;
@@ -188,7 +186,9 @@ export default function Navbar() {
     try {
       await supabase.auth.signOut();
       // Clear cache on sign out
-      cachedUserData = null;
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem(CACHE_KEY);
+      }
       setAuthState({
         isLoggedIn: false,
         userRole: null,
