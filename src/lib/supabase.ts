@@ -8,9 +8,9 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 // Enhanced Supabase client with better WebSocket settings
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
   },
   realtime: {
     params: {
@@ -97,13 +97,7 @@ export interface Application {
   created_at: string;
 }
 
-export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-}
+// Note type is now inferred from Database type
 
 export async function getNotes(userId: string) {
   const { data, error } = await supabase
@@ -121,14 +115,16 @@ export async function getNotes(userId: string) {
 }
 
 export async function createNote(userId: string, title: string, content: string) {
+  const note: NoteInsert = { 
+    title, 
+    content, 
+    user_id: userId,
+    created_at: new Date().toISOString()
+  };
+
   const { data, error } = await supabase
     .from('notes')
-    .insert([{ 
-      title, 
-      content, 
-      user_id: userId,
-      created_at: new Date().toISOString()
-    } as Omit<Note, 'id'>])
+    .insert(note)
     .select();
     
   if (error) {
@@ -140,9 +136,11 @@ export async function createNote(userId: string, title: string, content: string)
 }
 
 export async function updateNote(noteId: string, title: string, content: string) {
+  const updates: NoteUpdate = { title, content };
+  
   const { data, error } = await supabase
     .from('notes')
-    .update({ title, content })
+    .update(updates)
     .eq('id', noteId)
     .select();
     
