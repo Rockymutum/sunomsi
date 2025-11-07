@@ -139,13 +139,12 @@ export default function Navbar() {
     };
   }, [supabase]);
 
-  // Apply stored/system theme on mount (no UI here)
+  // Ensure light theme is applied
   useEffect(() => {
-    const stored = typeof window !== 'undefined' ? localStorage.getItem('theme') : null;
-    const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const isDark = stored ? stored === 'dark' : prefersDark;
-    if (isDark) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
+    document.documentElement.classList.remove('dark');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('theme', 'light');
+    }
   }, []);
 
   const handleSignOut = async () => {
@@ -182,8 +181,8 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={`bg-white ${showSearch ? 'shadow-md' : 'shadow-sm'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav className={`bg-white ${showSearch ? 'shadow-md' : 'shadow-sm'} w-full`} style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50 }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center gap-2 cursor-default select-none" aria-label="SUNOMSI brand">
