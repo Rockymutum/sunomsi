@@ -5,19 +5,12 @@ import { Database } from '@/types/supabase';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Enhanced Supabase client with better WebSocket settings
+// Create a single supabase client for interacting with your database
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
-      reconnect: true,
-      timeout: 10000, // 10 seconds
-    },
   },
   global: {
     headers: {
@@ -97,12 +90,31 @@ export interface Application {
   created_at: string;
 }
 
-// Note type is now inferred from Database type
+// Types for notes
+type Note = Database['public']['Tables']['notes']['Row'];
+type NoteInsert = Omit<Database['public']['Tables']['notes']['Insert'], 'id' | 'created_at' | 'updated_at'> & {
+  created_at?: string;
+  updated_at?: string;
+};
+type NoteUpdate = Partial<Omit<Database['public']['Tables']['notes']['Update'], 'id' | 'user_id' | 'created_at'>> & {
+  updated_at?: string;
+};
+
+export interface NoteWithUser extends Omit<Note, 'user_id'> {
+  user: {
+    id: string;
+    full_name: string;
+    avatar_url?: string;
+  };
+}
 
 export async function getNotes(userId: string) {
   const { data, error } = await supabase
     .from('notes')
-    .select('*')
+    .select(`
+      *,
+      user:profiles!user_id(id, full_name, avatar_url)
+    `)
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
     
@@ -111,11 +123,11 @@ export async function getNotes(userId: string) {
     return [];
   }
   
-  return data || [];
+  return (data || []) as unknown as NoteWithUser[];
 }
 
 export async function createNote(userId: string, title: string, content: string) {
-  const note: NoteInsert = { 
+  const noteData = { 
     title, 
     content, 
     user_id: userId,
@@ -124,32 +136,37 @@ export async function createNote(userId: string, title: string, content: string)
 
   const { data, error } = await supabase
     .from('notes')
-    .insert(note)
-    .select();
+    .insert([noteData])
+    .select()
+    .single();
     
   if (error) {
     console.error('Error creating note:', error);
     throw error;
   }
   
-  return data?.[0];
+  return data as Note;
 }
 
-export async function updateNote(noteId: string, title: string, content: string) {
-  const updates: NoteUpdate = { title, content };
+export async function updateNote(noteId: string, updates: { title?: string; content?: string }) {
+  const updateData = {
+    ...updates,
+    updated_at: new Date().toISOString()
+  };
   
   const { data, error } = await supabase
     .from('notes')
-    .update(updates)
+    .update(updateData)
     .eq('id', noteId)
-    .select();
+    .select()
+    .single();
     
   if (error) {
     console.error('Error updating note:', error);
     throw error;
   }
   
-  return data?.[0];
+  return data as Note;
 }
 
 export async function deleteNote(noteId: string) {
