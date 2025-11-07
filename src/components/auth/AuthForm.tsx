@@ -116,7 +116,6 @@ export default function AuthForm() {
     } finally {
       setIsLoading(false);
     }
-    }
   };
 
   const handleResetPassword = async () => {
@@ -152,47 +151,13 @@ export default function AuthForm() {
     try {
       console.log('[AuthForm] Attempting sign-up with:', { email, password: '***', role });
       
-      // First check if user already exists
-      const { data: existingUser } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (existingUser?.session) {
-        // User already exists, just update their role and redirect
-        console.log('[AuthForm] User already exists, updating role');
-        
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ role: role })
-          .eq('user_id', existingUser.session.user.id);
-          
-        if (updateError) {
-          console.error('[Auth] Profile update error:', updateError);
-          setErrorMsg('Could not update your profile. Please try again.');
-          resetButtons();
-          return;
-        }
-        
-        // Redirect based on role
-        if (role === 'poster') {
-          router.push('/tasks/new');
-        } else if (role === 'worker') {
-          router.push('/discovery');
-        } else {
-          router.push('/profile/edit');
-        }
-        return;
-      }
-      
-      // If user doesn't exist, create a new one
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             role,
-            full_name: 'New User', // Initialize full_name
+            full_name: 'New User',
           },
           emailRedirectTo: window.location.origin + '/auth',
         },
@@ -202,7 +167,9 @@ export default function AuthForm() {
         console.error('[Auth] signUp error:', error);
         setErrorMsg(error.message || 'Sign up failed');
         console.error('[Auth] Full signUp error object:', error);
-        resetButtons();
+        // Re-enable buttons on error
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => btn.removeAttribute('disabled'));
         return;
       }
       
@@ -218,7 +185,9 @@ export default function AuthForm() {
         if (insertError) {
           console.error('[Auth] Profile creation error:', insertError);
           setErrorMsg('Could not create a profile. Please try again.');
-          resetButtons();
+          // Re-enable buttons on error
+          const buttons = document.querySelectorAll('button');
+          buttons.forEach(btn => btn.removeAttribute('disabled'));
           return;
         }
 
@@ -233,7 +202,9 @@ export default function AuthForm() {
     } catch (err: any) {
       console.error('[Auth] signUp network error:', err);
       setErrorMsg(err?.message || 'Network error. Check Supabase env.');
-      resetButtons();
+      // Re-enable buttons on error
+      const buttons = document.querySelectorAll('button');
+      buttons.forEach(btn => btn.removeAttribute('disabled'));
     }
   };
   
@@ -264,6 +235,7 @@ export default function AuthForm() {
     );
   }
 
+  // Main form render
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
       <div className="w-full max-w-md">
