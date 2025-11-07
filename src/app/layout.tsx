@@ -17,7 +17,10 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  userScalable: false
+  viewportFit: 'cover',
+  userScalable: false,
+  interactiveWidget: 'resizes-content',
+  colorScheme: 'light',
 };
 
 export const metadata: Metadata = {
@@ -26,8 +29,9 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'Sunomsi',
+    startupImage: '/splash.png',
   },
   formatDetection: {
     telephone: false,
@@ -59,13 +63,18 @@ export default function RootLayout({ children }: Props) {
       <head>
         <meta name="application-name" content="SUNOMSI" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="SUNOMSI" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="theme-color" content="#000000" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        
+        {/* iOS specific */}
+        <meta name="apple-mobile-web-app-status-bar" content="black-translucent" />
+        <link rel="apple-touch-startup-image" href="/splash.png" />
         
         {/* Favicon links */}
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
