@@ -357,7 +357,7 @@ export default function TaskCard({ task }: TaskCardProps) {
           </div>
           <div className="flex items-center gap-2">
             <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap">
-              ${task.budget}
+              {task.budget} money
             </span>
             {canDelete && (
               <button
