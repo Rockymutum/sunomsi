@@ -494,78 +494,104 @@ export default function NewChatWindow({
   }
 
   return (
-    <div className={`flex flex-col h-full ${className}`}>
+    <div className={`flex flex-col h-full bg-gray-50 dark:bg-gray-900 ${className}`}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        <div className="flex items-center">
-          <button 
-            onClick={onClose}
-            className="mr-2 text-gray-500 hover:text-gray-700"
-            aria-label="Close"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-          </button>
-          <h2 className="font-medium">{otherUserName}</h2>
+      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <button 
+              onClick={onClose}
+              className="p-1.5 mr-2 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Close chat"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </button>
+            <div>
+              <h2 className="font-semibold text-gray-900 dark:text-white">{otherUserName}</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {messages.length > 0 ? 'Active now' : 'Start a new conversation'}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {groupedMessages.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-center text-gray-500">
-            <div>
-              <p>No messages yet</p>
-              <p className="text-sm mt-1">Send a message to start the conversation</p>
+          <div className="h-full flex flex-col items-center justify-center text-center p-6">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
             </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No messages yet</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md">
+              Start the conversation with {otherUserName.split(' ')[0]}. Say hello or ask a question!
+            </p>
           </div>
         ) : (
           <>
             {groupedMessages.map(({ date, messages: dateMessages }) => (
-              <div key={date} className="space-y-4">
+              <div key={date} className="space-y-3">
                 {/* Date header */}
-                <div className="relative flex items-center justify-center my-4">
+                <div className="relative flex items-center justify-center my-6">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200"></div>
+                    <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
                   </div>
-                  <div className="relative px-3 bg-white dark:bg-gray-900 text-xs text-gray-500 dark:text-gray-400 rounded-full border border-gray-200 dark:border-gray-700">
+                  <span className="relative px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-700">
                     {date}
-                  </div>
+                  </span>
                 </div>
                 
                 {/* Messages for this date */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {dateMessages.map((message, index) => {
                     const isCurrentUser = message.sender_id === currentUser?.id;
                     const showTime = index === dateMessages.length - 1 || 
-                      new Date(message.created_at).getTime() - new Date(dateMessages[index + 1]?.created_at).getTime() < -5 * 60 * 1000; // 5 minutes
+                      new Date(message.created_at).getTime() - new Date(dateMessages[index + 1]?.created_at).getTime() < -5 * 60 * 1000;
                     
                     return (
-                      <div key={message.id} className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                      <div 
+                        key={message.id} 
+                        className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} transition-all duration-150 ease-in-out`}
+                      >
                         <div 
-                          className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg relative group ${isCurrentUser 
-                            ? `bg-blue-500 text-white rounded-br-none ${message.isSending ? 'opacity-70' : ''} ${message.error ? 'bg-red-100 border border-red-300' : ''}` 
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-none'}`}
+                          className={`max-w-[75%] lg:max-w-md px-4 py-2.5 rounded-2xl relative group ${
+                            isCurrentUser 
+                              ? `bg-primary text-white rounded-br-sm shadow-md ${message.isSending ? 'opacity-80' : ''} ${
+                                  message.error ? 'bg-red-50 border border-red-200' : ''
+                                }` 
+                              : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-sm shadow-sm border border-gray-100 dark:border-gray-700'
+                          }`}
                         >
-                          <p className="text-sm">{message.content}</p>
-                          <div className="flex justify-between items-center mt-1">
-                            <span className="text-xs opacity-75">
-                              {message.error ? (
-                                <span className="text-red-500">Failed to send</span>
-                              ) : message.isSending ? (
-                                <span className={isCurrentUser ? 'text-blue-200' : 'text-gray-500'}>
-                                  Sending...
-                                </span>
-                              ) : null}
-                            </span>
-                            <span className="text-xs opacity-75">
+                          <p className="text-sm leading-relaxed break-words">{message.content}</p>
+                          <div className="flex justify-end items-center mt-1.5 space-x-2">
+                            {message.error ? (
+                              <span className="text-xs text-red-500">
+                                Failed to send
+                              </span>
+                            ) : message.isSending ? (
+                              <span className="text-xs text-blue-300 dark:text-blue-400">
+                                Sending...
+                              </span>
+                            ) : null}
+                            <span className={`text-xs ${
+                              isCurrentUser ? 'text-blue-100' : 'text-gray-400'
+                            }`}>
                               {formatMessageTime(message.created_at)}
                             </span>
+                            {isCurrentUser && !message.error && !message.isSending && (
+                              <span className="text-xs text-blue-100">
+                                ✓
+                              </span>
+                            )}
                           </div>
                           
                           {/* Hover timestamp */}
-                          <div className="absolute -bottom-5 right-0 text-xs text-gray-500 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute -bottom-5 right-0 text-[11px] text-gray-500 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             {formatRelativeTime(message.created_at)}
                           </div>
                         </div>
@@ -575,26 +601,37 @@ export default function NewChatWindow({
                 </div>
               </div>
             ))}
-            <div ref={messagesEndRef} />
+            <div ref={messagesEndRef} className="h-4" />
           </>
         )}
       </div>
 
       {/* Message input */}
-      <div className="p-4 border-t border-gray-200">
-        <form onSubmit={sendMessage} className="flex items-center">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={sending}
-          />
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+        <form 
+          onSubmit={sendMessage} 
+          className="flex items-end space-x-2"
+        >
+          <div className="flex-1 bg-gray-50 dark:bg-gray-700 rounded-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-200">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type a message..."
+              className="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 text-sm"
+              disabled={sending}
+              aria-label="Type your message"
+            />
+          </div>
           <button
             type="submit"
             disabled={!newMessage.trim() || sending}
-            className={`px-4 py-2 rounded-r-lg ${newMessage.trim() ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-300 cursor-not-allowed'} text-white`}
+            className={`p-2.5 rounded-full flex-shrink-0 transition-all duration-200 ${
+              newMessage.trim() 
+                ? 'bg-primary hover:bg-gray-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5' 
+                : 'bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed'
+            }`}
+            aria-label={sending ? 'Sending message...' : 'Send message'}
           >
             {sending ? (
               <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -602,8 +639,13 @@ export default function NewChatWindow({
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-5 w-5" 
+                viewBox="0 0 20 20" 
+                fill="currentColor"
+              >
+                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             )}
           </button>
