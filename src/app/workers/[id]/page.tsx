@@ -374,7 +374,7 @@ export default function WorkerDetailPage() {
             {/* Contact and location */}
             <div className="mt-6 flex flex-wrap gap-2">
               <button
-                onClick={() => userId ? (window.location.href = `/messages/${userId}`) : undefined}
+                onClick={() => userId ? router.push(`/messages/${userId}`) : undefined}
                 className="btn-primary"
               >
                 Contact
