@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Single effect to handle auth state and redirects
   useEffect(() => {
     let mounted = true;
-    let authListener: { subscription: any } | null = null;
+    let subscription: { unsubscribe: () => void } | null = null;
 
     const initializeAuth = async () => {
       try {
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     // Set up auth state change listener
-    authListener = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       
       setSession(session);
@@ -69,11 +69,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
+    // Store the subscription
+    subscription = data;
     initializeAuth();
 
     return () => {
       mounted = false;
-      authListener?.subscription?.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, [supabase.auth, router]);
 
