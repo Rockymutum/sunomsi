@@ -21,11 +21,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createClientComponentClient();
   const router = useRouter();
   const initialLoad = useRef(true);
+  const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
 
   // Single effect to handle auth state and redirects
   useEffect(() => {
     let mounted = true;
-    let subscription: { unsubscribe: () => void } | null = null;
 
     const initializeAuth = async () => {
       try {
@@ -56,6 +56,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Set up auth state change listener
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      // Store the subscription for cleanup
+      if (data && 'subscription' in data) {
+        subscriptionRef.current = data.subscription;
+      }
       if (!mounted) return;
       
       setSession(session);
@@ -69,13 +73,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Store the subscription
-    subscription = data;
     initializeAuth();
 
     return () => {
       mounted = false;
-      subscription?.unsubscribe();
+      subscriptionRef.current?.unsubscribe();
     };
   }, [supabase.auth, router]);
 
