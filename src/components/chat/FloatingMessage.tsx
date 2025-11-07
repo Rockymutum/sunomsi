@@ -62,6 +62,102 @@ export default function FloatingMessage() {
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
   // Handle reconnection logic
+  // Set up the subscription with the current user ID
+  const setupSubscriptionWithUser = useCallback(async (userId: string) => {
+    if (!userId) {
+      console.log('No user ID provided for subscription');
+      return;
+    }
+    
+    console.log('Setting up subscription for user:', userId);
+    setConnectionStatus('connecting');
+    
+    // Clear any existing subscription
+    if (subscriptionRef.current) {
+      console.log('Removing existing subscription');
+      supabase.removeChannel(subscriptionRef.current);
+    }
+
+    // Create a new subscription
+    const channel = supabase
+      .channel(`user_${userId}_messages`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `to_user_id=eq.${userId}`
+        },
+        (payload) => {
+          console.log('New message received:', payload);
+          setMessage(payload.new as any);
+          setIsVisible(true);
+          
+          // Auto-hide after 5 seconds
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+          }
+          timeoutRef.current = setTimeout(() => {
+            setIsVisible(false);
+          }, 5000);
+        }
+      )
+      .subscribe((status: string, err?: Error) => {
+        console.log('Subscription status:', status);
+        
+        switch (status) {
+          case 'SUBSCRIBED':
+            setConnectionStatus('connected');
+            break;
+            
+          case 'CHANNEL_ERROR':
+            console.error('Channel error:', err);
+            setConnectionStatus('error');
+            // Attempt to reconnect
+            setTimeout(() => {
+              setupSubscriptionWithUser(userId);
+            }, 2000);
+            break;
+            
+          case 'TIMED_OUT':
+            console.log('Connection timed out, attempting to reconnect...');
+            setConnectionStatus('reconnecting');
+            // Try to refresh the session and reconnect
+            (async () => {
+              try {
+                console.log('Attempting to refresh session...');
+                const { data, error } = await supabase.auth.refreshSession();
+                if (!error && data?.user?.id) {
+                  await setupSubscriptionWithUser(data.user.id);
+                }
+              } catch (refreshError) {
+                console.error('Error refreshing session:', refreshError);
+                // If refresh fails, try reconnecting with the same user ID
+                setTimeout(() => {
+                  setupSubscriptionWithUser(userId);
+                }, 2000);
+              }
+            })();
+            break;
+            
+          case 'CLOSED':
+            console.log('Connection closed, attempting to reconnect...');
+            setConnectionStatus('reconnecting');
+            setTimeout(() => {
+              setupSubscriptionWithUser(userId);
+            }, 2000);
+            break;
+            
+          default:
+            console.log('Unknown subscription status:', status);
+        }
+      });
+
+    subscriptionRef.current = channel;
+    return channel;
+  }, []);
+
   const reconnectWithBackoff = useCallback(async (userId: string) => {
     if (reconnectAttempts.current >= maxReconnectAttempts) {
       console.error('Max reconnection attempts reached');
@@ -84,7 +180,7 @@ export default function FloatingMessage() {
       console.error('Reconnection failed:', error);
       reconnectWithBackoff(userId);
     }
-  }, []);
+  }, [setupSubscriptionWithUser]);
 
   // Handle new message subscription
   useEffect(() => {
