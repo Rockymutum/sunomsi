@@ -26,6 +26,10 @@ export default function AuthForm() {
     setIsLoading(true);
 
     const saveButton = document.querySelector('button[type="submit"]');
+    if (saveButton) {
+      saveButton.setAttribute('disabled', 'true');
+      saveButton.textContent = isSignUp ? 'Signing up...' : 'Signing in...';
+    }
 
     try {
       if (!isSignUp) {
@@ -37,7 +41,6 @@ export default function AuthForm() {
 
         if (error) {
           setErrorMsg(error.message || 'Sign in failed');
-          setIsLoading(false);
           if (saveButton) {
             saveButton.textContent = 'Sign In';
             saveButton.removeAttribute('disabled');
@@ -51,19 +54,9 @@ export default function AuthForm() {
         } else {
           console.warn('[Auth] signIn returned no session');
           setErrorMsg('Sign in failed: no session');
-          setIsLoading(false);
-          if (saveButton) {
-            saveButton.textContent = 'Sign In';
-            saveButton.removeAttribute('disabled');
-          }
         }
       } else {
         // Handle sign up
-        if (saveButton) {
-          saveButton.textContent = 'Signing up...';
-          saveButton.setAttribute('disabled', 'true');
-        }
-
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -82,7 +75,6 @@ export default function AuthForm() {
             saveButton.textContent = 'Sign Up';
             saveButton.removeAttribute('disabled');
           }
-          setIsLoading(false);
           return;
         }
 
@@ -107,25 +99,30 @@ export default function AuthForm() {
             saveButton.textContent = 'Sign Up';
             saveButton.removeAttribute('disabled');
           }
-        }
-
-        setIsEmailSent(true);
-        router.push('/auth/check-email');
-      } catch (err: any) {
-        setErrorMsg(err?.message || 'Network error. Check Supabase env.');
-        const saveButton = document.querySelector('button[type="submit"]');
-        if (saveButton) {
-          saveButton.textContent = 'Sign Up';
-          saveButton.removeAttribute('disabled');
+          
+          // Redirect to check email page
+          router.push('/auth/check-email');
         }
       }
+    } catch (error: any) {
+      console.error('Authentication error:', error);
+      setErrorMsg(error?.message || 'An error occurred during authentication');
+      
+      const saveButton = document.querySelector('button[type="submit"]');
+      if (saveButton) {
+        saveButton.textContent = isSignUp ? 'Sign Up' : 'Sign In';
+        saveButton.removeAttribute('disabled');
+      }
+    } finally {
+      setIsLoading(false);
+    }
     }
   };
 
   const handleResetPassword = async () => {
-    setErrorMsg(null);
+    setErrorMsg && setErrorMsg(null);
     if (!email) {
-      setErrorMsg('Enter your email first to reset password.');
+      setErrorMsg && setErrorMsg('Enter your email first to reset password.');
       return;
     }
     try {
