@@ -333,14 +333,23 @@ export default function Navbar() {
           <div className="flex justify-between items-center h-full">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center gap-2 cursor-default select-none" aria-label="SUNOMSI brand">
-                <div className="relative h-7 w-7">
+                <div className="relative h-7 w-7 flex-shrink-0">
                   <Image
                     src="/logo.png.PNG"
                     alt="SUNOMSI logo"
-                    fill
+                    width={28}
+                    height={28}
                     sizes="28px"
                     className="object-contain"
                     priority
+                    loading="eager"
+                    unoptimized={false}
+                    onError={(e) => {
+                      // Fallback to a simple text logo if image fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = '/logo-fallback.svg';
+                    }}
                   />
                 </div>
                 <span className="text-xl font-bold text-primary">SUNOMSI</span>
