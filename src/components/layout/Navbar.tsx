@@ -179,11 +179,28 @@ export default function Navbar() {
     setShowSearch(false);
   };
 
+  // Add padding to the body to prevent content from being hidden behind the fixed navbar
+  useEffect(() => {
+    document.body.style.paddingTop = '64px'; // Match the height of your navbar
+    return () => {
+      document.body.style.paddingTop = '';
+    };
+  }, []);
+
   return (
     <>
-      <nav className={`bg-white ${showSearch ? 'shadow-md' : 'shadow-sm'} w-full`} style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50 }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="flex justify-between h-16">
+      <nav className={`bg-white ${showSearch ? 'shadow-md' : 'shadow-sm'} w-full fixed top-0 left-0 right-0 z-50`} style={{
+        position: 'fixed',
+        top: 'env(safe-area-inset-top, 0)', // Account for iPhone notch
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        height: '64px', // Fixed height for the navbar
+        paddingTop: 'env(safe-area-inset-top, 0)', // Add padding for the notch area
+        boxSizing: 'content-box' // Ensure padding is added to the height
+      }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full h-full">
+          <div className="flex justify-between items-center h-full">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center gap-2 cursor-default select-none" aria-label="SUNOMSI brand">
                 <div className="relative h-7 w-7">
