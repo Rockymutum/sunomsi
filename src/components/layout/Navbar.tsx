@@ -32,6 +32,8 @@ export default function Navbar() {
   
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [showNav, setShowNav] = useState(true);
 
   // Memoized function to update user data
   const updateUserData = useCallback(async () => {
@@ -180,7 +182,32 @@ export default function Navbar() {
   };
 
   // Add padding to the body to prevent content from being hidden behind the fixed navbar
+  // Handle scroll behavior
   useEffect(() => {
+    const controlNavbar = () => {
+      if (typeof window !== 'undefined') {
+        const currentScrollY = window.scrollY;
+        
+        // Always show navbar at the top of the page
+        if (currentScrollY === 0) {
+          setShowNav(true);
+        } 
+        // Scrolling down
+        else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+          setShowNav(false);
+        } 
+        // Scrolling up
+        else if (currentScrollY < lastScrollY - 10) {
+          setShowNav(true);
+        }
+        
+        setLastScrollY(currentScrollY);
+      }
+    };
+
+    // Add a class to the html element for safe area handling
+    document.documentElement.classList.add('safe-area');
+
     // Set CSS variables for safe area insets
     document.documentElement.style.setProperty('--safe-area-top', 'env(safe-area-inset-top, 0px)');
     document.body.style.paddingTop = 'calc(64px + var(--safe-area-top, 0px))';
@@ -194,6 +221,15 @@ export default function Navbar() {
     const style = document.createElement('style');
     style.id = 'safe-area-style';
     style.textContent = `
+      /* Safe area handling */
+      html.safe-area {
+        --safe-area-top: env(safe-area-inset-top, 0px);
+        --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+        --safe-area-left: env(safe-area-inset-left, 0px);
+        --safe-area-right: env(safe-area-inset-right, 0px);
+      }
+      
+      /* Safe area background */
       @supports (padding-top: env(safe-area-inset-top)) {
         body::before {
           content: '';
@@ -201,9 +237,16 @@ export default function Navbar() {
           top: 0;
           left: 0;
           right: 0;
-          height: env(safe-area-inset-top);
+          height: var(--safe-area-top);
           background-color: white;
           z-index: 1000;
+          pointer-events: none;
+        }
+        
+        /* Ensure content doesn't get hidden behind the safe area */
+        body {
+          padding-top: var(--safe-area-top);
+          background-color: white;
         }
       }
     `;
@@ -211,7 +254,11 @@ export default function Navbar() {
     document.head.appendChild(meta);
     document.head.appendChild(style);
     
+    // Add scroll event listener
+    window.addEventListener('scroll', controlNavbar, { passive: true });
+    
     return () => {
+      window.removeEventListener('scroll', controlNavbar);
       document.body.style.paddingTop = '';
       document.documentElement.style.removeProperty('--safe-area-top');
       const existingMeta = document.querySelector('meta[name="viewport"]');
@@ -224,24 +271,41 @@ export default function Navbar() {
         document.head.removeChild(existingStyle);
       }
     };
-  }, []);
+  }, [lastScrollY]);
 
   return (
     <>
-      <nav className={`bg-white ${showSearch ? 'shadow-md' : 'shadow-sm'} w-full fixed left-0 right-0 z-50`} style={{
-        position: 'fixed',
-        top: 'env(safe-area-inset-top, 0px)',
-        left: 0,
-        right: 0,
-        height: '64px',
-        zIndex: 50,
-        boxSizing: 'border-box',
-        paddingTop: '0',
-        // Add a white background that extends into the safe area
-        background: `linear-gradient(to bottom, white 0%, white ${'env(safe-area-inset-top, 0px)'}, white 100%)`,
-        // Add a subtle border at the bottom for better separation
-        borderBottom: '1px solid #f0f0f0'
-      }}>
+      <>
+        {/* Safe area background */}
+        <div 
+          className="fixed top-0 left-0 right-0 z-40 bg-white"
+          style={{
+            height: 'var(--safe-area-top, 0px)',
+            transition: 'transform 0.2s ease-in-out',
+            transform: showNav ? 'translateY(0)' : 'translateY(-100%)',
+            willChange: 'transform'
+          }}
+        />
+        
+        {/* Main navbar */}
+        <nav 
+          className={`bg-white ${showSearch ? 'shadow-md' : 'shadow-sm'} w-full fixed left-0 right-0 z-50 transition-transform duration-200 ease-in-out`} 
+          style={{
+            top: 'var(--safe-area-top, 0px)',
+            left: 0,
+            right: 0,
+            height: '64px',
+            zIndex: 50,
+            boxSizing: 'border-box',
+            background: 'white',
+            borderBottom: '1px solid #f0f0f0',
+            willChange: 'transform',
+            transform: showNav ? 'translateY(0)' : 'translateY(-100%)',
+            transition: 'transform 0.2s ease-in-out',
+            paddingLeft: 'var(--safe-area-left, 0px)',
+            paddingRight: 'var(--safe-area-right, 0px)'
+          }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full h-full">
           <div className="flex justify-between items-center h-full">
             <div className="flex">
