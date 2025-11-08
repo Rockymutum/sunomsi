@@ -255,6 +255,15 @@ export default function Navbar() {
     style.id = 'safe-area-style';
     style.textContent = `
       @supports (padding-top: env(safe-area-inset-top)) {
+        html {
+          background-color: white;
+        }
+        
+        body {
+          position: relative;
+          background-color: white;
+        }
+        
         body::before {
           content: '';
           position: fixed;
@@ -263,14 +272,21 @@ export default function Navbar() {
           right: 0;
           height: env(safe-area-inset-top);
           background-color: white;
-          z-index: 1000;
+          z-index: 9999;
           transition: transform 0.2s ease-in-out;
+          pointer-events: none;
         }
         
         .nav-hidden body::before {
           transform: translateY(-100%);
         }
-      }
+        
+        /* Ensure content doesn't appear under the status bar */
+        @supports (padding-top: env(safe-area-inset-top)) {
+          body {
+            padding-top: env(safe-area-inset-top);
+          }
+        }
     `;
     
     document.head.appendChild(meta);
