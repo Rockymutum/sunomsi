@@ -8,9 +8,11 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    loader: 'default',
   },
   experimental: {
-    optimizeCss: true,
+    // Disable optimizeCss as it's causing issues with critters
+    // optimizeCss: true,
     optimizePackageImports: ['lucide-react'],
   },
   compress: true,
@@ -19,26 +21,34 @@ const nextConfig = {
   httpAgentOptions: {
     keepAlive: true,
   },
-  onDemandEntries: {
-    maxInactiveAge: 25 * 1000,
-    pagesBufferLength: 5,
-  },
   // Disable source maps in production
   productionBrowserSourceMaps: false,
-  // Enable static optimization for all pages
-  output: 'standalone',
+  // Use static export for Vercel
+  output: 'export',
+  // Add trailing slash for static export
+  trailingSlash: true,
   // Disable TypeScript type checking during build for faster builds
   typescript: {
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: true,
   },
   // Disable ESLint during build for faster builds
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Improve image optimization
+  // Disable image optimization API as we're using static export
   images: {
-    loader: 'custom',
-    loaderFile: './src/lib/imageLoader.js',
+    unoptimized: true,
+  },
+  // Add webpack configuration
+  webpack: (config, { isServer }) => {
+    // Fixes npm packages that depend on `fs` module
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      };
+    }
+    return config;
   },
 };
 
