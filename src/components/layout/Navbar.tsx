@@ -245,7 +245,7 @@ export default function Navbar() {
     document.documentElement.style.setProperty('--safe-area-top', 'env(safe-area-inset-top, 0px)');
     document.body.style.paddingTop = 'calc(64px + var(--safe-area-top, 0px))';
     
-    // Add meta tag for iOS 15+ viewport bug fix
+    // Add meta tag for iOS viewport and safe area
     const meta = document.createElement('meta');
     meta.name = 'viewport';
     meta.content = 'width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1.0, user-scalable=0';
@@ -254,39 +254,36 @@ export default function Navbar() {
     const style = document.createElement('style');
     style.id = 'safe-area-style';
     style.textContent = `
-      @supports (padding-top: env(safe-area-inset-top)) {
-        html {
-          background-color: white;
-        }
-        
-        body {
-          position: relative;
-          background-color: white;
-        }
-        
-        body::before {
-          content: '';
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: env(safe-area-inset-top);
-          background-color: white;
-          z-index: 9999;
-          transition: transform 0.2s ease-in-out;
-          pointer-events: none;
-        }
-        
-        .nav-hidden body::before {
-          transform: translateY(-100%);
-        }
-        
-        /* Ensure content doesn't appear under the status bar */
-        @supports (padding-top: env(safe-area-inset-top)) {
-          body {
-            padding-top: env(safe-area-inset-top);
-          }
-        }
+      html {
+        background-color: white;
+        height: 100%;
+      }
+      
+      body {
+        position: relative;
+        background-color: white;
+        min-height: 100%;
+        padding-top: env(safe-area-inset-top);
+        margin: 0;
+      }
+      
+      /* Safe area background */
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: env(safe-area-inset-top);
+        background-color: white;
+        z-index: 9999;
+      }
+      
+      /* Ensure the navbar respects the safe area */
+      nav {
+        padding-top: env(safe-area-inset-top);
+        margin-top: calc(-1 * env(safe-area-inset-top, 0px));
+      }
     `;
     
     document.head.appendChild(meta);
@@ -318,15 +315,14 @@ export default function Navbar() {
           showNav ? 'translate-y-0' : '-translate-y-full'
         }`} 
         style={{
-          top: 'env(safe-area-inset-top, 0px)',
+          top: 0,
           left: 0,
           right: 0,
-          height: '64px',
+          height: 'calc(64px + env(safe-area-inset-top, 0px))',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
           zIndex: 50,
           boxSizing: 'border-box',
-          // Add a white background that extends into the safe area
           background: 'white',
-          // Add a subtle border at the bottom for better separation
           borderBottom: '1px solid #f0f0f0',
           willChange: 'transform',
           transform: showNav ? 'translateY(0)' : 'translateY(-100%)',
