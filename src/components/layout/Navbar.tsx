@@ -181,23 +181,66 @@ export default function Navbar() {
 
   // Add padding to the body to prevent content from being hidden behind the fixed navbar
   useEffect(() => {
-    document.body.style.paddingTop = '64px'; // Match the height of your navbar
+    // Set CSS variables for safe area insets
+    document.documentElement.style.setProperty('--safe-area-top', 'env(safe-area-inset-top, 0px)');
+    document.body.style.paddingTop = 'calc(64px + var(--safe-area-top, 0px))';
+    
+    // Add meta tag for iOS 15+ viewport bug fix
+    const meta = document.createElement('meta');
+    meta.name = 'viewport';
+    meta.content = 'width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1.0, user-scalable=0';
+    
+    // Add a style tag to handle the safe area background
+    const style = document.createElement('style');
+    style.id = 'safe-area-style';
+    style.textContent = `
+      @supports (padding-top: env(safe-area-inset-top)) {
+        body::before {
+          content: '';
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: env(safe-area-inset-top);
+          background-color: white;
+          z-index: 1000;
+        }
+      }
+    `;
+    
+    document.head.appendChild(meta);
+    document.head.appendChild(style);
+    
     return () => {
       document.body.style.paddingTop = '';
+      document.documentElement.style.removeProperty('--safe-area-top');
+      const existingMeta = document.querySelector('meta[name="viewport"]');
+      const existingStyle = document.getElementById('safe-area-style');
+      
+      if (existingMeta) {
+        document.head.removeChild(existingMeta);
+      }
+      if (existingStyle) {
+        document.head.removeChild(existingStyle);
+      }
     };
   }, []);
 
   return (
     <>
-      <nav className={`bg-white ${showSearch ? 'shadow-md' : 'shadow-sm'} w-full fixed top-0 left-0 right-0 z-50`} style={{
+      <nav className={`bg-white ${showSearch ? 'shadow-md' : 'shadow-sm'} w-full fixed left-0 right-0 z-50`} style={{
         position: 'fixed',
-        top: 'env(safe-area-inset-top, 0)', // Account for iPhone notch
+        top: 'env(safe-area-inset-top, 0px)',
         left: 0,
         right: 0,
+        height: '64px',
         zIndex: 50,
-        height: '64px', // Fixed height for the navbar
-        paddingTop: 'env(safe-area-inset-top, 0)', // Add padding for the notch area
-        boxSizing: 'content-box' // Ensure padding is added to the height
+        boxSizing: 'border-box',
+        paddingTop: '0',
+        // Add a white background that extends into the safe area
+        background: `linear-gradient(to bottom, white 0%, white ${'env(safe-area-inset-top, 0px)'}, white 100%)`,
+        // Add a subtle border at the bottom for better separation
+        borderBottom: '1px solid #f0f0f0'
       }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full h-full">
           <div className="flex justify-between items-center h-full">
