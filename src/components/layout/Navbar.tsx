@@ -1,26 +1,27 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import { BsGlobeAsiaAustralia, BsChatDots } from 'react-icons/bs';
 
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 // Cache for user data
-let cachedUserData: {
+interface CachedUserData {
   isLoggedIn: boolean;
   userRole: string | null;
   avatarUrl: string | null;
   timestamp: number;
-} | null = null;
-
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+}
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClientComponentClient();
+  const cachedUserData = useRef<CachedUserData | null>(null);
   
   // State with initial values from cache if available
   const [authState, setAuthState] = useState(() => ({
@@ -39,10 +40,10 @@ export default function Navbar() {
   const updateUserData = useCallback(async () => {
     try {
       // Check cache first
-      if (cachedUserData && (Date.now() - cachedUserData.timestamp) < CACHE_DURATION) {
+      if (cachedUserData.current && (Date.now() - cachedUserData.current.timestamp) < CACHE_DURATION) {
         setAuthState(prev => ({
           ...prev,
-          ...cachedUserData,
+          ...cachedUserData.current,
           isLoading: false
         }));
         return;
@@ -50,10 +51,12 @@ export default function Navbar() {
 
       setAuthState(prev => ({ ...prev, isLoading: true }));
       
-      const { data: { session } } = await supabase.auth.getSession();
+      // Get the current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (!session?.user) {
-        cachedUserData = {
+      if (sessionError || !session?.user) {
+        console.error('Session error:', sessionError);
+        cachedUserData.current = {
           isLoggedIn: false,
           userRole: null,
           avatarUrl: null,
@@ -69,30 +72,55 @@ export default function Navbar() {
       }
 
       const uid = session.user.id;
-      const [{ data: prof }, { data: worker }] = await Promise.all([
-        supabase.from('profiles').select('avatar_url, updated_at').eq('user_id', uid).maybeSingle(),
-        supabase.from('worker_profiles').select('id').eq('user_id', uid).maybeSingle(),
-      ]);
       
-      const avatar = prof?.avatar_url || null;
-      const ts = prof?.updated_at ? `?t=${encodeURIComponent(prof.updated_at)}` : '';
-      const avatarUrl = avatar ? `${avatar}${ts}` : null;
-      const userRole = worker ? 'worker' : 'poster';
-      
-      // Update cache
-      cachedUserData = {
-        isLoggedIn: true,
-        userRole,
-        avatarUrl,
-        timestamp: Date.now()
-      };
-      
-      setAuthState({
-        isLoggedIn: true,
-        userRole,
-        avatarUrl,
-        isLoading: false
-      });
+      try {
+        // Use the session to make authenticated requests
+        const [profResponse, workerResponse] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('avatar_url, updated_at')
+            .eq('user_id', uid)
+            .single(),
+          supabase
+            .from('worker_profiles')
+            .select('id')
+            .eq('user_id', uid)
+            .maybeSingle()
+        ]);
+
+        if (profResponse.error) throw profResponse.error;
+        if (workerResponse.error && workerResponse.error.code !== 'PGRST116') { // Ignore not found errors for worker_profiles
+          throw workerResponse.error;
+        }
+
+        const avatar = profResponse.data?.avatar_url || null;
+        const ts = profResponse.data?.updated_at ? `?t=${encodeURIComponent(profResponse.data.updated_at)}` : '';
+        const avatarUrl = avatar ? `${avatar}${ts}` : null;
+        const userRole = workerResponse.data ? 'worker' : 'poster';
+        
+        // Update cache
+        cachedUserData.current = {
+          isLoggedIn: true,
+          userRole,
+          avatarUrl,
+          timestamp: Date.now()
+        };
+        
+        setAuthState({
+          isLoggedIn: true,
+          userRole,
+          avatarUrl,
+          isLoading: false
+        });
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        // Don't cache failed requests
+        cachedUserData.current = null;
+        setAuthState(prev => ({
+          ...prev,
+          isLoading: false
+        }));
+      }
       
     } catch (error) {
       console.error('Error updating user data:', error);
@@ -105,23 +133,28 @@ export default function Navbar() {
 
   useEffect(() => {
     let unsubAuth: { data: { subscription: { unsubscribe: () => void } } } | null = null;
+    let mounted = true;
 
-    // Initial load
-    updateUserData();
+    const initializeAuth = async () => {
+      // Initial load
+      await updateUserData();
 
-    // Set up auth state change listener
-    unsubAuth = supabase.auth.onAuthStateChange((event) => {
-      if (['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED'].includes(event)) {
-        // Clear cache on auth state changes
-        cachedUserData = null;
-        updateUserData();
-      }
-    }) as any;
+      // Set up auth state change listener
+      unsubAuth = supabase.auth.onAuthStateChange(async (event) => {
+        if (mounted && ['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED', 'TOKEN_REFRESHED'].includes(event)) {
+          // Clear cache on auth state changes
+          cachedUserData.current = null;
+          await updateUserData();
+        }
+      }) as any;
+    };
+
+    initializeAuth().catch(console.error);
 
     // Set up visibility change listener
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        updateUserData();
+      if (mounted && document.visibilityState === 'visible') {
+        updateUserData().catch(console.error);
       }
     };
     
@@ -130,6 +163,7 @@ export default function Navbar() {
 
     // Cleanup function
     return () => {
+      mounted = false;
       try { 
         if (unsubAuth?.data?.subscription?.unsubscribe) {
           unsubAuth.data.subscription.unsubscribe(); 
@@ -139,7 +173,7 @@ export default function Navbar() {
       }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [supabase]);
+  }, [updateUserData]);
 
   // Ensure light theme is applied
   useEffect(() => {
@@ -152,8 +186,10 @@ export default function Navbar() {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      // Clear cache on sign out
-      cachedUserData = null;
+      // Clear cache on sign out by setting current to null
+      if (cachedUserData.current) {
+        cachedUserData.current = null;
+      }
       setAuthState({
         isLoggedIn: false,
         userRole: null,
