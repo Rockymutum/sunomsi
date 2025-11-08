@@ -187,9 +187,7 @@ export default function Navbar() {
     try {
       await supabase.auth.signOut();
       // Clear cache on sign out by setting current to null
-      if (cachedUserData.current) {
-        cachedUserData.current = null;
-      }
+      cachedUserData.current = null;
       setAuthState({
         isLoggedIn: false,
         userRole: null,
