@@ -32,6 +32,36 @@ export default function DiscoveryPage() {
       fetchTasks();
     })();
   }, []);
+
+  // Quick scroll restoration for this specific page
+  useEffect(() => {
+    console.log('Discovery page mounted - setting up scroll memory');
+    
+    // Save scroll position
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      sessionStorage.setItem('discoveryScroll', scrollY.toString());
+      console.log('Scroll saved:', scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    
+    // Restore scroll position
+    const savedScroll = sessionStorage.getItem('discoveryScroll');
+    console.log('Saved scroll found:', savedScroll);
+    
+    if (savedScroll) {
+      const scrollY = parseInt(savedScroll);
+      if (scrollY > 0) {
+        console.log('Restoring discovery scroll to:', scrollY);
+        window.scrollTo(0, scrollY);
+      }
+    }
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
   
   const fetchTasks = async () => {
     setLoading(true);
