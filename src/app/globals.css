@@ -2,148 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design tokens */
 :root {
-  /* Colors (minimal grays + primary dark) */
-  --color-bg: 255 255 255;           /* white */
-  --color-fg: 17 24 39;              /* gray-900 */
-  --color-muted: 107 114 128;        /* gray-500 */
-  --color-border: 229 231 235;       /* gray-200 */
-  --color-card: 255 255 255;         /* white */
-  --color-primary: 31 41 55;         /* gray-800 */
-  --color-primary-contrast: 255 255 255;
-
-  /* Radii */
-  --radius: 0.5rem;                  /* rounded-lg */
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 255, 255, 255;
 }
 
-html, body {
-  background-color: #ffffff;
-  color: rgb(var(--color-fg));
-  height: 100%;
-  margin: 0;
-  padding: 0;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 0, 0, 0;
+    --background-start-rgb: 255, 255, 255;
+    --background-end-rgb: 255, 255, 255;
+  }
 }
 
 body {
-  background-color: #ffffff;
-  color: rgb(var(--color-fg));
-  min-height: 100vh;
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
 }
 
-/* Global layout safety: ensure no horizontal scrolling and proper sizing */
-*, *::before, *::after { box-sizing: border-box; }
-html, body { max-width: 100%; overflow-x: hidden; }
-img, video, canvas, svg { max-width: 100%; height: auto; }
-iframe { max-width: 100%; }
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center font-semibold px-4 py-2 transition-colors;
-    background-color: rgb(var(--color-primary));
-    color: rgb(var(--color-primary-contrast));
-    border-radius: var(--radius);
+    @apply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
   }
-
-  .btn-primary:hover { filter: brightness(0.95); }
-  .btn-primary:active { filter: brightness(0.9); }
-  .btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgb(var(--color-primary) / 0.25); }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center font-medium px-4 py-2 border transition-colors;
-    border-color: rgb(var(--color-border));
-    color: rgb(var(--color-fg));
-    background-color: transparent;
-    border-radius: var(--radius);
+    @apply bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
   }
-
-  .btn-secondary:hover { background-color: rgb(243 244 246 / 0.5); }
-
-  .btn-secondary-compact {
-    @apply inline-flex items-center justify-center font-medium px-3 py-1.5 border text-sm transition-colors;
-    border-color: rgb(var(--color-border));
-    color: rgb(var(--color-fg));
-    background-color: transparent;
-    border-radius: var(--radius);
-  }
-  .btn-secondary-compact:hover { background-color: rgb(243 244 246 / 0.5); }
-
-  .btn-subtle {
-    @apply inline-flex items-center justify-center px-3 py-2 text-sm transition-colors;
-    color: rgb(var(--color-muted));
-    background-color: transparent;
-    border-radius: var(--radius);
-  }
-  .btn-subtle:hover { background-color: rgb(243 244 246 / 0.5); }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center font-semibold px-4 py-2 transition-colors text-white;
-    background-color: #dc2626;
-    border-radius: var(--radius);
+    @apply bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
   }
-  .btn-danger:hover { background-color: #b91c1c; }
-
-  .btn-danger-outline {
-    @apply inline-flex items-center justify-center font-medium px-4 py-2 border transition-colors text-red-700;
-    border-color: #fecaca; /* red-200 */
-    background-color: transparent;
-    border-radius: var(--radius);
-  }
-  .btn-danger-outline:hover { background-color: #fef2f2; }
-
-  .card {
-    @apply p-6 transition-shadow;
-    background-color: rgb(var(--color-card));
-    border: 1px solid rgb(var(--color-border));
-    box-shadow: var(--shadow-sm);
-    border-radius: var(--radius);
-  }
-  .card:hover { box-shadow: var(--shadow-md); }
-
-  /* Chips */
-  .chip {
-    @apply inline-flex items-center px-3 py-1.5 rounded-xl text-sm font-medium border;
-    background-color: rgb(243 244 246); /* gray-100 */
-    color: rgb(55 65 81); /* gray-700 */
-    border-color: rgb(var(--color-border));
-  }
-  .chip-soft {
-    @apply inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium;
-    background-color: rgb(249 250 251); /* gray-50 */
-    color: rgb(75 85 99); /* gray-600 */
-    border: 1px solid rgb(var(--color-border));
-  }
-
-  /* Hover lift utility for tiles/cards */
-  .hover-lift { transition: box-shadow 200ms, transform 200ms; }
-  .hover-lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-
-  /* Subtle image tile hover scale */
-  .tile { @apply overflow-hidden; border-radius: var(--radius); }
-  .tile img { transition: transform 300ms ease; }
-  .tile:hover img { transform: scale(1.03); }
 
   .input-field {
-    @apply w-full px-3 py-2 outline-none transition-all text-sm;
-    border: 1px solid rgb(var(--color-border));
-    background-color: rgb(255 255 255);
-    color: rgb(17 24 39);
-    border-radius: var(--radius);
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
   }
-  .dark .input-field {
-    background-color: rgb(31 41 55);
-    color: rgb(243 244 246);
-    border-color: rgb(55 65 81);
-  }
-  .input-field:focus { box-shadow: 0 0 0 3px rgb(var(--color-primary) / 0.25); border-color: rgb(var(--color-primary)); }
-  .input-field[aria-invalid="true"], .input-field.invalid { border-color: #ef4444; }
-}
 
-  /* Typography tweaks */
-  h1, h2, h3 { letter-spacing: -0.01em; }
-  .prose { @apply leading-relaxed; }
+  .card {
+    @apply bg-white rounded-lg shadow-md border border-gray-200;
+  }
+
+  .tile {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4;
+  }
+}
