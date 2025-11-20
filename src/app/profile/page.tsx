@@ -1,118 +1,189 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import Navbar from "@/components/layout/Navbar";
-import Link from "next/link";
-import { BsBehance, BsDribbble, BsLinkedin, BsInstagram } from "react-icons/bs";
-import { FaFacebook } from "react-icons/fa";
-import { FiEdit3, FiLogOut, FiMail, FiMapPin, FiCalendar } from "react-icons/fi";
+import { useState, useEffect } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useRouter } from 'next/navigation';
+import Navbar from '@/components/layout/Navbar';
 
-export default function ProfileHomePage() {
-  const router = useRouter();
-  const supabase = createClientComponentClient();
+interface Profile {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  email: string;
+  phone: string | null;
+  bio: string | null;
+  skills: string[];
+  created_at: string;
+  updated_at: string;
+}
 
+export default function ProfilePage() {
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [profile, setProfile] = useState<any | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
-  const [isWorker, setIsWorker] = useState<boolean>(false);
-  const [social, setSocial] = useState<{
-    behance?: string | null;
-    dribbble?: string | null;
-    linkedin?: string | null;
-    instagram?: string | null;
-    facebook?: string | null;
-  }>({});
+  const [editing, setEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    full_name: '',
+    phone: '',
+    bio: '',
+  });
+  const [user, setUser] = useState<any>(null);
+  const [message, setMessage] = useState('');
+  
+  const supabase = createClientComponentClient();
+  const router = useRouter();
 
   useEffect(() => {
-    const init = async () => {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/auth");
-        return;
-      }
-      setUserId(session.user.id);
-      setEmail(session.user.email ?? null);
-
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-      setProfile(prof || null);
-      if (prof?.contact) {
-        const contactStr = prof.contact as string;
-        setSocial({
-          behance: /behance\.net\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*behance[^\s]*/i)?.[0] || null : null,
-          dribbble: /dribbble\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*dribbble[^\s]*/i)?.[0] || null : null,
-          linkedin: /linkedin\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*linkedin[^\s]*/i)?.[0] || null : null,
-          instagram: /instagram\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*instagram[^\s]*/i)?.[0] || null : null,
-          facebook: /facebook\.com\//i.test(contactStr) ? contactStr.match(/https?:\/\/[^\s]*facebook[^\s]*/i)?.[0] || null : null,
-        });
-      } else {
-        setSocial({});
-      }
-
-      // Check worker portfolio existence to infer role
-      const { data: wp } = await supabase
-        .from('worker_profiles')
-        .select('id')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-      setIsWorker(!!wp);
-      setLoading(false);
-    };
-    init();
-  }, [supabase, router]);
-
-  // Ensure light theme is applied
-  useEffect(() => {
-    document.documentElement.classList.remove('dark');
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('theme', 'light');
-    }
+    checkAuth();
   }, []);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push("/");
+  const checkAuth = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        router.push('/auth');
+        return;
+      }
+
+      setUser(session.user);
+      await getProfile(session.user.id);
+    } catch (error) {
+      console.error('Error checking auth:', error);
+      router.push('/auth');
+    }
   };
 
-  const contactDisplay = (() => {
-    const raw = (profile?.contact || email || "").toString();
-    const sanitized = raw
-      .replace(/https?:\/\/[^\s]*behance[^\s]*/gi, "")
-      .replace(/https?:\/\/[^\s]*dribbble[^\s]*/gi, "")
-      .replace(/https?:\/\/[^\s]*linkedin[^\s]*/gi, "")
-      .replace(/https?:\/\/[^\s]*instagram[^\s]*/gi, "")
-      .replace(/https?:\/\/[^\s]*facebook[^\s]*/gi, "")
-      .replace(/\s{2,}/g, " ")
-      .trim();
-    return sanitized || "—";
-  })();
+  const getProfile = async (userId: string) => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
 
-  const joinedDate = profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : "—";
+      if (error) {
+        console.error('Error fetching profile:', error);
+        if (error.code === 'PGRST116') {
+          await createProfile(userId);
+          return;
+        }
+        throw error;
+      } else {
+        setProfile(data);
+        setFormData({
+          full_name: data.full_name || '',
+          phone: data.phone || '',
+          bio: data.bio || '',
+        });
+      }
+    } catch (error: any) {
+      console.error('Error in getProfile:', error);
+      setMessage('Error loading profile: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const hasSocialLinks = Boolean(
-    social.behance || social.dribbble || social.linkedin || social.instagram || social.facebook
-  );
+  const createProfile = async (userId: string) => {
+    try {
+      const newProfile = {
+        user_id: userId,
+        full_name: user?.user_metadata?.full_name || '',
+        avatar_url: user?.user_metadata?.avatar_url || '',
+        email: user?.email || '',
+        phone: '',
+        bio: '',
+        skills: [],
+      };
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert(newProfile)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setProfile(data);
+      setFormData({
+        full_name: data.full_name || '',
+        phone: data.phone || '',
+        bio: data.bio || '',
+      });
+    } catch (error: any) {
+      console.error('Error creating profile:', error);
+      setMessage('Error creating profile: ' + error.message);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!profile || !user) return;
+
+    try {
+      setMessage('');
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: formData.full_name,
+          phone: formData.phone,
+          bio: formData.bio,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setProfile(prev => prev ? { ...prev, ...formData } : null);
+      setEditing(false);
+      setMessage('Profile updated successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      setMessage('Error updating profile: ' + error.message);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      router.push('/auth');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  // Listen for auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        router.push('/auth');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase, router]);
 
   if (loading) {
     return (
-      <div className="min-h-[100svh] bg-background">
+      <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <div className="max-w-4xl mx-auto py-8 px-4">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2 space-y-4">
+                <div className="h-32 bg-gray-200 rounded"></div>
+                <div className="h-32 bg-gray-200 rounded"></div>
+              </div>
+              <div className="space-y-4">
+                <div className="h-32 bg-gray-200 rounded"></div>
+                <div className="h-32 bg-gray-200 rounded"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -120,171 +191,198 @@ export default function ProfileHomePage() {
   }
 
   return (
-    <div className="min-h-[100svh] bg-background">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <main className="mx-auto w-full max-w-sm px-4 pb-12 pt-8 sm:max-w-md md:max-w-2xl sm:px-6 lg:px-8">
-        <section className="relative overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-xl">
-          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-r from-primary/90 via-primary to-primary/70 opacity-90" aria-hidden="true" />
+      
+      <div className="max-w-4xl mx-auto py-8 px-4">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
+          <p className="text-gray-600 mt-2">Manage your account settings and preferences</p>
+        </div>
 
-          <header className="relative p-5 pb-8">
-            <div className="flex items-start justify-between">
-              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-white/80">
-                Profile
-              </span>
-            </div>
+        {message && (
+          <div className={`mb-6 p-4 rounded-md ${
+            message.includes('Error') 
+              ? 'bg-red-50 text-red-800 border border-red-200' 
+              : 'bg-green-50 text-green-800 border border-green-200'
+          }`}>
+            {message}
+          </div>
+        )}
 
-            <div className="mt-10 flex flex-col items-center text-center">
-              <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-white bg-gray-100 shadow-lg">
-                {profile?.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={profile.avatar_url} alt={profile?.full_name || "Avatar"} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-white text-3xl font-semibold text-primary">
-                    {(profile?.full_name?.charAt(0) || "U").toUpperCase()}
-                  </div>
-                )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Main Profile Info */}
+          <div className="md:col-span-2">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-5 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Personal Information</h2>
               </div>
+              <div className="p-6 space-y-6">
+                {/* Email (read-only) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={user?.email || ''}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
+                  />
+                </div>
 
-              <div className="mt-4 space-y-2">
-                <h1 className="text-xl font-semibold text-gray-900">
-                  {profile?.full_name || "User"}
-                </h1>
-                <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-medium uppercase tracking-wider">
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold ${
-                      isWorker ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700"
-                    }`}
-                  >
-                    {isWorker ? "Worker" : "Poster"}
-                  </span>
-                  {email && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 text-[11px] font-semibold text-slate-600 shadow-sm backdrop-blur">
-                      <FiMail className="h-3.5 w-3.5" />
-                      {email}
-                    </span>
+                {/* Full Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name
+                  </label>
+                  {editing ? (
+                    <input
+                      type="text"
+                      value={formData.full_name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter your full name"
+                    />
+                  ) : (
+                    <p className="px-3 py-2 text-gray-900">{profile?.full_name || 'Not set'}</p>
+                  )}
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  {editing ? (
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter your phone number"
+                    />
+                  ) : (
+                    <p className="px-3 py-2 text-gray-900">{profile?.phone || 'Not set'}</p>
+                  )}
+                </div>
+
+                {/* Bio */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Bio
+                  </label>
+                  {editing ? (
+                    <textarea
+                      value={formData.bio}
+                      onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Tell us about yourself..."
+                    />
+                  ) : (
+                    <p className="px-3 py-2 text-gray-900 whitespace-pre-wrap">
+                      {profile?.bio || 'No bio provided'}
+                    </p>
+                  )}
+                </div>
+
+                {/* Edit/Save Buttons */}
+                <div className="flex justify-end space-x-3 pt-4">
+                  {editing ? (
+                    <>
+                      <button
+                        onClick={() => {
+                          setEditing(false);
+                          setFormData({
+                            full_name: profile?.full_name || '',
+                            phone: profile?.phone || '',
+                            bio: profile?.bio || '',
+                          });
+                        }}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSave}
+                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        Save Changes
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setEditing(true)}
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      Edit Profile
+                    </button>
                   )}
                 </div>
               </div>
-
-              {hasSocialLinks && (
-                <div className="mt-5 flex w-full flex-wrap items-center justify-center gap-3">
-                  {social.facebook && (
-                    <Link
-                      href={social.facebook}
-                      target="_blank"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#0866FF] shadow-sm transition hover:-translate-y-0.5 hover:border-[#0866FF]/50 hover:bg-[#0866FF]/5"
-                    >
-                      <FaFacebook className="h-5 w-5" />
-                    </Link>
-                  )}
-                  {social.behance && (
-                    <Link
-                      href={social.behance}
-                      target="_blank"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#1769FF] shadow-sm transition hover:-translate-y-0.5 hover:border-[#1769FF]/50 hover:bg-[#1769FF]/5"
-                    >
-                      <BsBehance className="h-5 w-5" />
-                    </Link>
-                  )}
-                  {social.dribbble && (
-                    <Link
-                      href={social.dribbble}
-                      target="_blank"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#EA4C89] shadow-sm transition hover:-translate-y-0.5 hover:border-[#EA4C89]/50 hover:bg-[#EA4C89]/5"
-                    >
-                      <BsDribbble className="h-5 w-5" />
-                    </Link>
-                  )}
-                  {social.linkedin && (
-                    <Link
-                      href={social.linkedin}
-                      target="_blank"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#0A66C2] shadow-sm transition hover:-translate-y-0.5 hover:border-[#0A66C2]/50 hover:bg-[#0A66C2]/5"
-                    >
-                      <BsLinkedin className="h-5 w-5" />
-                    </Link>
-                  )}
-                  {social.instagram && (
-                    <Link
-                      href={social.instagram}
-                      target="_blank"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-[#C13584] shadow-sm transition hover:-translate-y-0.5 hover:border-[#C13584]/50 hover:bg-[#C13584]/5"
-                    >
-                      <BsInstagram className="h-5 w-5" />
-                    </Link>
-                  )}
-                </div>
-              )}
             </div>
-          </header>
+          </div>
 
-          <div className="relative border-t border-slate-100 bg-white p-5">
-            <div className="space-y-5">
-              <section className="bg-white">
-                <h2 className="text-xs font-semibold uppercase tracking-[0.45em] text-slate-500">
-                  About
-                </h2>
-                <div className="mt-2 rounded-2xl bg-white border border-slate-100 shadow-sm">
-                  <p className="whitespace-pre-line px-4 py-3 text-sm font-medium text-slate-700">
-                    {profile?.bio || "Share a short introduction to let others get to know you."}
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Account Info */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-5 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Account</h2>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <p className="text-sm text-gray-500">Member since</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
                   </p>
                 </div>
-              </section>
-
-              <section className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2 bg-white">
-                <div className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
-                  <span className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-primary shadow-sm">
-                    <FiMapPin className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <div className="text-xs uppercase tracking-wide text-slate-500">Place</div>
-                    <p className="mt-1 font-medium text-slate-800">
-                      {profile?.place || "—"}
-                    </p>
-                  </div>
+                <div>
+                  <p className="text-sm text-gray-500">User ID</p>
+                  <p className="text-sm font-medium text-gray-900 font-mono text-xs truncate">
+                    {user?.id}
+                  </p>
                 </div>
-                <div className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
-                  <span className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-primary shadow-sm">
-                    <FiMail className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <div className="text-xs uppercase tracking-wide text-slate-500">Contact</div>
-                    <p className="mt-1 break-words font-medium text-slate-800">
-                      {contactDisplay}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 sm:col-span-2">
-                  <span className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-primary shadow-sm">
-                    <FiCalendar className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <div className="text-xs uppercase tracking-wide text-slate-500">Joined</div>
-                    <p className="mt-1 font-medium text-slate-800">{joinedDate}</p>
-                  </div>
-                </div>
-              </section>
-
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <button
-                  onClick={() => router.push("/profile/edit")}
-                  className="btn-primary inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold sm:w-auto"
-                >
-                  <FiEdit3 className="h-4 w-4" />
-                  Edit profile
-                </button>
                 <button
                   onClick={handleSignOut}
-                  className="btn-secondary inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold sm:w-auto"
+                  className="w-full px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-md hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
-                  <FiLogOut className="h-4 w-4" />
-                  Log out
+                  Sign Out
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-5 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
+              </div>
+              <div className="p-6 space-y-3">
+                <button
+                  onClick={() => router.push('/discovery')}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                >
+                  📋 Browse Tasks
+                </button>
+                <button
+                  onClick={() => router.push('/workers')}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                >
+                  👥 Find Workers
+                </button>
+                <button
+                  onClick={() => router.push('/discovery')}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                >
+                  ➕ Create Task
                 </button>
               </div>
             </div>
           </div>
-        </section>
-      </main>
+        </div>
+      </div>
     </div>
   );
 }
