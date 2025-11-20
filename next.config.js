@@ -24,7 +24,6 @@ const nextConfig = {
   // Disable source maps in production
   productionBrowserSourceMaps: false,
   // Use static export for Vercel
-  output: 'export',
   // Add trailing slash for static export
   trailingSlash: true,
   // Disable TypeScript type checking during build for faster builds
