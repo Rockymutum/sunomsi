@@ -381,12 +381,12 @@ export default function TaskCard({ task }: TaskCardProps) {
 
       {/* Media */}
       {task.images && task.images.length > 0 && (
-        <div className="tile w-full bg-black/5">
+        <div className="tile w-full aspect-square">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={task.images[0]}
             alt={task.title}
-            className={`w-full max-h-96 object-cover ${isHovered ? 'brightness-95' : 'brightness-100'}`}
+            className={`w-full h-full object-cover ${isHovered ? 'brightness-95' : 'brightness-100'}`}
           />
         </div>
       )}
