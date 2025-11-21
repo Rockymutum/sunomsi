@@ -198,7 +198,7 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50 border-t border-gray-100 translate-y-0">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50 border-t border-gray-100">
         <div className="flex justify-around items-center h-14 px-2">
           <Link href="/discovery" className="flex flex-col items-center justify-center flex-1 h-full pt-1">
             <BsGlobeAsiaAustralia className="h-5 w-5" />
