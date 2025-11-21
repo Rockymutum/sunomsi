@@ -86,7 +86,7 @@ export default function MessagesPage() {
     return (
       <div className="min-h-[100svh] bg-background">
         <Navbar />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-20 pb-20 md:pb-12">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
@@ -99,7 +99,7 @@ export default function MessagesPage() {
     <div className="min-h-[100svh] bg-background">
       <Navbar />
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-20 pb-20 md:pb-6">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Messages</h1>
 
         {conversations.length > 0 ? (

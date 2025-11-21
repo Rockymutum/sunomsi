@@ -170,7 +170,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="max-w-4xl mx-auto py-8 px-4">
+        <div className="max-w-4xl mx-auto py-8 px-4 pt-20 pb-20 md:pb-8">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
             <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
@@ -194,7 +194,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="max-w-4xl mx-auto py-8 px-4">
+      <div className="max-w-4xl mx-auto py-8 px-4 pt-20 pb-20 md:pb-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
@@ -203,8 +203,8 @@ export default function ProfilePage() {
 
         {message && (
           <div className={`mb-6 p-4 rounded-md ${message.includes('Error')
-              ? 'bg-red-50 text-red-800 border border-red-200'
-              : 'bg-green-50 text-green-800 border border-green-200'
+            ? 'bg-red-50 text-red-800 border border-red-200'
+            : 'bg-green-50 text-green-800 border border-green-200'
             }`}>
             {message}
           </div>

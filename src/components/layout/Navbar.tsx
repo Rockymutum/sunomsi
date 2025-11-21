@@ -54,7 +54,7 @@ export default function Navbar() {
           .select('avatar_url, updated_at')
           .eq('user_id', updatedUser.id)
           .single();
-          
+
         if (profile?.avatar_url) {
           const ts = profile.updated_at ? `?t=${encodeURIComponent(profile.updated_at)}` : '';
           setAvatarUrl(`${profile.avatar_url}${ts}`);
@@ -124,31 +124,28 @@ export default function Navbar() {
                 />
                 <span className="text-xl font-bold text-primary">SUNOMSI</span>
               </div>
-              
+
               <div className="hidden md:ml-6 md:flex md:space-x-5">
                 <Link
                   href="/discovery"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    pathname === '/discovery' ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === '/discovery' ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    }`}
                 >
                   <BsGlobeAsiaAustralia className="h-5 w-5" />
                   <span className="ml-1">Discover</span>
                 </Link>
-                <Link 
+                <Link
                   href="/workers"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    pathname === '/workers' ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === '/workers' ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    }`}
                 >
                   <BsPerson className="h-5 w-5" />
                   <span className="ml-1">Workers</span>
                 </Link>
                 <Link
                   href="/messages"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    pathname.startsWith('/messages') ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname.startsWith('/messages') ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    }`}
                 >
                   <BsChatDots className="h-5 w-5" />
                   <span className="ml-1">Messages</span>
@@ -163,26 +160,18 @@ export default function Navbar() {
               >
                 🔍
               </button>
-              
+
               {user ? (
-                <>
-                  <Link href="/profile" className="flex items-center">
-                    <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                      {avatarUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="h-5 w-5 text-gray-600">👤</div>
-                      )}
-                    </div>
-                  </Link>
-                  <button
-                    onClick={handleSignOut}
-                    className="px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200"
-                  >
-                    Sign Out
-                  </button>
-                </>
+                <Link href="/profile" className="flex items-center">
+                  <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                    {avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-5 w-5 text-gray-600">👤</div>
+                    )}
+                  </div>
+                </Link>
               ) : (
                 <Link href="/auth" className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark">
                   Sign In
@@ -209,7 +198,7 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50 border-t border-gray-100">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50 border-t border-gray-100 translate-y-0">
         <div className="flex justify-around items-center h-14 px-2">
           <Link href="/discovery" className="flex flex-col items-center justify-center flex-1 h-full pt-1">
             <BsGlobeAsiaAustralia className="h-5 w-5" />
