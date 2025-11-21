@@ -29,7 +29,7 @@ export default function ProfilePage() {
   });
   const [user, setUser] = useState<any>(null);
   const [message, setMessage] = useState('');
-  
+
   const supabase = createClientComponentClient();
   const router = useRouter();
 
@@ -40,7 +40,7 @@ export default function ProfilePage() {
   const checkAuth = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         router.push('/auth');
         return;
@@ -57,7 +57,7 @@ export default function ProfilePage() {
   const getProfile = async (userId: string) => {
     try {
       setLoading(true);
-      
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -106,7 +106,7 @@ export default function ProfilePage() {
         .single();
 
       if (error) throw error;
-      
+
       setProfile(data);
       setFormData({
         full_name: data.full_name || '',
@@ -193,7 +193,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
+
       <div className="max-w-4xl mx-auto py-8 px-4">
         {/* Header */}
         <div className="mb-8">
@@ -202,11 +202,10 @@ export default function ProfilePage() {
         </div>
 
         {message && (
-          <div className={`mb-6 p-4 rounded-md ${
-            message.includes('Error') 
-              ? 'bg-red-50 text-red-800 border border-red-200' 
+          <div className={`mb-6 p-4 rounded-md ${message.includes('Error')
+              ? 'bg-red-50 text-red-800 border border-red-200'
               : 'bg-green-50 text-green-800 border border-green-200'
-          }`}>
+            }`}>
             {message}
           </div>
         )}
@@ -307,7 +306,7 @@ export default function ProfilePage() {
                       </button>
                       <button
                         onClick={handleSave}
-                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 text-sm font-medium text-white bg-slate-800 border border-transparent rounded-md hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500"
                       >
                         Save Changes
                       </button>
@@ -315,7 +314,7 @@ export default function ProfilePage() {
                   ) : (
                     <button
                       onClick={() => setEditing(true)}
-                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="px-4 py-2 text-sm font-medium text-white bg-slate-800 border border-transparent rounded-md hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500"
                     >
                       Edit Profile
                     </button>

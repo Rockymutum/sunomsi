@@ -329,13 +329,13 @@ export default function TaskCard({ task }: TaskCardProps) {
   if (hidden) return null;
 
   return (
-    <div 
-      className="bg-white rounded-lg border border-gray-200 overflow-hidden md:rounded-md md:border-0 md:bg-[rgb(var(--color-card))] md:shadow-sm md:hover:shadow-md md:transition-shadow"
+    <div
+      className="bg-white rounded-[28px] shadow-xl border border-slate-200 mb-6 overflow-hidden transition-shadow hover:shadow-2xl"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Header */}
-      <div className="p-4">
+      <div className="px-6 py-4 sm:px-8 sm:py-5">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2 min-w-0">
             <Link href={`/profile/${(task as any).poster_id}`} className="flex items-center gap-2 min-w-0 cursor-pointer">
@@ -349,24 +349,34 @@ export default function TaskCard({ task }: TaskCardProps) {
                   </div>
                 )}
               </div>
-              <div className="min-w-0">
-                <div className="text-sm text-gray-900 font-medium truncate">{(task as any).poster?.full_name || 'Someone'}</div>
-                <div className="text-[12px] text-gray-500 truncate">{formatDistanceToNow(new Date((task as any).created_at))}</div>
+              <div className="min-w-0 flex flex-col">
+                <span className="text-[15px] text-gray-900 font-semibold hover:underline truncate">
+                  {(task as any).poster?.full_name || 'Someone'}
+                </span>
+                <div className="flex items-center text-xs text-gray-500">
+                  <span>{formatDistanceToNow(new Date((task as any).created_at))}</span>
+                  <span className="mx-1">·</span>
+                  <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-label="Shared with Public">
+                    <g fillRule="evenodd">
+                      <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm3.5 11.5a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0z" />
+                    </g>
+                  </svg>
+                </div>
               </div>
             </Link>
           </div>
           <div className="flex items-center gap-2">
-            <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap">
-              ₹{task.budget}
-            </span>
             {canDelete && (
               <button
                 type="button"
                 onClick={handleDelete}
                 disabled={deleting}
-                className="btn-secondary-compact border-red-300 text-red-700 hover:bg-red-50"
+                className="text-gray-500 hover:bg-gray-100 p-2 rounded-full transition-colors"
+                title="Delete post"
               >
-                {deleting ? 'Deleting…' : 'Delete'}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             )}
           </div>
@@ -374,60 +384,79 @@ export default function TaskCard({ task }: TaskCardProps) {
       </div>
 
       {/* Body: text first */}
-      <div className="px-4 pb-3">
-        <h3 className="text-base font-semibold text-gray-900 mb-1">{task.title}</h3>
-        <p className="text-gray-700 text-sm whitespace-pre-line">{task.description}</p>
+      <div className="px-6 pb-4 sm:px-8 sm:pb-5">
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">{task.title}</h3>
+        <p className="text-[15px] text-slate-700 whitespace-pre-line leading-relaxed">{task.description}</p>
+        <div className="mt-3 flex items-center gap-2">
+          <span className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full text-xs font-semibold">
+            {task.category}
+          </span>
+          <span className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-xs font-semibold">
+            ₹{task.budget}
+          </span>
+          <div className="flex items-center text-xs text-slate-500 ml-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {task.location}
+          </div>
+        </div>
       </div>
 
-      {/* Media */}
+      {/* Media - Full Bleed */}
       {task.images && task.images.length > 0 && (
-        <div className="tile w-full aspect-square">
+        <div className="w-full aspect-square bg-gray-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={task.images[0]}
             alt={task.title}
-            className={`w-full h-full object-cover ${isHovered ? 'brightness-95' : 'brightness-100'}`}
+            className="w-full h-full object-cover block"
           />
         </div>
       )}
 
-      {/* Meta */}
-      <div className="px-4 py-3 flex items-center justify-between text-xs text-gray-600">
-        <div className="flex items-center truncate">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          <span className="truncate">{task.location}</span>
-        </div>
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-gray-100 text-gray-800">
-          {task.category}
-        </span>
-      </div>
-
       {/* Footer actions */}
-      <div className="px-2 py-1 grid grid-cols-3 gap-1">
-        <Link href={`/tasks/${task.id}`} className="btn-subtle w-full text-center">
-          View details
-        </Link>
-        <button type="button" onClick={handleComment} className="btn-subtle w-full text-center">
-          Comment
-        </button>
-        <button type="button" onClick={handleShare} className="btn-subtle w-full text-center">
-          Share
-        </button>
+      <div className="px-3 py-2 border-t border-slate-200">
+        <div className="flex items-center justify-between">
+          <Link href={`/tasks/${task.id}`} className="flex-1 flex items-center justify-center gap-2 py-2.5 hover:bg-slate-50 rounded-xl transition-colors text-slate-600 font-semibold text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            View details
+          </Link>
+          <button
+            onClick={handleComment}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 hover:bg-slate-50 rounded-xl transition-colors text-slate-600 font-semibold text-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+            </svg>
+            Comment
+          </button>
+          <button
+            onClick={handleShare}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 hover:bg-slate-50 rounded-xl transition-colors text-slate-600 font-semibold text-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            Share
+          </button>
+        </div>
       </div>
 
       {/* Inline comments */}
       {showComments && (
-        <div className="px-3 pb-3">
+        <div className="px-6 py-4 border-t border-slate-200 bg-slate-50">
           <div className="mt-2">
             {commentsLoading ? (
               <div className="text-xs text-gray-500">Loading comments…</div>
             ) : comments.length === 0 ? (
               <div className="text-xs text-gray-500">Be the first to comment.</div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {comments.map((c) => (
                   <div key={c.id} className="flex items-start gap-2">
                     <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
@@ -441,8 +470,8 @@ export default function TaskCard({ task }: TaskCardProps) {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="bg-gray-100 rounded-2xl px-3 py-2 inline-block max-w-full sm:max-w-[90%] break-words">
-                        <div className="text-[13px] font-medium text-gray-900">{c.user?.full_name || 'User'}</div>
+                      <div className="bg-white border border-gray-200 rounded-2xl px-3 py-2 inline-block max-w-full shadow-sm">
+                        <div className="text-[13px] font-semibold text-gray-900">{c.user?.full_name || 'User'}</div>
                         {editCommentId === c.id ? (
                           <div className="mt-1">
                             <textarea
@@ -461,11 +490,17 @@ export default function TaskCard({ task }: TaskCardProps) {
                         )}
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-3 gap-y-1 text-[12px] text-gray-500 pl-2">
-                        <button onClick={() => toggleLike(c.id)} className={`hover:underline ${likedByMe[c.id] ? 'text-primary' : ''}`}>Like</button>
-                        <button className="hover:underline" onClick={(e) => e.preventDefault()}>Reply</button>
-                        <span>· {formatDistanceToNow(new Date(c.created_at))}</span>
-                        {typeof likeCounts[c.id] !== 'undefined' && <span>· {likeCounts[c.id]} likes</span>}
-                        {typeof replyCounts[c.id] !== 'undefined' && <span>· {replyCounts[c.id]} replies</span>}
+                        <button onClick={() => toggleLike(c.id)} className={`font-semibold hover:underline ${likedByMe[c.id] ? 'text-primary' : ''}`}>Like</button>
+                        <button className="font-semibold hover:underline" onClick={(e) => e.preventDefault()}>Reply</button>
+                        <span>{formatDistanceToNow(new Date(c.created_at))}</span>
+                        {typeof likeCounts[c.id] !== 'undefined' && likeCounts[c.id] > 0 && (
+                          <span className="flex items-center gap-1">
+                            <span className="bg-primary rounded-full p-0.5">
+                              <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" /></svg>
+                            </span>
+                            {likeCounts[c.id]}
+                          </span>
+                        )}
                         {userId && c.user_id === userId && editCommentId !== c.id && (
                           <>
                             <span>·</span>
@@ -482,22 +517,30 @@ export default function TaskCard({ task }: TaskCardProps) {
             )}
           </div>
 
-          <form onSubmit={handleAddComment} className="mt-2 flex items-center gap-2">
-            <input
-              type="text"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Write a comment…"
-              className="flex-1 rounded-full border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-              disabled={postingComment}
-            />
-            <button
-              type="submit"
-              disabled={postingComment}
-              className="px-3 py-1.5 rounded-full bg-primary text-white text-sm disabled:opacity-60"
-            >
-              {postingComment ? 'Posting…' : 'Post'}
-            </button>
+          <form onSubmit={handleAddComment} className="mt-3 flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+              {/* Current user avatar placeholder */}
+              <div className="h-full w-full flex items-center justify-center bg-gray-200 text-gray-500 text-xs">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
+              </div>
+            </div>
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Write a comment…"
+                className="w-full rounded-full border-none bg-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                disabled={postingComment}
+              />
+              <button
+                type="submit"
+                disabled={postingComment || !commentText.trim()}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-primary disabled:opacity-50"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+              </button>
+            </div>
           </form>
         </div>
       )}

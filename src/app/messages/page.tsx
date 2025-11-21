@@ -9,27 +9,27 @@ import { formatDistanceToNow } from '@/utils/dateUtils';
 export default function MessagesPage() {
   const router = useRouter();
   const supabase = createClientComponentClient();
-  
+
   const [conversations, setConversations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  
+
   useEffect(() => {
     const fetchConversations = async () => {
       setLoading(true);
-      
+
       try {
         // Check authentication status
         const { data: { session } } = await supabase.auth.getSession();
         const currentUserId = session?.user?.id;
-        
+
         if (!currentUserId) {
           router.push('/auth');
           return;
         }
-        
+
         setUserId(currentUserId);
-        
+
         // Get all conversations where the user is either sender or receiver
         const { data: messagesData, error: messagesError } = await supabase
           .from('messages')
@@ -43,15 +43,15 @@ export default function MessagesPage() {
           `)
           .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
           .order('created_at', { ascending: false });
-        
+
         if (messagesError) throw messagesError;
-        
+
         // Process conversations
         const conversationMap = new Map();
-        
+
         for (const message of messagesData || []) {
           const partnerId = message.sender_id === currentUserId ? message.receiver_id : message.sender_id;
-          
+
           if (!conversationMap.has(partnerId)) {
             // Get partner's profile
             const { data: profile } = await supabase
@@ -59,7 +59,7 @@ export default function MessagesPage() {
               .select('full_name, avatar_url')
               .eq('user_id', partnerId)
               .single();
-              
+
             conversationMap.set(partnerId, {
               partnerId,
               partnerName: profile?.full_name || 'Unknown User',
@@ -70,7 +70,7 @@ export default function MessagesPage() {
             });
           }
         }
-        
+
         setConversations(Array.from(conversationMap.values()));
       } catch (error) {
         console.error('Error fetching conversations:', error);
@@ -78,7 +78,7 @@ export default function MessagesPage() {
         setLoading(false);
       }
     };
-    
+
     fetchConversations();
   }, [router, supabase]);
 
@@ -98,15 +98,15 @@ export default function MessagesPage() {
   return (
     <div className="min-h-[100svh] bg-background">
       <Navbar />
-      
+
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Messages</h1>
-        
+
         {conversations.length > 0 ? (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <ul className="divide-y divide-gray-200">
               {conversations.map((conversation) => (
-                <li 
+                <li
                   key={conversation.partnerId}
                   onClick={() => router.push(`/messages/${conversation.partnerId}`)}
                   className="hover:bg-gray-50 cursor-pointer"
@@ -115,9 +115,9 @@ export default function MessagesPage() {
                     <div className="flex items-center">
                       <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
                         {conversation.partnerAvatar ? (
-                          <img 
-                            src={conversation.partnerAvatar} 
-                            alt={conversation.partnerName} 
+                          <img
+                            src={conversation.partnerAvatar}
+                            alt={conversation.partnerName}
                             className="h-full w-full object-cover"
                           />
                         ) : (
@@ -126,7 +126,7 @@ export default function MessagesPage() {
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="ml-3 flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <p className="text-sm font-medium text-gray-900 truncate">
@@ -141,7 +141,7 @@ export default function MessagesPage() {
                             {conversation.lastMessage}
                           </p>
                           {conversation.unread > 0 && (
-                            <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-blue-600">
+                            <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-slate-800">
                               <span className="text-xs font-medium text-white">
                                 {conversation.unread}
                               </span>
@@ -164,9 +164,9 @@ export default function MessagesPage() {
             <p className="mt-1 text-sm text-gray-500">
               When you connect with other users, your conversations will appear here.
             </p>
-            <button 
+            <button
               onClick={() => router.push('/discovery')}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="mt-4 px-4 py-2 bg-slate-800 text-white rounded-md hover:bg-slate-900 transition-colors"
             >
               Browse Tasks
             </button>

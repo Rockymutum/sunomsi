@@ -37,7 +37,7 @@ export default function WorkersPage() {
   const supabase = createClientComponentClient();
   const searchParams = useSearchParams();
   const initialQ = (searchParams.get('q') || '').trim();
-  
+
   const [workers, setWorkers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
@@ -123,14 +123,52 @@ export default function WorkersPage() {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
+  // Scroll restoration - restore after workers are loaded
+  useEffect(() => {
+    if (!loading && workers.length > 0) {
+      const savedScroll = sessionStorage.getItem('workersScroll');
+      if (savedScroll) {
+        const scrollY = parseInt(savedScroll, 10);
+        if (scrollY > 0) {
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              window.scrollTo({
+                top: scrollY,
+                behavior: 'instant' as ScrollBehavior,
+              });
+            }, 150);
+          });
+        }
+      }
+    }
+  }, [loading, workers.length]);
+
+  // Save scroll position
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    const handleScroll = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        const scrollY = window.scrollY;
+        sessionStorage.setItem('workersScroll', scrollY.toString());
+      }, 100);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, []);
+
   // Keep filters.searchTerm in sync with URL changes (e.g., header search while on this page)
   useEffect(() => {
     setFilters((prev) => ({ ...prev, searchTerm: initialQ }));
   }, [initialQ]);
-  
+
   const fetchWorkers = async () => {
     setLoading(true);
-    
+
     // Fetch worker profiles (without relational select to avoid FK dependency)
     let baseQuery = () => supabase
       .from('worker_profiles')
@@ -138,21 +176,21 @@ export default function WorkersPage() {
       .order('updated_at', { ascending: false })
       .order('created_at', { ascending: false });
     let query = baseQuery();
-    
+
     // Apply filters
     if (filters.skills && filters.skills.length > 0) {
       // Filter by skills (array contains)
       query = query.contains('skills', filters.skills);
     }
-    
+
     if (filters.minRating > 0) {
       query = query.gte('rating', filters.minRating);
     }
-    
+
     if (filters.location) {
       query = query.ilike('location', `%${filters.location}%`);
     }
-    
+
     if (filters.searchTerm) {
       // This is a bit tricky since we need to search in the related profiles table
       // For a real app, you might want to implement a more sophisticated search
@@ -160,7 +198,7 @@ export default function WorkersPage() {
         .from('profiles')
         .select('id')
         .ilike('full_name', `%${filters.searchTerm}%`);
-      
+
       if (!profileError && profileIds && profileIds.length > 0) {
         const ids = profileIds.map(p => p.id);
         query = query.in('user_id', ids);
@@ -169,7 +207,7 @@ export default function WorkersPage() {
         query = query.ilike('bio', `%${filters.searchTerm}%`);
       }
     }
-    
+
     const runProfiles = async () => await query;
     let { data, error } = await runProfiles();
     if (error && (error.message?.toLowerCase().includes('jwt') || error.message?.toLowerCase().includes('token'))) {
@@ -197,7 +235,7 @@ export default function WorkersPage() {
         // ignore; fall through
       }
     }
-    
+
     if (error) {
       console.error('Error fetching workers:', error);
     } else if (data && data.length > 0) {
@@ -220,7 +258,7 @@ export default function WorkersPage() {
           try {
             await supabase.auth.refreshSession();
             ({ data: profs, error: profErr } = await runProfilesJoin());
-          } catch (_e) {}
+          } catch (_e) { }
         }
 
         if (!profErr && profs) {
@@ -232,11 +270,11 @@ export default function WorkersPage() {
             ...w,
             profiles: byUserId[w.user_id]
               ? {
-                  id: byUserId[w.user_id].id,
-                  full_name: byUserId[w.user_id].full_name,
-                  avatar_url: byUserId[w.user_id].avatar_url,
-                  updated_at: byUserId[w.user_id].updated_at,
-                }
+                id: byUserId[w.user_id].id,
+                full_name: byUserId[w.user_id].full_name,
+                avatar_url: byUserId[w.user_id].avatar_url,
+                updated_at: byUserId[w.user_id].updated_at,
+              }
               : null,
           }));
         }
@@ -295,10 +333,10 @@ export default function WorkersPage() {
       setWorkers([]);
       setCategories([]);
     }
-    
+
     setLoading(false);
   };
-  
+
   const toggleSkillSelection = (skill: string) => {
     setSkillsInput((prev) =>
       prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]
@@ -392,9 +430,9 @@ export default function WorkersPage() {
   };
 
   return (
-    <div className="min-h-[100svh] bg-background">
+    <div className="min-h-[100svh] bg-slate-50">
       <Navbar />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {publishSuccess && (
           <div className="mb-4 rounded-md border border-green-200 bg-green-50 text-green-800 px-4 py-3 text-sm">
@@ -405,7 +443,7 @@ export default function WorkersPage() {
         <div className="mb-6">
           <AdPlaceholder type="banner" height="90px" />
         </div>
-        
+
         <div className="flex flex-col gap-6">
           {/* Main content */}
           <div className="flex-1">
@@ -419,15 +457,15 @@ export default function WorkersPage() {
             )}
 
             {showComposer && (
-              <div className="card mb-5">
+              <div className="bg-white rounded-[28px] shadow-xl border border-slate-200 p-6 sm:p-8 mb-6">
                 {/* Wizard header */}
                 <div className="mb-3">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span className={`${currentStep===0 ? 'font-semibold text-gray-900' : ''}`}>1. Basic Info</span>
+                    <span className={`${currentStep === 0 ? 'font-semibold text-gray-900' : ''}`}>1. Basic Info</span>
                     <span>›</span>
-                    <span className={`${currentStep===1 ? 'font-semibold text-gray-900' : ''}`}>2. Skills</span>
+                    <span className={`${currentStep === 1 ? 'font-semibold text-gray-900' : ''}`}>2. Skills</span>
                     <span>›</span>
-                    <span className={`${currentStep===2 ? 'font-semibold text-gray-900' : ''}`}>3. Review & Publish</span>
+                    <span className={`${currentStep === 2 ? 'font-semibold text-gray-900' : ''}`}>3. Review & Publish</span>
                   </div>
                 </div>
                 <form onSubmit={handleCreatePortfolio} className="space-y-3">
@@ -470,11 +508,10 @@ export default function WorkersPage() {
                               key={option}
                               type="button"
                               onClick={() => toggleSkillSelection(option)}
-                              className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                                active
-                                  ? 'border-primary bg-primary text-white shadow-sm'
-                                  : 'border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary'
-                              }`}
+                              className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-primary/30 ${active
+                                ? 'border-primary bg-primary text-white shadow-sm'
+                                : 'border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary'
+                                }`}
                             >
                               {option}
                             </button>
@@ -540,11 +577,10 @@ export default function WorkersPage() {
                   <button
                     type="button"
                     onClick={() => handleCategoryClick('')}
-                    className={`inline-flex items-center whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary/40 ${
-                      selectedCategory === ''
-                        ? 'border-primary bg-primary text-white shadow-sm'
-                        : 'border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary'
-                    }`}
+                    className={`inline-flex items-center whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary/40 ${selectedCategory === ''
+                      ? 'border-primary bg-primary text-white shadow-sm'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary'
+                      }`}
                   >
                     All
                   </button>
@@ -553,11 +589,10 @@ export default function WorkersPage() {
                       key={category}
                       type="button"
                       onClick={() => handleCategoryClick(category)}
-                      className={`inline-flex items-center whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary/40 ${
-                        selectedCategory === category
-                          ? 'border-primary bg-primary text-white shadow-sm'
-                          : 'border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary'
-                      }`}
+                      className={`inline-flex items-center whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary/40 ${selectedCategory === category
+                        ? 'border-primary bg-primary text-white shadow-sm'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary'
+                        }`}
                     >
                       {category}
                     </button>
@@ -565,7 +600,7 @@ export default function WorkersPage() {
                 </div>
               </div>
             )}
-            
+
             {loading ? (
               <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -577,14 +612,14 @@ export default function WorkersPage() {
                     <WorkerCard key={worker.id} worker={worker} />
                   ))}
                 </div>
-                
+
                 {/* Inline ad after first 3 workers */}
                 {workers.length > 3 && (
                   <div className="my-5 max-w-2xl mx-auto">
                     <AdPlaceholder type="inline" height="250px" />
                   </div>
                 )}
-                
+
                 {workers.length > 3 && (
                   <div className="max-w-2xl mx-auto flex flex-col gap-5">
                     {workers.slice(3).map((worker) => (
@@ -602,7 +637,7 @@ export default function WorkersPage() {
                 <p className="mt-1 text-sm text-gray-500">
                   Try adjusting your filters or check back later for new workers.
                 </p>
-                <button 
+                <button
                   onClick={handleClearFilters}
                   className="mt-4 btn-secondary"
                 >

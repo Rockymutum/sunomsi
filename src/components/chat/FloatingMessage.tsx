@@ -17,7 +17,7 @@ export default function FloatingMessage() {
   const [message, setMessage] = useState<any>(null);
   const [isVisible, setIsVisible] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+
   const messageRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
   const subscriptionRef = useRef<any>(null);
@@ -28,7 +28,7 @@ export default function FloatingMessage() {
   // Dragging functionality
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!messageRef.current) return;
-    
+
     const rect = messageRef.current.getBoundingClientRect();
     setDragOffset({
       x: e.clientX - rect.left,
@@ -39,7 +39,7 @@ export default function FloatingMessage() {
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging) return;
-    
+
     setPosition({
       x: e.clientX - dragOffset.x,
       y: e.clientY - dragOffset.y,
@@ -70,10 +70,10 @@ export default function FloatingMessage() {
       console.log('No user ID provided for subscription');
       return;
     }
-    
+
     console.log('Setting up subscription for user:', userId);
     setConnectionStatus('connecting');
-    
+
     // Clear any existing subscription
     if (subscriptionRef.current) {
       console.log('Removing existing subscription');
@@ -95,7 +95,7 @@ export default function FloatingMessage() {
           console.log('New message received:', payload);
           setMessage(payload.new as any);
           setIsVisible(true);
-          
+
           // Auto-hide after 5 seconds
           if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
@@ -107,12 +107,12 @@ export default function FloatingMessage() {
       )
       .subscribe((status: string, err?: Error) => {
         console.log('Subscription status:', status);
-        
+
         switch (status) {
           case 'SUBSCRIBED':
             setConnectionStatus('connected');
             break;
-            
+
           case 'CHANNEL_ERROR':
             console.error('Channel error:', err);
             setConnectionStatus('error');
@@ -121,7 +121,7 @@ export default function FloatingMessage() {
               setupSubscriptionWithUser(userId);
             }, 2000);
             break;
-            
+
           case 'TIMED_OUT':
             console.log('Connection timed out, attempting to reconnect...');
             setConnectionStatus('reconnecting');
@@ -142,7 +142,7 @@ export default function FloatingMessage() {
               }
             })();
             break;
-            
+
           case 'CLOSED':
             console.log('Connection closed, attempting to reconnect...');
             setConnectionStatus('reconnecting');
@@ -150,7 +150,7 @@ export default function FloatingMessage() {
               setupSubscriptionWithUser(userId);
             }, 2000);
             break;
-            
+
           default:
             console.log('Unknown subscription status:', status);
         }
@@ -169,11 +169,11 @@ export default function FloatingMessage() {
 
     const delay = Math.min(reconnectDelay * Math.pow(2, reconnectAttempts.current), 30000);
     reconnectAttempts.current++;
-    
+
     console.log(`Attempting to reconnect (attempt ${reconnectAttempts.current}) in ${delay}ms`);
-    
+
     await new Promise(resolve => setTimeout(resolve, delay));
-    
+
     try {
       await setupSubscriptionWithUser(userId);
       reconnectAttempts.current = 0; // Reset on successful connection
@@ -187,7 +187,7 @@ export default function FloatingMessage() {
   // Handle new message subscription
   useEffect(() => {
     console.log('FloatingMessage component mounted');
-    
+
     // Get initial session
     const getInitialSession = async () => {
       try {
@@ -199,17 +199,17 @@ export default function FloatingMessage() {
         return null;
       }
     };
-    
+
     // Set up the subscription with the current user ID
     const setupSubscriptionWithUser = async (userId: string) => {
       if (!userId) {
         console.log('No user ID provided for subscription');
         return;
       }
-      
+
       console.log('Setting up subscription for user:', userId);
       setConnectionStatus('connecting');
-      
+
       // Clear any existing subscription
       if (subscriptionRef.current) {
         console.log('Removing existing subscription');
@@ -234,14 +234,14 @@ export default function FloatingMessage() {
         )
         .subscribe((status: string, err?: Error) => {
           console.log('Subscription status:', status);
-          
+
           switch (status) {
             case 'SUBSCRIBED':
               console.log('Successfully subscribed to messages');
               setConnectionStatus('connected');
               reconnectAttempts.current = 0;
               break;
-              
+
             case 'CHANNEL_ERROR':
               console.error('Error with Supabase channel:', err);
               setConnectionStatus('error');
@@ -263,19 +263,19 @@ export default function FloatingMessage() {
                 reconnectWithBackoff(userId);
               }
               break;
-              
+
             case 'TIMED_OUT':
               console.error('Supabase channel timed out');
               setConnectionStatus('reconnecting');
               reconnectWithBackoff(userId);
               break;
-              
+
             case 'CLOSED':
               console.log('Channel closed, attempting to reconnect...');
               setConnectionStatus('reconnecting');
               reconnectWithBackoff(userId);
               break;
-              
+
             default:
               console.log('Unknown subscription status:', status);
           }
@@ -293,7 +293,7 @@ export default function FloatingMessage() {
         if (userId) {
           await setupSubscriptionWithUser(userId);
         }
-        
+
         // Check for existing messages
         if (userId) {
           const { data: recentMessages } = await supabase
@@ -302,7 +302,7 @@ export default function FloatingMessage() {
             .eq('receiver_id', userId)
             .order('created_at', { ascending: false })
             .limit(1);
-          
+
           if (recentMessages?.[0]) {
             console.log('Found recent message:', recentMessages[0]);
             setMessage(recentMessages[0]);
@@ -353,12 +353,12 @@ export default function FloatingMessage() {
   }, []);
 
   // Always render the component
-  
+
   // Show connection status for debugging
   if (connectionStatus !== 'connected') {
     console.log('Connection status:', connectionStatus);
   }
-  
+
   console.log('Rendering FloatingMessage with messages:', messages.length);
 
   // Toggle between expanded and minimized states
@@ -380,20 +380,20 @@ export default function FloatingMessage() {
   useEffect(() => {
     const fetchMessages = async () => {
       if (!isExpanded) return;
-      
+
       try {
         setIsLoading(true);
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
-        
+
         const { data, error } = await supabase
           .from('messages')
           .select('*')
           .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
           .order('created_at', { ascending: true });
-          
+
         if (error) throw error;
-        
+
         if (data) {
           setMessages(data);
           // Reset unread count when loading messages
@@ -405,10 +405,10 @@ export default function FloatingMessage() {
         setIsLoading(false);
       }
     };
-    
+
     fetchMessages();
   }, [isExpanded]);
-  
+
   // Handle new message when minimized
   useEffect(() => {
     if (messages.length > 0 && !isExpanded) {
@@ -417,7 +417,7 @@ export default function FloatingMessage() {
   }, [messages, isExpanded]);
 
   return (
-    <div 
+    <div
       className="fixed bottom-4 right-4 z-50 flex flex-col items-end space-y-2"
       style={{
         cursor: isDragging ? 'grabbing' : 'default',
@@ -425,13 +425,13 @@ export default function FloatingMessage() {
     >
       {/* Chat Window */}
       {isExpanded && (
-        <div 
+        <div
           ref={messageRef}
           className="w-80 h-[500px] bg-white dark:bg-gray-800 rounded-t-lg shadow-xl flex flex-col border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
           {/* Header */}
-          <div 
-            className="flex items-center justify-between bg-blue-600 text-white p-3 cursor-move"
+          <div
+            className="flex items-center justify-between bg-slate-800 text-white p-3 cursor-move"
             onMouseDown={handleMouseDown}
           >
             <div className="flex items-center space-x-2">
@@ -446,13 +446,13 @@ export default function FloatingMessage() {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setIsExpanded(false)}
-                className="text-white hover:bg-blue-700 rounded-full p-1"
+                className="text-white hover:bg-slate-900 rounded-full p-1"
               >
                 <X size={18} />
               </button>
             </div>
           </div>
-          
+
           {/* Messages */}
           <div className="flex-1 p-4 overflow-y-auto">
             {isLoading ? (
@@ -462,16 +462,15 @@ export default function FloatingMessage() {
             ) : messages.length > 0 ? (
               <div className="space-y-4">
                 {messages.map((msg) => (
-                  <div 
-                    key={msg.id} 
-                    className={`p-3 rounded-lg max-w-[80%] ${
-                      (async () => {
+                  <div
+                    key={msg.id}
+                    className={`p-3 rounded-lg max-w-[80%] ${(async () => {
                         const { data: { session } } = await supabase.auth.getSession();
-                        return msg.sender_id === session?.user?.id 
-                          ? 'ml-auto bg-blue-100 dark:bg-blue-900 text-right' 
+                        return msg.sender_id === session?.user?.id
+                          ? 'ml-auto bg-blue-100 dark:bg-blue-900 text-right'
                           : 'mr-auto bg-gray-100 dark:bg-gray-700';
                       })()
-                    }`}
+                      }`}
                   >
                     <div className="text-sm text-gray-800 dark:text-gray-200">
                       {msg.content}
@@ -486,14 +485,14 @@ export default function FloatingMessage() {
             ) : (
               <div className="h-full flex items-center justify-center">
                 <div className="text-center text-gray-500 dark:text-gray-400">
-                  {connectionStatus === 'connected' 
+                  {connectionStatus === 'connected'
                     ? 'No messages yet. Start a conversation!'
                     : `Connecting... (${connectionStatus})`}
                 </div>
               </div>
             )}
           </div>
-          
+
           {/* Footer */}
           <div className="border-t border-gray-200 dark:border-gray-700 p-3 bg-gray-50 dark:bg-gray-700">
             <a
@@ -506,13 +505,12 @@ export default function FloatingMessage() {
           </div>
         </div>
       )}
-      
+
       {/* Floating Button */}
       <button
         onClick={toggleChat}
-        className={`flex items-center justify-center w-14 h-14 rounded-full shadow-lg ${
-          isExpanded ? 'bg-blue-600' : 'bg-blue-600 hover:bg-blue-700'
-        } text-white transition-all duration-200`}
+        className={`flex items-center justify-center w-14 h-14 rounded-full shadow-lg ${isExpanded ? 'bg-slate-800' : 'bg-slate-800 hover:bg-slate-900'
+          } text-white transition-all duration-200`}
         aria-label={isExpanded ? 'Minimize chat' : 'Open chat'}
       >
         {isExpanded ? (

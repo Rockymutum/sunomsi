@@ -31,7 +31,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUserId(session?.user?.id ?? null);
-      
+
       // Fetch user profile data
       const { data: profile } = await supabase
         .from('profiles')
@@ -70,13 +70,13 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
       setHidden(true);
     }
   };
-  
+
   // Generate star rating display
   const renderStars = (rating: number) => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
-    
+
     for (let i = 0; i < 5; i++) {
       if (i < fullStars) {
         stars.push(
@@ -98,26 +98,26 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
         );
       }
     }
-    
+
     return <div className="flex">{stars}</div>;
   };
-  
+
   if (hidden) return null;
 
   return (
-    <div 
-      className="bg-white rounded-lg border border-gray-200 overflow-hidden md:rounded-md md:border-0 md:bg-[rgb(var(--color-card))] md:shadow-sm md:hover:shadow-md md:transition-shadow"
+    <div
+      className="bg-white rounded-[28px] shadow-xl border border-slate-200 overflow-hidden transition-shadow hover:shadow-2xl mb-6"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="p-4">
+      <div className="p-6 sm:p-8">
         <Link href={`/profile/${worker.user_id}`} className="flex items-center gap-3 mb-4">
           <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
             {userProfile?.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img 
-                src={`${userProfile.avatar_url}${userProfile.updated_at ? `?t=${encodeURIComponent(userProfile.updated_at)}` : ''}`} 
-                alt={userProfile.full_name || 'Avatar'} 
+              <img
+                src={`${userProfile.avatar_url}${userProfile.updated_at ? `?t=${encodeURIComponent(userProfile.updated_at)}` : ''}`}
+                alt={userProfile.full_name || 'Avatar'}
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -142,10 +142,10 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
             </div>
           </div>
         </Link>
-        { (worker as any).title && (
+        {(worker as any).title && (
           <div className="text-sm font-medium text-gray-900 mb-2">{(worker as any).title}</div>
         )}
-        
+
         {worker.location && (
           <div className="flex items-center text-sm text-gray-500 mb-3">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -155,18 +155,18 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
             <span>{worker.location}</span>
           </div>
         )}
-        
+
         {worker.bio && (
           <p className="text-gray-600 text-sm mb-4 line-clamp-2">{worker.bio}</p>
         )}
-        
+
         {worker.skills && worker.skills.length > 0 && (
           <div className="mb-4">
             <h4 className="text-xs font-medium text-gray-500 mb-2">SKILLS</h4>
             <div className="flex flex-wrap gap-1">
               {worker.skills.map((skill, index) => (
-                <span 
-                  key={index} 
+                <span
+                  key={index}
                   className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
                 >
                   {skill}
@@ -175,7 +175,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
             </div>
           </div>
         )}
-        
+
         <div className="mt-4 flex gap-2">
           <Link href={`/workers/${worker.user_id}`} className="btn-primary flex-1 text-center">
             View Profile
