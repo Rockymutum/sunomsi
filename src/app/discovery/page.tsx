@@ -9,7 +9,7 @@ import PageShell from '@/components/ui/PageShell';
 
 export default function DiscoveryPage() {
   const supabase = createClientComponentClient();
-  
+
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -33,36 +33,45 @@ export default function DiscoveryPage() {
     })();
   }, []);
 
-  // Quick scroll restoration for this specific page
+  // Scroll restoration - restore after tasks are loaded
   useEffect(() => {
-    console.log('Discovery page mounted - setting up scroll memory');
-    
-    // Save scroll position
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      sessionStorage.setItem('discoveryScroll', scrollY.toString());
-      console.log('Scroll saved:', scrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    
-    // Restore scroll position
-    const savedScroll = sessionStorage.getItem('discoveryScroll');
-    console.log('Saved scroll found:', savedScroll);
-    
-    if (savedScroll) {
-      const scrollY = parseInt(savedScroll);
-      if (scrollY > 0) {
-        console.log('Restoring discovery scroll to:', scrollY);
-        window.scrollTo(0, scrollY);
+    if (!loading && tasks.length > 0) {
+      // Restore scroll position after content is loaded
+      const savedScroll = sessionStorage.getItem('discoveryScroll');
+      if (savedScroll) {
+        const scrollY = parseInt(savedScroll, 10);
+        if (scrollY > 0) {
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              window.scrollTo({
+                top: scrollY,
+                behavior: 'instant' as ScrollBehavior,
+              });
+            }, 150);
+          });
+        }
       }
     }
+  }, [loading, tasks.length]);
 
+  // Save scroll position
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    const handleScroll = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        const scrollY = window.scrollY;
+        sessionStorage.setItem('discoveryScroll', scrollY.toString());
+      }, 100);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, []);
-  
+
   const fetchTasks = async () => {
     setLoading(true);
     setFetchError(null);
@@ -263,15 +272,15 @@ export default function DiscoveryPage() {
   // Filter UI removed; filtering remains via internal fetch logic
 
   return (
-    <div className="min-h-[100svh] bg-background">
+    <div className="min-h-[100svh] bg-slate-50">
       <Navbar />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Top banner ad */}
         <div className="mb-6">
           <AdPlaceholder type="banner" height="90px" />
         </div>
-        
+
         <div className="flex flex-col gap-6">
           {/* Main content */}
           <div className="flex-1">
@@ -287,8 +296,8 @@ export default function DiscoveryPage() {
                 </button>
               </div>
             ) : (
-              <div className="card mb-5">
-                <form onSubmit={handleCreateTask} className="space-y-3">
+              <div className="bg-white rounded-[28px] shadow-xl border border-slate-200 p-6 sm:p-8 mb-6">
+                <form onSubmit={handleCreateTask} className="space-y-4">
                   <div className="flex items-start gap-3">
                     <div className="flex-1">
                       <input
@@ -395,7 +404,7 @@ export default function DiscoveryPage() {
             )}
 
             <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Available Tasks</h1>
-            
+
             {loading ? (
               <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -407,14 +416,14 @@ export default function DiscoveryPage() {
                     <TaskCard key={task.id} task={task} />
                   ))}
                 </div>
-                
+
                 {/* Inline ad after first 3 tasks */}
                 {tasks.length > 3 && (
                   <div className="my-5 max-w-2xl mx-auto">
                     <AdPlaceholder type="inline" height="250px" />
                   </div>
                 )}
-                
+
                 {tasks.length > 3 && (
                   <div className="max-w-2xl mx-auto flex flex-col gap-5">
                     {tasks.slice(3).map((task) => (
