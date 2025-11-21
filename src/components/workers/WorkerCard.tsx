@@ -106,7 +106,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
 
   return (
     <div
-      className="bg-white rounded-[28px] shadow-xl border border-slate-200 overflow-hidden transition-shadow hover:shadow-2xl mb-6"
+      className="bg-white rounded-[28px] shadow-xl border border-slate-200 overflow-hidden transition-shadow hover:shadow-2xl mb-6 card-interactive"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

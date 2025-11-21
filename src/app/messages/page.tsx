@@ -14,72 +14,75 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchConversations = async () => {
+  const fetchConversations = async (showSpinner = true) => {
+    // Only show spinner if no cached data exists
+    if (showSpinner && conversations.length === 0) {
       setLoading(true);
+    }
 
-      try {
-        // Check authentication status
-        const { data: { session } } = await supabase.auth.getSession();
-        const currentUserId = session?.user?.id;
+    try {
+      // Check authentication status
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUserId = session?.user?.id;
 
-        if (!currentUserId) {
-          router.push('/auth');
-          return;
-        }
-
-        setUserId(currentUserId);
-
-        // Get all conversations where the user is either sender or receiver
-        const { data: messagesData, error: messagesError } = await supabase
-          .from('messages')
-          .select(`
-            id,
-            sender_id,
-            receiver_id,
-            created_at,
-            content,
-            read
-          `)
-          .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
-          .order('created_at', { ascending: false });
-
-        if (messagesError) throw messagesError;
-
-        // Process conversations
-        const conversationMap = new Map();
-
-        for (const message of messagesData || []) {
-          const partnerId = message.sender_id === currentUserId ? message.receiver_id : message.sender_id;
-
-          if (!conversationMap.has(partnerId)) {
-            // Get partner's profile
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('full_name, avatar_url')
-              .eq('user_id', partnerId)
-              .single();
-
-            conversationMap.set(partnerId, {
-              partnerId,
-              partnerName: profile?.full_name || 'Unknown User',
-              partnerAvatar: profile?.avatar_url,
-              lastMessage: message.content,
-              lastMessageTime: message.created_at,
-              unread: message.receiver_id === currentUserId && !message.read ? 1 : 0
-            });
-          }
-        }
-
-        setConversations(Array.from(conversationMap.values()));
-      } catch (error) {
-        console.error('Error fetching conversations:', error);
-      } finally {
-        setLoading(false);
+      if (!currentUserId) {
+        router.push('/auth');
+        return;
       }
-    };
 
-    fetchConversations();
+      setUserId(currentUserId);
+
+      // Get all conversations where the user is either sender or receiver
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('messages')
+        .select(`
+          id,
+          sender_id,
+          receiver_id,
+          created_at,
+          content,
+          read
+        `)
+        .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
+        .order('created_at', { ascending: false });
+
+      if (messagesError) throw messagesError;
+
+      // Process conversations
+      const conversationMap = new Map();
+
+      for (const message of messagesData || []) {
+        const partnerId = message.sender_id === currentUserId ? message.receiver_id : message.sender_id;
+
+        if (!conversationMap.has(partnerId)) {
+          // Get partner's profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, avatar_url')
+            .eq('user_id', partnerId)
+            .single();
+
+          conversationMap.set(partnerId, {
+            partnerId,
+            partnerName: profile?.full_name || 'Unknown User',
+            partnerAvatar: profile?.avatar_url,
+            lastMessage: message.content,
+            lastMessageTime: message.created_at,
+            unread: message.receiver_id === currentUserId && !message.read ? 1 : 0
+          });
+        }
+      }
+
+      setConversations(Array.from(conversationMap.values()));
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchConversations(true); // Initial load with spinner
   }, [router, supabase]);
 
   if (loading) {
@@ -99,7 +102,7 @@ export default function MessagesPage() {
     <div className="min-h-[100svh] bg-background">
       <Navbar />
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-20 pb-20 md:pb-6">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-20 pb-20 md:pb-6 page-transition">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Messages</h1>
 
         {conversations.length > 0 ? (

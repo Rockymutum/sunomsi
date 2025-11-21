@@ -78,9 +78,9 @@ export default function WorkersPage() {
 
   // Refetch when the page regains focus or becomes visible (handles back navigation)
   useEffect(() => {
-    const onFocus = () => fetchWorkers();
+    const onFocus = () => fetchWorkers(false); // Background fetch, no spinner
     const onVisibility = () => {
-      if (document.visibilityState === 'visible') fetchWorkers();
+      if (document.visibilityState === 'visible') fetchWorkers(false); // Background fetch, no spinner
     };
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onVisibility);
@@ -106,21 +106,13 @@ export default function WorkersPage() {
       // Also listen to profile updates so avatar/name changes reflect in the list
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
         // Refetch to re-merge latest profiles (full_name, avatar_url, updated_at)
-        fetchWorkers();
+        fetchWorkers(false); // Background fetch, no spinner
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase]);
-
-  // Refetch on auth state changes (handles JWT refresh/sign-in/sign-out)
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, _session) => {
-      fetchWorkers();
-    });
-    return () => subscription.unsubscribe();
   }, [supabase]);
 
   // Scroll restoration - restore after workers are loaded
@@ -166,8 +158,11 @@ export default function WorkersPage() {
     setFilters((prev) => ({ ...prev, searchTerm: initialQ }));
   }, [initialQ]);
 
-  const fetchWorkers = async () => {
-    setLoading(true);
+  const fetchWorkers = async (showSpinner = true) => {
+    // Only show spinner if no cached data exists
+    if (showSpinner && workers.length === 0) {
+      setLoading(true);
+    }
 
     // Fetch worker profiles (without relational select to avoid FK dependency)
     let baseQuery = () => supabase
@@ -433,7 +428,7 @@ export default function WorkersPage() {
     <div className="min-h-[100svh] bg-slate-50">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 pb-20 md:pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 pb-20 md:pb-8 page-transition">
         {publishSuccess && (
           <div className="mb-4 rounded-md border border-green-200 bg-green-50 text-green-800 px-4 py-3 text-sm">
             {publishSuccess}

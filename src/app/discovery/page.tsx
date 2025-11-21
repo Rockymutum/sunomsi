@@ -72,8 +72,11 @@ export default function DiscoveryPage() {
     };
   }, []);
 
-  const fetchTasks = async () => {
-    setLoading(true);
+  const fetchTasks = async (showSpinner = true) => {
+    // Only show spinner if no cached data exists
+    if (showSpinner && tasks.length === 0) {
+      setLoading(true);
+    }
     setFetchError(null);
     const run = async () => {
       return await supabase
@@ -118,9 +121,9 @@ export default function DiscoveryPage() {
 
   // Refetch when the page regains focus or becomes visible (handles back navigation)
   useEffect(() => {
-    const onFocus = () => fetchTasks();
+    const onFocus = () => fetchTasks(false); // Background fetch, no spinner
     const onVisibility = () => {
-      if (document.visibilityState === 'visible') fetchTasks();
+      if (document.visibilityState === 'visible') fetchTasks(false); // Background fetch, no spinner
     };
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onVisibility);
@@ -164,14 +167,6 @@ export default function DiscoveryPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase]);
-
-  // Refetch on auth state changes (handles JWT refresh/sign-in/sign-out)
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, _session) => {
-      fetchTasks();
-    });
-    return () => subscription.unsubscribe();
   }, [supabase]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -275,7 +270,7 @@ export default function DiscoveryPage() {
     <div className="min-h-[100svh] bg-slate-50">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 pb-20 md:pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 pb-20 md:pb-8 page-transition">
         {/* Top banner ad */}
         <div className="mb-6">
           <AdPlaceholder type="banner" height="90px" />
