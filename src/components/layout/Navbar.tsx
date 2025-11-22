@@ -27,7 +27,13 @@ export default function Navbar() {
       setUser(currentUser);
 
       if (currentUser) {
-        // Fetch user profile
+        // Try to load avatar from cache first
+        const cachedAvatar = sessionStorage.getItem(`avatar_${currentUser.id}`);
+        if (cachedAvatar) {
+          setAvatarUrl(cachedAvatar);
+        }
+
+        // Fetch user profile (in background)
         const { data: profile } = await supabase
           .from('profiles')
           .select('avatar_url, updated_at')
@@ -36,7 +42,10 @@ export default function Navbar() {
 
         if (profile?.avatar_url) {
           const ts = profile.updated_at ? `?t=${encodeURIComponent(profile.updated_at)}` : '';
-          setAvatarUrl(`${profile.avatar_url}${ts}`);
+          const fullAvatarUrl = `${profile.avatar_url}${ts}`;
+          setAvatarUrl(fullAvatarUrl);
+          // Cache the avatar URL
+          sessionStorage.setItem(`avatar_${currentUser.id}`, fullAvatarUrl);
         }
       } else {
         setAvatarUrl(null);
@@ -48,6 +57,12 @@ export default function Navbar() {
     const unsubscribe = sessionManager.subscribe(async (updatedUser) => {
       setUser(updatedUser);
       if (updatedUser) {
+        // Try to load avatar from cache first
+        const cachedAvatar = sessionStorage.getItem(`avatar_${updatedUser.id}`);
+        if (cachedAvatar) {
+          setAvatarUrl(cachedAvatar);
+        }
+
         // Fetch user profile on auth changes
         const { data: profile } = await supabase
           .from('profiles')
@@ -57,7 +72,10 @@ export default function Navbar() {
 
         if (profile?.avatar_url) {
           const ts = profile.updated_at ? `?t=${encodeURIComponent(profile.updated_at)}` : '';
-          setAvatarUrl(`${profile.avatar_url}${ts}`);
+          const fullAvatarUrl = `${profile.avatar_url}${ts}`;
+          setAvatarUrl(fullAvatarUrl);
+          // Cache the avatar URL
+          sessionStorage.setItem(`avatar_${updatedUser.id}`, fullAvatarUrl);
         }
       } else {
         setAvatarUrl(null);
@@ -197,21 +215,61 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50 border-t border-gray-100">
-        <div className="flex justify-around items-center h-14 px-2">
-          <Link href="/discovery" className="flex flex-col items-center justify-center flex-1 h-full pt-1">
-            <BsGlobeAsiaAustralia className="h-5 w-5" />
-            <span className="text-[11px] font-medium mt-0.5">Discover</span>
-          </Link>
-          <Link href="/workers" className="flex flex-col items-center justify-center flex-1 h-full pt-1">
-            <BsPerson className="h-5 w-5" />
-            <span className="text-[11px] font-medium mt-0.5">Workers</span>
-          </Link>
-          <Link href="/messages" className="flex flex-col items-center justify-center flex-1 h-full pt-1">
-            <BsChatDots className="h-5 w-5" />
-            <span className="text-[11px] font-medium mt-0.5">Messages</span>
-          </Link>
+
+      {/* Mobile Bottom Navigation - Floating Design */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+        <div className="px-4 pb-4">
+          <div className="bg-white/90 backdrop-blur-xl rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-gray-200/50 pointer-events-auto">
+            <div className="flex justify-around items-center h-16 px-2">
+              <Link
+                href="/discovery"
+                className={`flex flex-col items-center justify-center flex-1 h-full gap-1 rounded-2xl transition-all duration-200 ${pathname === '/discovery'
+                  ? 'text-slate-900 scale-105'
+                  : 'text-gray-500 hover:text-gray-700 active:scale-95'
+                  }`}
+              >
+                <BsGlobeAsiaAustralia className={`h-6 w-6 transition-all ${pathname === '/discovery' ? 'text-slate-900' : ''}`} />
+                <span className={`text-[10px] font-semibold transition-all ${pathname === '/discovery' ? 'text-slate-900' : ''}`}>
+                  Discover
+                </span>
+                {pathname === '/discovery' && (
+                  <div className="absolute bottom-1 w-1 h-1 rounded-full bg-slate-900" />
+                )}
+              </Link>
+
+              <Link
+                href="/workers"
+                className={`flex flex-col items-center justify-center flex-1 h-full gap-1 rounded-2xl transition-all duration-200 ${pathname === '/workers'
+                  ? 'text-slate-900 scale-105'
+                  : 'text-gray-500 hover:text-gray-700 active:scale-95'
+                  }`}
+              >
+                <BsPerson className={`h-6 w-6 transition-all ${pathname === '/workers' ? 'text-slate-900' : ''}`} />
+                <span className={`text-[10px] font-semibold transition-all ${pathname === '/workers' ? 'text-slate-900' : ''}`}>
+                  Workers
+                </span>
+                {pathname === '/workers' && (
+                  <div className="absolute bottom-1 w-1 h-1 rounded-full bg-slate-900" />
+                )}
+              </Link>
+
+              <Link
+                href="/messages"
+                className={`flex flex-col items-center justify-center flex-1 h-full gap-1 rounded-2xl transition-all duration-200 ${pathname.startsWith('/messages')
+                  ? 'text-slate-900 scale-105'
+                  : 'text-gray-500 hover:text-gray-700 active:scale-95'
+                  }`}
+              >
+                <BsChatDots className={`h-6 w-6 transition-all ${pathname.startsWith('/messages') ? 'text-slate-900' : ''}`} />
+                <span className={`text-[10px] font-semibold transition-all ${pathname.startsWith('/messages') ? 'text-slate-900' : ''}`}>
+                  Messages
+                </span>
+                {pathname.startsWith('/messages') && (
+                  <div className="absolute bottom-1 w-1 h-1 rounded-full bg-slate-900" />
+                )}
+              </Link>
+            </div>
+          </div>
         </div>
       </nav>
     </>

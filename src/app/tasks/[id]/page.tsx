@@ -249,7 +249,7 @@ export default function TaskDetailsPage({ params }: TaskParams) {
     return (
       <div className="min-h-[100svh] bg-background">
         <Navbar />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-20 pb-20 md:pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-20 pb-24 md:pb-12">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
@@ -262,7 +262,7 @@ export default function TaskDetailsPage({ params }: TaskParams) {
     return (
       <div className="min-h-[100svh] bg-slate-50">
         <Navbar />
-        <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8 pt-20 pb-20 md:pb-16">
+        <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8 pt-20 pb-24 md:pb-16">
           <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-xl">
             <h1 className="text-2xl font-semibold text-slate-900">Task not found</h1>
             <p className="mt-3 text-sm text-slate-500">
@@ -290,7 +290,7 @@ export default function TaskDetailsPage({ params }: TaskParams) {
           className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(76,106,255,0.12),_transparent_60%)]"
           aria-hidden="true"
         />
-        <div className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14 pt-20 pb-20 md:pb-14">
+        <div className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14 pt-20 pb-24 md:pb-14">
           <div className="mb-6">
             <button
               type="button"
@@ -311,12 +311,12 @@ export default function TaskDetailsPage({ params }: TaskParams) {
                     <div className="absolute bottom-6 left-6 flex flex-wrap items-center gap-3">
                       <span
                         className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white ${task.status === 'open'
-                            ? 'bg-emerald-500/80'
-                            : task.status === 'assigned'
-                              ? 'bg-blue-500/80'
-                              : task.status === 'completed'
-                                ? 'bg-purple-500/80'
-                                : 'bg-slate-500/80'
+                          ? 'bg-emerald-500/80'
+                          : task.status === 'assigned'
+                            ? 'bg-blue-500/80'
+                            : task.status === 'completed'
+                              ? 'bg-purple-500/80'
+                              : 'bg-slate-500/80'
                           }`}
                       >
                         {task.status.replace(/\b\w/g, (char: string) => char.toUpperCase())}
@@ -334,12 +334,12 @@ export default function TaskDetailsPage({ params }: TaskParams) {
                       {!task.images?.length && (
                         <span
                           className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white ${task.status === 'open'
-                              ? 'bg-emerald-500'
-                              : task.status === 'assigned'
-                                ? 'bg-blue-500'
-                                : task.status === 'completed'
-                                  ? 'bg-purple-500'
-                                  : 'bg-slate-500'
+                            ? 'bg-emerald-500'
+                            : task.status === 'assigned'
+                              ? 'bg-blue-500'
+                              : task.status === 'completed'
+                                ? 'bg-purple-500'
+                                : 'bg-slate-500'
                             }`}
                         >
                           {task.status.replace(/\b\w/g, (char: string) => char.toUpperCase())}
@@ -432,12 +432,12 @@ export default function TaskDetailsPage({ params }: TaskParams) {
                                     </h3>
                                     <span
                                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${application.status === 'pending'
-                                          ? 'bg-amber-100 text-amber-700'
-                                          : application.status === 'accepted'
-                                            ? 'bg-emerald-100 text-emerald-700'
-                                            : application.status === 'rejected'
-                                              ? 'bg-rose-100 text-rose-700'
-                                              : 'bg-slate-100 text-slate-600'
+                                        ? 'bg-amber-100 text-amber-700'
+                                        : application.status === 'accepted'
+                                          ? 'bg-emerald-100 text-emerald-700'
+                                          : application.status === 'rejected'
+                                            ? 'bg-rose-100 text-rose-700'
+                                            : 'bg-slate-100 text-slate-600'
                                         }`}
                                     >
                                       {application.status.charAt(0).toUpperCase() + application.status.slice(1)}

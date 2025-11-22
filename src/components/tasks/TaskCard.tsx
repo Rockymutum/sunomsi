@@ -330,91 +330,107 @@ export default function TaskCard({ task }: TaskCardProps) {
 
   return (
     <div
-      className="bg-white rounded-[28px] shadow-xl border border-slate-200 mb-6 overflow-hidden transition-shadow hover:shadow-2xl card-interactive"
+      className="bg-white rounded-[28px] shadow-xl border border-slate-200 mb-6 overflow-hidden transition-shadow hover:shadow-2xl"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Header */}
-      <div className="px-6 py-4 sm:px-8 sm:py-5">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            <Link href={`/profile/${(task as any).poster_id}`} className="flex items-center gap-2 min-w-0 cursor-pointer">
-              <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
-                {(task as any).poster?.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={(task as any).poster.avatar_url as string} alt={(task as any).poster.full_name as string} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary text-sm font-bold">
-                    {((task as any).poster?.full_name || 'U').charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0 flex flex-col">
-                <span className="text-[15px] text-gray-900 font-semibold hover:underline truncate">
-                  {(task as any).poster?.full_name || 'Someone'}
-                </span>
-                <div className="flex items-center text-xs text-gray-500">
-                  <span>{formatDistanceToNow(new Date((task as any).created_at))}</span>
-                  <span className="mx-1">·</span>
-                  <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-label="Shared with Public">
-                    <g fillRule="evenodd">
-                      <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm3.5 11.5a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0z" />
-                    </g>
-                  </svg>
-                </div>
-              </div>
-            </Link>
-          </div>
-          <div className="flex items-center gap-2">
-            {canDelete && (
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={deleting}
-                className="text-gray-500 hover:bg-gray-100 p-2 rounded-full transition-colors"
-                title="Delete post"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Body: text first */}
-      <div className="px-6 pb-4 sm:px-8 sm:pb-5">
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">{task.title}</h3>
-        <p className="text-[15px] text-slate-700 whitespace-pre-line leading-relaxed">{task.description}</p>
-        <div className="mt-3 flex items-center gap-2">
-          <span className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full text-xs font-semibold">
-            {task.category}
-          </span>
-          <span className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-xs font-semibold">
-            ₹{task.budget}
-          </span>
-          <div className="flex items-center text-xs text-slate-500 ml-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            {task.location}
-          </div>
-        </div>
-      </div>
-
-      {/* Media - Full Bleed */}
+      {/* Media - Full Bleed at Top */}
       {task.images && task.images.length > 0 && (
-        <div className="w-full aspect-square bg-gray-100">
+        <div className="w-full aspect-[16/10] bg-gray-100 relative">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={task.images[0]}
             alt={task.title}
             className="w-full h-full object-cover block"
           />
+          {/* Category badge overlay */}
+          <div className="absolute top-3 left-3">
+            <span className="bg-white/95 backdrop-blur-sm text-slate-900 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
+              {task.category}
+            </span>
+          </div>
         </div>
       )}
+
+      {/* Content Section */}
+      <div className="px-6 py-5 sm:px-8 sm:py-6">
+        {/* Title & Description */}
+        <div className="mb-4">
+          <h3 className="text-xl font-bold text-slate-900 mb-2 leading-tight">{task.title}</h3>
+          <p className="text-[15px] text-slate-600 line-clamp-3 leading-relaxed">{task.description}</p>
+        </div>
+
+        {/* Details Grid */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {/* Budget */}
+          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200 rounded-2xl p-3">
+            <div className="flex items-center gap-1.5 text-emerald-700 mb-0.5">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Budget</span>
+            </div>
+            <div className="text-2xl font-bold text-emerald-900">₹{task.budget}</div>
+          </div>
+
+          {/* Location */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3">
+            <div className="flex items-center gap-1.5 text-slate-600 mb-0.5">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Location</span>
+            </div>
+            <div className="text-sm font-semibold text-slate-900 truncate">{task.location}</div>
+          </div>
+        </div>
+
+        {/* Category badge (if no image) */}
+        {(!task.images || task.images.length === 0) && (
+          <div className="mb-4">
+            <span className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+              {task.category}
+            </span>
+          </div>
+        )}
+
+        {/* Posted by */}
+        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+          <Link href={`/profile/${(task as any).poster_id}`} className="flex items-center gap-2.5 min-w-0 cursor-pointer group">
+            <div className="h-9 w-9 rounded-full overflow-hidden bg-gray-100 ring-2 ring-slate-100 flex-shrink-0 group-hover:ring-slate-200 transition-all">
+              {(task as any).poster?.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={(task as any).poster.avatar_url as string} alt={(task as any).poster.full_name as string} className="h-full w-full object-cover" />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary text-sm font-bold">
+                  {((task as any).poster?.full_name || 'U').charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex flex-col">
+              <span className="text-sm text-slate-900 font-semibold group-hover:underline truncate">
+                {(task as any).poster?.full_name || 'Someone'}
+              </span>
+              <span className="text-xs text-slate-500">{formatDistanceToNow(new Date((task as any).created_at))} ago</span>
+            </div>
+          </Link>
+
+          {canDelete && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
+              title="Delete post"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Footer actions */}
       <div className="px-3 py-2 border-t border-slate-200">

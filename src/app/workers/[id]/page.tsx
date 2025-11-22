@@ -74,7 +74,7 @@ export default function WorkerDetailPage() {
           setSocial({});
         }
 
-              // Fetch reviews where this user is the reviewee
+        // Fetch reviews where this user is the reviewee
         const { data: revs } = await supabase
           .from("reviews")
           .select("id, rating, comment, created_at, reviewer_id")
@@ -236,7 +236,7 @@ export default function WorkerDetailPage() {
             .from('worker_profiles')
             .update({ rating: avgFixed, updated_at: new Date().toISOString() })
             .eq('user_id', userId);
-        } catch (_) {}
+        } catch (_) { }
       }
     } catch (err: any) {
       alert(err?.message || 'Failed to submit review');
@@ -274,29 +274,27 @@ export default function WorkerDetailPage() {
   }
 
   return (
-    <div className="min-h-[100svh] bg-background overflow-x-hidden">
+    <div className="min-h-[100svh] bg-slate-50">
       <Navbar />
-      <div className="max-w-sm sm:max-w-md md:max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Card container mimicking the mock */}
-        <div className="relative rounded-[28px] shadow-lg overflow-hidden bg-white border border-gray-200 md:border-0 md:bg-[rgb(var(--color-card))] md:shadow-sm">
-          {/* Header area */}
-          <div className="p-5 pb-20">
-            <div className="flex items-center justify-between text-gray-500">
-              <button onClick={() => router.back()} aria-label="Back" className="p-2 hover:bg-gray-100 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-                  <path d="M10.828 12l4.95-4.95a.75.75 0 10-1.06-1.06l-5.48 5.47a.75.75 0 000 1.06l5.48 5.48a.75.75 0 101.06-1.06L10.828 12z" />
-                </svg>
-              </button>
-              <button aria-label="More" className="p-2 hover:bg-gray-100 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-                  <path d="M5 12a2 2 0 114 0 2 2 0 01-4 0zm5 0a2 2 0 114 0 2 2 0 01-4 0zm7-2a2 2 0 100 4 2 2 0 000-4z" />
-                </svg>
-              </button>
-            </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 pb-24 md:pb-8">
+        {/* Back Button */}
+        <button
+          onClick={() => router.back()}
+          className="mb-4 inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 font-medium transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back
+        </button>
 
-            {/* Avatar */}
-            <div className="mt-2 flex justify-center">
-              <div className="h-24 w-24 rounded-full overflow-hidden ring-2 ring-white shadow-md bg-gray-100">
+        {/* Main Profile Card */}
+        <div className="bg-white rounded-[32px] shadow-2xl border border-slate-200 overflow-hidden mb-6">
+          {/* Header with Gradient Background */}
+          <div className="relative bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 pt-12 pb-24 px-6">
+            {/* Avatar - Large and Centered */}
+            <div className="flex justify-center mb-4">
+              <div className="h-32 w-32 rounded-full overflow-hidden bg-white ring-4 ring-white/20 shadow-2xl">
                 {profile?.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -305,177 +303,249 @@ export default function WorkerDetailPage() {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold text-3xl">
+                  <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-bold text-4xl">
                     {(profile?.full_name?.charAt(0) || 'W').toUpperCase()}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Name + Title */}
-            <div className="mt-4 text-center">
-              <h1 className="text-2xl font-bold text-gray-900">
+            {/* Name & Title */}
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-white mb-2">
                 {profile?.full_name || 'Worker'}
               </h1>
-              <div className="text-sm text-gray-500">{worker?.title || '—'}</div>
-            </div>
+              <p className="text-lg text-slate-300 font-medium mb-4">
+                {worker?.title || 'Professional'}
+              </p>
 
-            {/* Social icons */}
-            {(social.behance || social.dribbble || social.linkedin || social.instagram) && (
-              <div className="mt-4 flex items-center justify-center gap-3">
-                {social.behance && (
-                  <Link href={social.behance} target="_blank" className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-[#1769FF]">
-                    <BsBehance className="h-5 w-5" />
-                  </Link>
-                )}
-                {social.dribbble && (
-                  <Link href={social.dribbble} target="_blank" className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-[#EA4C89]">
-                    <BsDribbble className="h-5 w-5" />
-                  </Link>
-                )}
-                {social.linkedin && (
-                  <Link href={social.linkedin} target="_blank" className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-[#0A66C2]">
-                    <BsLinkedin className="h-5 w-5" />
-                  </Link>
-                )}
-                {social.instagram && (
-                  <Link href={social.instagram} target="_blank" className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-[#C13584]">
-                    <BsInstagram className="h-5 w-5" />
-                  </Link>
-                )}
-              </div>
-            )}
+              {/* Rating Badge */}
+              {typeof avgRating === 'number' && avgRating > 0 ? (
+                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <svg
+                        key={i}
+                        xmlns="http://www.w3.org/2000/svg"
+                        className={`h-5 w-5 ${i < Math.floor(avgRating) ? 'text-yellow-400' : 'text-slate-400'}`}
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <span className="text-white font-bold">{avgRating.toFixed(1)}</span>
+                  <span className="text-slate-300 text-sm">({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})</span>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+                  <span className="text-slate-300 text-sm">No reviews yet</span>
+                </div>
+              )}
+
+              {/* Social Links */}
+              {(social.behance || social.dribbble || social.linkedin || social.instagram) && (
+                <div className="mt-6 flex items-center justify-center gap-3">
+                  {social.behance && (
+                    <Link href={social.behance} target="_blank" className="p-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white transition-all hover:scale-110">
+                      <BsBehance className="h-5 w-5" />
+                    </Link>
+                  )}
+                  {social.dribbble && (
+                    <Link href={social.dribbble} target="_blank" className="p-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white transition-all hover:scale-110">
+                      <BsDribbble className="h-5 w-5" />
+                    </Link>
+                  )}
+                  {social.linkedin && (
+                    <Link href={social.linkedin} target="_blank" className="p-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white transition-all hover:scale-110">
+                      <BsLinkedin className="h-5 w-5" />
+                    </Link>
+                  )}
+                  {social.instagram && (
+                    <Link href={social.instagram} target="_blank" className="p-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white transition-all hover:scale-110">
+                      <BsInstagram className="h-5 w-5" />
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Details section (flattened, light) */}
-          <div className="bg-white text-gray-900 p-5 pt-6 border-t border-gray-200">
-            {/* Skills */}
+          {/* Content Section */}
+          <div className="px-6 py-6 sm:px-8 sm:py-8">
+            {/* Location & Contact */}
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-8 pb-6 border-b border-slate-100">
+              {worker.location && (
+                <div className="flex items-center gap-2 text-slate-600 bg-slate-50 px-4 py-2 rounded-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="font-medium">{worker.location}</span>
+                </div>
+              )}
+              <button
+                onClick={() => userId ? router.push(`/messages/${userId}`) : undefined}
+                className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-full font-semibold text-sm transition-all shadow-lg shadow-slate-900/20 hover:shadow-xl hover:scale-105"
+              >
+                Contact Worker
+              </button>
+            </div>
+
+            {/* About Section */}
+            {worker.bio && (
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <h2 className="text-lg font-bold text-slate-900">About</h2>
+                </div>
+                <p className="text-slate-600 leading-relaxed whitespace-pre-line">{worker.bio}</p>
+              </div>
+            )}
+
+            {/* Skills Section */}
             {worker.skills && worker.skills.length > 0 && (
-              <div className="mb-5">
-                <div className="text-sm text-gray-600 mb-2">Skill</div>
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  </svg>
+                  <h2 className="text-lg font-bold text-slate-900">Skills</h2>
+                </div>
                 <div className="flex flex-wrap gap-2">
-                  {worker.skills.map((s) => (
-                    <span key={s} className="px-3 py-2 rounded-xl bg-white text-gray-900 text-sm font-semibold shadow-sm">
-                      {s}
+                  {worker.skills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200"
+                    >
+                      {skill}
                     </span>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Profession / Title */}
-            <div className="mb-5">
-              <div className="text-sm text-gray-600 mb-1">Profession</div>
-              <div className="text-base font-medium pb-2">{worker?.title || '—'}</div>
-            </div>
+            {/* Reviews Section */}
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+                <h2 className="text-lg font-bold text-slate-900">Reviews</h2>
+              </div>
 
-            {/* Experience section removed as requested */}
-
-            {/* Contact and location */}
-            <div className="mt-6 flex flex-wrap gap-2">
-              <button
-                onClick={() => userId ? router.push(`/messages/${userId}`) : undefined}
-                className="btn-primary"
-              >
-                Contact
-              </button>
-              {worker.location && (
-                <div className="ml-auto flex items-center text-sm text-gray-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              {reviews.length > 0 ? (
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <svg
+                              key={i}
+                              xmlns="http://www.w3.org/2000/svg"
+                              className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400' : 'text-slate-300'}`}
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                          <span className="ml-2 font-bold text-slate-900">{review.rating}/5</span>
+                        </div>
+                        <span className="text-xs text-slate-500">{new Date(review.created_at).toLocaleDateString()}</span>
+                      </div>
+                      {review.comment && (
+                        <p className="text-sm text-slate-600 leading-relaxed">{review.comment}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-slate-50 rounded-2xl border border-slate-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                   </svg>
-                  <span>{worker.location}</span>
+                  <p className="text-sm text-slate-500">No reviews yet</p>
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Details below dark section */}
-          {worker.bio && (
-            <div className="px-5 py-4 bg-white">
-              <h2 className="text-sm font-medium text-gray-700 mb-1">About</h2>
-              <p className="text-gray-800 text-sm whitespace-pre-line break-words">{worker.bio}</p>
-            </div>
-          )}
-
-          {/* Reviews */}
-          <div className="px-5 py-5">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-medium text-gray-700">Reviews</h2>
-              {typeof avgRating === 'number' && (
-                <div className="text-sm text-gray-800">Avg rating: <span className="font-semibold">{avgRating}</span></div>
-              )}
-            </div>
-            {reviews.length > 0 ? (
-              <div className="space-y-3">
-                {reviews.map((r) => (
-                  <div key={r.id} className="border border-gray-100 rounded-md p-3">
-                    <div className="text-sm font-medium text-gray-900">Rating: {r.rating}/5</div>
-                    {r.comment && <div className="text-sm text-gray-700 mt-1 break-words">{r.comment}</div>}
-                    <div className="text-xs text-gray-500 mt-1">{new Date(r.created_at).toLocaleDateString()}</div>
+              {/* Leave Review Form */}
+              {currentUserId && currentUserId !== userId && (
+                <form onSubmit={submitReview} className="mt-6 bg-slate-50 rounded-2xl p-5 border border-slate-200">
+                  <h3 className="font-semibold text-slate-900 mb-4">Leave a Review</h3>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Rating</label>
+                    <div className="flex gap-2">
+                      {[5, 4, 3, 2, 1].map((rating) => (
+                        <button
+                          key={rating}
+                          type="button"
+                          onClick={() => setReviewRating(rating)}
+                          className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${reviewRating === rating
+                              ? 'bg-slate-900 text-white shadow-lg'
+                              : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
+                            }`}
+                        >
+                          {rating}★
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-sm text-gray-500">No reviews yet.</div>
-            )}
-
-            {/* Leave a review form (visible if logged in and not own profile) */}
-            {currentUserId && currentUserId !== userId && (
-              <form onSubmit={submitReview} className="mt-4 border border-gray-100 rounded-md p-3">
-                <div className="flex items-center gap-3">
-                  <label className="text-sm text-gray-700">Rating</label>
-                  <select
-                    value={reviewRating}
-                    onChange={(e) => setReviewRating(parseInt(e.target.value))}
-                    className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Comment (optional)</label>
+                    <textarea
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      placeholder="Share your experience..."
+                      rows={3}
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={reviewSubmitting}
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-slate-900/20 hover:shadow-xl disabled:opacity-50"
                   >
-                    {[5,4,3,2,1].map((n) => (
-                      <option key={n} value={n}>{n}</option>
-                    ))}
-                  </select>
-                </div>
-                <textarea
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
-                  placeholder="Write a short comment (optional)"
-                  rows={3}
-                  className="mt-2 w-full input-field"
-                />
-                <div className="mt-2 flex justify-end">
-                  <button type="submit" className="btn-primary" disabled={reviewSubmitting}>
-                    {reviewSubmitting ? 'Submitting...' : 'Leave a review'}
+                    {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
                   </button>
+                </form>
+              )}
+            </div>
+
+            {/* Past Jobs Section */}
+            {pastJobs.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <h2 className="text-lg font-bold text-slate-900">Past Jobs</h2>
                 </div>
-              </form>
-            )}
-          </div>
-
-          {/* Past Jobs */}
-          <div className="px-5 pb-6">
-            <h2 className="text-sm font-medium text-gray-700 mb-2">Past Jobs</h2>
-            {pastJobs.length > 0 ? (
-              <div className="space-y-2">
-                {pastJobs.map((t) => (
-                  <div key={t.id} className="border border-gray-100 rounded-md p-3">
-                    <div className="text-sm font-medium text-gray-900">{t.title}</div>
-                    <div className="text-xs text-gray-600">{t.location}</div>
-                    <div className="text-xs text-gray-500 mt-1">{new Date(t.created_at).toLocaleDateString()}</div>
-                  </div>
-                ))}
+                <div className="space-y-3">
+                  {pastJobs.map((job) => (
+                    <div key={job.id} className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                      <h3 className="font-semibold text-slate-900 mb-1">{job.title}</h3>
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>{job.location}</span>
+                        <span className="text-slate-400">•</span>
+                        <span>{new Date(job.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ) : (
-              <div className="text-sm text-gray-500">No past jobs yet.</div>
             )}
-          </div>
-
-          <div className="px-5 pb-5">
-            <button onClick={() => router.back()} className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">Back</button>
           </div>
         </div>
       </div>
-
     </div>
   );
 }

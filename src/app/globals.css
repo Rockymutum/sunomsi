@@ -3,190 +3,33 @@
 @tailwind utilities;
 
 :root {
-  --background: #f9fafb;
-  --foreground: #171717;
-  --primary: #1e293b;
-  --primary-dark: #0f172a;
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 255, 255, 255;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --foreground-rgb: 0, 0, 0;
+    --background-start-rgb: 255, 255, 255;
+    --background-end-rgb: 255, 255, 255;
   }
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
-}
-
-/* Custom scrollbar for webkit browsers */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* Hide scrollbar for Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #888 #f1f1f1;
-}
-
-/* Native App Enhancements */
-
-/* Remove tap highlight and improve touch responsiveness */
-* {
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-}
-
-/* Smooth scrolling with momentum */
-html {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Hardware acceleration for smooth animations */
-body {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-/* Improve touch interactions */
-button,
-a,
-[role="button"] {
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* Smooth transitions for interactive elements */
-button,
-a,
-input,
-textarea,
-select {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Page transition animation */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.page-transition {
-  animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Card press animation */
-@keyframes cardPress {
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(0.98);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-.card-interactive {
-  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-interactive:active {
-  transform: scale(0.98);
-}
-
-/* Skeleton loader animation */
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-.skeleton {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 1000px 100%;
-  animation: shimmer 2s infinite;
-}
-
-/* Pull to refresh indicator */
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.refresh-spinner {
-  animation: spin 1s linear infinite;
-}
-
-/* Smooth scroll for containers */
-.smooth-scroll {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Optimize rendering performance */
-.will-change-transform {
-  will-change: transform;
-}
-
-.will-change-opacity {
-  will-change: opacity;
-}
-
-/* Native-like button press */
-.btn-press {
-  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.btn-press:active {
-  transform: scale(0.95);
 }
 
 @layer components {
