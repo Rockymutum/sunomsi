@@ -586,7 +586,8 @@ export default function WorkersPage() {
                         onChange={(e) => setBioInput(e.target.value)}
                         placeholder="Short bio (your experience, specialties)"
                         rows={4}
-                        className="input-field"
+                        className="input-field resize-none"
+                        style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
                       />
                     </>
                   )}

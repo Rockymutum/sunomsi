@@ -9,6 +9,13 @@ CREATE TABLE IF NOT EXISTS profiles (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT NOT NULL,
   avatar_url TEXT,
+  email TEXT,
+  phone TEXT,
+  bio TEXT,
+  skills TEXT[] DEFAULT '{}',
+  place TEXT,
+  title TEXT,
+  contact TEXT,
   role TEXT NOT NULL CHECK (role IN ('poster', 'worker')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

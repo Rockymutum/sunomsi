@@ -15,10 +15,17 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+
+      // Get current user
+      const { data: { session } } = await supabase.auth.getSession();
+      setCurrentUserId(session?.user?.id || null);
+
+      // Get profile data
       const { data } = await supabase
         .from('profiles')
         .select('*')
@@ -76,10 +83,10 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
 
     const joinedDate = details.created_at
       ? new Date(details.created_at).toLocaleDateString(undefined, {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
       : '—';
 
     return {
@@ -176,6 +183,21 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
                       </div>
                     </div>
                   </div>
+
+                  {/* Edit Profile Button - Only show for own profile */}
+                  {currentUserId && currentUserId === id && (
+                    <div className="flex justify-center sm:justify-end">
+                      <Link
+                        href="/profile"
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-primary hover:bg-primary/5 hover:shadow-md"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit Profile
+                      </Link>
+                    </div>
+                  )}
 
                   {visibleSocialLinks.length > 0 && (
                     <div className="flex flex-wrap justify-center gap-3 sm:justify-end">

@@ -313,6 +313,7 @@ export default function DiscoveryPage() {
                       placeholder="Describe the task in detail..."
                       rows={3}
                       className="input-field resize-none"
+                      style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

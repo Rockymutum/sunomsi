@@ -14,6 +14,8 @@ interface Profile {
   phone: string | null;
   bio: string | null;
   skills: string[];
+  place: string | null;
+  title: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -26,6 +28,8 @@ export default function ProfilePage() {
     full_name: '',
     phone: '',
     bio: '',
+    place: '',
+    title: '',
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -79,6 +83,8 @@ export default function ProfilePage() {
           full_name: data.full_name || '',
           phone: data.phone || '',
           bio: data.bio || '',
+          place: data.place || '',
+          title: data.title || '',
         });
       }
     } catch (error: any) {
@@ -114,6 +120,8 @@ export default function ProfilePage() {
         full_name: data.full_name || '',
         phone: data.phone || '',
         bio: data.bio || '',
+        place: data.place || '',
+        title: data.title || '',
       });
     } catch (error: any) {
       console.error('Error creating profile:', error);
@@ -161,6 +169,8 @@ export default function ProfilePage() {
         full_name: formData.full_name,
         phone: formData.phone,
         bio: formData.bio,
+        place: formData.place,
+        title: formData.title,
         updated_at: new Date().toISOString(),
       };
 
@@ -371,6 +381,42 @@ export default function ProfilePage() {
                   )}
                 </div>
 
+                {/* Professional Title */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Professional Title
+                  </label>
+                  {editing ? (
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., Graphic Designer, Developer"
+                    />
+                  ) : (
+                    <p className="px-3 py-2 text-gray-900">{profile?.title || 'Not set'}</p>
+                  )}
+                </div>
+
+                {/* Location */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Location
+                  </label>
+                  {editing ? (
+                    <input
+                      type="text"
+                      value={formData.place}
+                      onChange={(e) => setFormData(prev => ({ ...prev, place: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., New York, NY"
+                    />
+                  ) : (
+                    <p className="px-3 py-2 text-gray-900">{profile?.place || 'Not set'}</p>
+                  )}
+                </div>
+
                 {/* Bio */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -381,8 +427,9 @@ export default function ProfilePage() {
                       value={formData.bio}
                       onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                       placeholder="Tell us about yourself..."
+                      style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
                     />
                   ) : (
                     <p className="px-3 py-2 text-gray-900 whitespace-pre-wrap">

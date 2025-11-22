@@ -565,8 +565,9 @@ export default function TaskDetailsPage({ params }: TaskParams) {
                           value={applicationNote}
                           onChange={(e) => setApplicationNote(e.target.value)}
                           rows={4}
-                          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
                           placeholder="Explain how your experience aligns with this task..."
+                          style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
                         />
                       </div>
                       <button

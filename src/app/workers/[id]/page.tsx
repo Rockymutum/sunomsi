@@ -486,8 +486,8 @@ export default function WorkerDetailPage() {
                           type="button"
                           onClick={() => setReviewRating(rating)}
                           className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${reviewRating === rating
-                              ? 'bg-slate-900 text-white shadow-lg'
-                              : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
+                            ? 'bg-slate-900 text-white shadow-lg'
+                            : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
                             }`}
                         >
                           {rating}★
@@ -502,7 +502,8 @@ export default function WorkerDetailPage() {
                       onChange={(e) => setReviewComment(e.target.value)}
                       placeholder="Share your experience..."
                       rows={3}
-                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 resize-none"
+                      style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
                     />
                   </div>
                   <button

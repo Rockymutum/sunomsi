@@ -12,15 +12,15 @@ export default function EditProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  
-  
+
+
   // Profile form state
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  
+
   // Worker profile form state
   const [location, setLocation] = useState('');
   const [contact, setContact] = useState('');
@@ -32,7 +32,7 @@ export default function EditProfilePage() {
   const [linkedin, setLinkedin] = useState('');
   const [instagram, setInstagram] = useState('');
   const [facebook, setFacebook] = useState('');
-  
+
   const AVAILABLE_SKILLS = [
     'Cleaning',
     'Delivery',
@@ -45,28 +45,28 @@ export default function EditProfilePage() {
     'Gardening',
     'Other'
   ];
-  
+
   useEffect(() => {
     const fetchProfile = async () => {
       setLoading(true);
-      
+
       // Check if user is logged in
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         router.push('/auth');
         return;
       }
-      
+
       const userId = session.user.id;
       setUserId(userId);
-      
+
       // Fetch profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
-      
+
       if (profileError) {
         console.error('Error fetching profile:', profileError);
       } else if (profileData) {
@@ -93,30 +93,30 @@ export default function EditProfilePage() {
         setInstagram(c.match(/https?:\/\/[^\s]*instagram[^\s]*/i)?.[0] || '');
         setFacebook(c.match(/https?:\/\/[^\s]*facebook[^\s]*/i)?.[0] || '');
       }
-      
+
       // Check if user is a worker
       const { data: workerData, error: workerError } = await supabase
         .from('worker_profiles')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
-      
+
       if (!workerError && workerData) {
         setIsWorker(true);
         setSkills(workerData.skills || []);
       }
-      
+
       setLoading(false);
     };
-    
+
     fetchProfile();
   }, [supabase, router]);
-  
+
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       setAvatarFile(file);
-      
+
       // Create a preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -125,50 +125,50 @@ export default function EditProfilePage() {
       reader.readAsDataURL(file);
     }
   };
-  
+
   const addSkill = () => {
     if (skillInput && !skills.includes(skillInput)) {
       setSkills([...skills, skillInput]);
       setSkillInput('');
     }
   };
-  
+
   const removeSkill = (skillToRemove: string) => {
     setSkills(skills.filter(skill => skill !== skillToRemove));
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!userId) return;
-    
+
     setSaving(true);
-    
+
     try {
       // Upload avatar if changed
       let finalAvatarUrl = avatarUrl;
-      
+
       if (avatarFile) {
         const fileExt = avatarFile.name.split('.').pop();
         const fileName = `${userId}-${Date.now()}.${fileExt}`;
-        
+
         const { error: uploadError, data } = await supabase.storage
           .from('avatars')
           .upload(fileName, avatarFile);
-        
+
         if (uploadError) {
           console.error('Avatar upload error:', uploadError);
           alert(`Failed to upload avatar: ${uploadError.message || 'Unknown error'}`);
           return;
         }
-        
+
         const { data: { publicUrl } } = supabase.storage
           .from('avatars')
           .getPublicUrl(fileName);
-        
+
         finalAvatarUrl = publicUrl;
       }
-      
+
       // Ensure a profile exists; create if missing (role based on isWorker)
       const { data: profExisting, error: profFetchErr } = await supabase
         .from('profiles')
@@ -224,7 +224,7 @@ export default function EditProfilePage() {
             updated_at: new Date().toISOString()
           })
           .eq('user_id', userId);
-        
+
         if (profileError) {
           console.error('Profile update error:', profileError);
           alert(`Failed to update profile: ${profileError.message || 'Unknown error'}`);
@@ -232,10 +232,10 @@ export default function EditProfilePage() {
         }
       }
       // No worker_profiles write for bio/place/contact to keep user profile separate
-      
+
       // Redirect to profile page
       router.push(`/profile/${userId}`);
-      
+
     } catch (error: any) {
       console.error('Error updating profile:', error);
       alert(`Failed to update profile. ${error?.message ? 'Details: ' + error.message : ''}`);
@@ -243,7 +243,7 @@ export default function EditProfilePage() {
       setSaving(false);
     }
   };
-  
+
   if (loading) {
     return (
       <div className="min-h-[100svh] bg-background">
@@ -306,9 +306,10 @@ export default function EditProfilePage() {
                 id="bio"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                className="input-field"
+                className="input-field resize-none"
                 rows={4}
                 placeholder="Tell others about yourself"
+                style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
               />
             </div>
             <div>

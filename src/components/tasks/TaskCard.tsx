@@ -533,26 +533,32 @@ export default function TaskCard({ task }: TaskCardProps) {
             )}
           </div>
 
-          <form onSubmit={handleAddComment} className="mt-3 flex items-center gap-2">
+          <form onSubmit={handleAddComment} className="mt-3 flex items-start gap-2">
             <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
               {/* Current user avatar placeholder */}
               <div className="h-full w-full flex items-center justify-center bg-gray-200 text-gray-500 text-xs">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
               </div>
             </div>
-            <div className="flex-1 relative">
-              <input
-                type="text"
+            <div className="flex-1 relative min-w-0">
+              <textarea
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 placeholder="Write a comment…"
-                className="w-full rounded-full border-none bg-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                className="w-full rounded-2xl border-none bg-gray-100 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 resize-none overflow-hidden min-h-[36px] max-h-[120px]"
                 disabled={postingComment}
+                rows={1}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = 'auto';
+                  target.style.height = Math.min(target.scrollHeight, 120) + 'px';
+                }}
+                style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
               />
               <button
                 type="submit"
                 disabled={postingComment || !commentText.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-primary disabled:opacity-50"
+                className="absolute right-3 bottom-2 text-primary disabled:opacity-50"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
               </button>
