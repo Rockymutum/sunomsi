@@ -5,7 +5,6 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import WorkerCard from '@/components/workers/WorkerCard';
-import AdPlaceholder from '@/components/ads/AdPlaceholder';
 
 const BASE_SKILL_OPTIONS = [
   'Carpentry',
@@ -439,10 +438,6 @@ export default function WorkersPage() {
             {publishSuccess}
           </div>
         )}
-        {/* Top banner ad */}
-        <div className="mb-6">
-          <AdPlaceholder type="banner" height="90px" />
-        </div>
 
         <div className="flex flex-col gap-6">
           {/* Main content */}
@@ -606,28 +601,11 @@ export default function WorkersPage() {
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
               </div>
             ) : workers.length > 0 ? (
-              <>
-                <div className="max-w-2xl mx-auto flex flex-col gap-5">
-                  {workers.slice(0, 3).map((worker) => (
-                    <WorkerCard key={worker.id} worker={worker} />
-                  ))}
-                </div>
-
-                {/* Inline ad after first 3 workers */}
-                {workers.length > 3 && (
-                  <div className="my-5 max-w-2xl mx-auto">
-                    <AdPlaceholder type="inline" height="250px" />
-                  </div>
-                )}
-
-                {workers.length > 3 && (
-                  <div className="max-w-2xl mx-auto flex flex-col gap-5">
-                    {workers.slice(3).map((worker) => (
-                      <WorkerCard key={worker.id} worker={worker} />
-                    ))}
-                  </div>
-                )}
-              </>
+              <div className="max-w-2xl mx-auto flex flex-col gap-5">
+                {workers.map((worker) => (
+                  <WorkerCard key={worker.id} worker={worker} />
+                ))}
+              </div>
             ) : (
               <div className="card text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

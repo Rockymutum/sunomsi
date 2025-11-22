@@ -330,7 +330,7 @@ export default function TaskCard({ task }: TaskCardProps) {
 
   return (
     <div
-      className="bg-white rounded-[28px] shadow-xl border border-slate-200 mb-6 overflow-hidden transition-shadow hover:shadow-2xl"
+      className="bg-white rounded-[28px] shadow-xl border border-slate-200 mb-3 overflow-hidden transition-shadow hover:shadow-2xl"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

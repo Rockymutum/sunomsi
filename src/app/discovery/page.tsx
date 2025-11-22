@@ -1,10 +1,12 @@
+```
 "use client";
 
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Navbar from '@/components/layout/Navbar';
 import TaskCard from '@/components/tasks/TaskCard';
-import AdPlaceholder from '@/components/ads/AdPlaceholder';
+import { Task } from '@/lib/supabase';
+import { useSearchParams } from 'next/navigation';
 import PageShell from '@/components/ui/PageShell';
 
 export default function DiscoveryPage() {
@@ -213,241 +215,221 @@ export default function DiscoveryPage() {
 
       const imageUrls: string[] = [];
       for (const imageFile of imageFiles) {
-        const fileName = `${session.user.id}/${Date.now()}-${imageFile.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from('task_images')
-          .upload(fileName, imageFile);
-        if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage
-          .from('task_images')
-          .getPublicUrl(fileName);
-        imageUrls.push(publicUrl);
+        const fileName = `${ session.user.id }/${Date.now()}-${imageFile.name}`;
+const { error: uploadError } = await supabase.storage
+  .from('task_images')
+  .upload(fileName, imageFile);
+if (uploadError) throw uploadError;
+const { data: { publicUrl } } = supabase.storage
+  .from('task_images')
+  .getPublicUrl(fileName);
+imageUrls.push(publicUrl);
       }
 
-      const payload: any = {
-        title: title.trim(),
-        description: description.trim(),
-        budget: budget ? parseFloat(budget) : null,
-        location: newLocation.trim() || 'Remote',
-        category: category || 'Other',
-        status: 'open',
-        poster_id: session.user.id,
-        images: imageUrls,
-      };
+const payload: any = {
+  title: title.trim(),
+  description: description.trim(),
+  budget: budget ? parseFloat(budget) : null,
+  location: newLocation.trim() || 'Remote',
+  category: category || 'Other',
+  status: 'open',
+  poster_id: session.user.id,
+  images: imageUrls,
+};
 
-      if (!payload.title || !payload.description) {
-        setCreateError('Title and description are required.');
-        return;
-      }
+if (!payload.title || !payload.description) {
+  setCreateError('Title and description are required.');
+  return;
+}
 
-      (payload as any).deadline = new Date(deadline).toISOString();
+(payload as any).deadline = new Date(deadline).toISOString();
 
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert(payload)
-        .select('*')
-        .single();
+const { data, error } = await supabase
+  .from('tasks')
+  .insert(payload)
+  .select('*')
+  .single();
 
-      if (error) {
-        setCreateError(error.message || 'Failed to create task');
-      } else if (data) {
-        setTitle('');
-        setDescription('');
-        setBudget('');
-        setNewLocation('');
-        setCategory('');
-        setDeadline('');
-        setImageFiles([]);
-        setImagePreviews([]);
-        setTasks((prev) => [data, ...prev]);
-        setShowComposer(false);
-      }
+if (error) {
+  setCreateError(error.message || 'Failed to create task');
+} else if (data) {
+  setTitle('');
+  setDescription('');
+  setBudget('');
+  setNewLocation('');
+  setCategory('');
+  setDeadline('');
+  setImageFiles([]);
+  setImagePreviews([]);
+  setTasks((prev) => [data, ...prev]);
+  setShowComposer(false);
+}
     } catch (err: any) {
-      setCreateError(err?.message || 'Network error.');
-    } finally {
-      setCreating(false);
-    }
+  setCreateError(err?.message || 'Network error.');
+} finally {
+  setCreating(false);
+}
   };
 
-  // Filter UI removed; filtering remains via internal fetch logic
+// Filter UI removed; filtering remains via internal fetch logic
 
-  return (
-    <div className="min-h-[100svh] bg-slate-50">
-      <Navbar />
+return (
+  <div className="min-h-[100svh] bg-slate-50">
+    <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 pb-24 md:pb-8">
-        {/* Top banner ad */}
-        <div className="mb-6">
-          <AdPlaceholder type="banner" height="90px" />
-        </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 pb-24 md:pb-8">
 
-        <div className="flex flex-col gap-6">
-          {/* Main content */}
-          <div className="flex-1">
-            {/* Task composer - collapsed/expanded */}
-            {!showComposer ? (
-              <div className="mb-6">
-                <button
-                  type="button"
-                  onClick={() => setShowComposer(true)}
-                  className="btn-primary"
-                >
-                  Create Task
-                </button>
-              </div>
-            ) : (
-              <div className="bg-white rounded-[28px] shadow-xl border border-slate-200 p-6 sm:p-8 mb-6">
-                <form onSubmit={handleCreateTask} className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="What's the task?"
-                        className="input-field"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Describe the task..."
-                      rows={3}
-                      className="input-field"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={budget}
-                      onChange={(e) => setBudget(e.target.value)}
-                      placeholder="Budget (optional)"
-                      className="input-field"
-                    />
+      <div className="flex flex-col gap-6">
+        {/* Main content */}
+        <div className="flex-1">
+          {/* Task composer - collapsed/expanded */}
+          {!showComposer ? (
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={() => setShowComposer(true)}
+                className="btn-primary"
+              >
+                Create Task
+              </button>
+            </div>
+          ) : (
+            <div className="bg-white rounded-[28px] shadow-xl border border-slate-200 mb-3 overflow-hidden transition-shadow hover:shadow-2xl">
+              <form onSubmit={handleCreateTask} className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-1">
                     <input
                       type="text"
-                      value={newLocation}
-                      onChange={(e) => setNewLocation(e.target.value)}
-                      placeholder="Location (optional)"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="What's the task?"
                       className="input-field"
                     />
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="input-field"
-                    >
-                      <option value="">Select category (optional)</option>
-                      <option value="Cleaning">Cleaning</option>
-                      <option value="Delivery">Delivery</option>
-                      <option value="Handyman">Handyman</option>
-                      <option value="Moving">Moving</option>
-                      <option value="Technology">Technology</option>
-                      <option value="Design">Design</option>
-                      <option value="Writing">Writing</option>
-                      <option value="Cooking">Cooking</option>
-                      <option value="Gardening">Gardening</option>
-                      <option value="Other">Other</option>
-                    </select>
                   </div>
-                  <div>
-                    <input
-                      type="date"
-                      value={deadline}
-                      onChange={(e) => setDeadline(e.target.value)}
-                      className="input-field"
-                      placeholder="Deadline"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleImageChange}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark"
-                    />
-                    {imagePreviews.length > 0 && (
-                      <div className="mt-2 grid grid-cols-2 gap-2">
-                        {imagePreviews.map((preview, idx) => (
-                          <div key={idx} className="tile h-32">
-                            <img src={preview} alt={`Task preview ${idx + 1}`} className="w-full h-full object-cover" />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {createError && (
-                    <div className="text-sm text-red-600">{createError}</div>
-                  )}
-                  <div className="flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowComposer(false);
-                        setCreateError(null);
-                      }}
-                      className="btn-secondary-compact"
-                    >
-                      Cancel
-                    </button>
-                    <button type="submit" className="btn-primary" disabled={creating}>
-                      {creating ? 'Posting...' : 'Post Task'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Available Tasks</h1>
-
-            {loading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-              </div>
-            ) : tasks.length > 0 ? (
-              <>
-                <div className="max-w-2xl mx-auto flex flex-col gap-5">
-                  {tasks.slice(0, 3).map((task) => (
-                    <TaskCard key={task.id} task={task} />
-                  ))}
                 </div>
+                <div>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe the task..."
+                    rows={3}
+                    className="input-field"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={budget}
+                    onChange={(e) => setBudget(e.target.value)}
+                    placeholder="Budget (optional)"
+                    className="input-field"
+                  />
+                  <input
+                    type="text"
+                    value={newLocation}
+                    onChange={(e) => setNewLocation(e.target.value)}
+                    placeholder="Location (optional)"
+                    className="input-field"
+                  />
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="input-field"
+                  >
+                    <option value="">Select category (optional)</option>
+                    <option value="Cleaning">Cleaning</option>
+                    <option value="Delivery">Delivery</option>
+                    <option value="Handyman">Handyman</option>
+                    <option value="Moving">Moving</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Design">Design</option>
+                    <option value="Writing">Writing</option>
+                    <option value="Cooking">Cooking</option>
+                    <option value="Gardening">Gardening</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <input
+                    type="date"
+                    value={deadline}
+                    onChange={(e) => setDeadline(e.target.value)}
+                    className="input-field"
+                    placeholder="Deadline"
+                    required
+                  />
+                </div>
+                <div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark"
+                  />
+                  {imagePreviews.length > 0 && (
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {imagePreviews.map((preview, idx) => (
+                        <div key={idx} className="tile h-32">
+                          <img src={preview} alt={`Task preview ${idx + 1}`} className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {createError && (
+                  <div className="text-sm text-red-600">{createError}</div>
+                )}
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowComposer(false);
+                      setCreateError(null);
+                    }}
+                    className="btn-secondary-compact"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-primary" disabled={creating}>
+                    {creating ? 'Posting...' : 'Post Task'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
 
-                {/* Inline ad after first 3 tasks */}
-                {tasks.length > 3 && (
-                  <div className="my-5 max-w-2xl mx-auto">
-                    <AdPlaceholder type="inline" height="250px" />
-                  </div>
-                )}
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Available Tasks</h1>
 
-                {tasks.length > 3 && (
-                  <div className="max-w-2xl mx-auto flex flex-col gap-5">
-                    {tasks.slice(3).map((task) => (
-                      <TaskCard key={task.id} task={task} />
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="card text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h3 className="text-lg font-medium text-gray-900">No tasks found</h3>
-                {fetchError ? (
-                  <p className="mt-1 text-sm text-red-600">{fetchError}</p>
-                ) : (
-                  <p className="mt-1 text-sm text-gray-500">There are no tasks to display yet.</p>
-                )}
-              </div>
-            )}
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          ) : !loading && tasks.length > 0 && (
+            <div className="max-w-2xl mx-auto flex flex-col gap-5">
+              {tasks.map((task) => (
+                <TaskCard key={task.id} task={task} />
+              ))}
+            </div>
+          )}
+          {tasks.length === 0 && !loading && (
+            <div className="card text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-lg font-medium text-gray-900">No tasks found</h3>
+              {fetchError ? (
+                <p className="mt-1 text-sm text-red-600">{fetchError}</p>
+              ) : (
+                <p className="mt-1 text-sm text-gray-500">There are no tasks to display yet.</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
