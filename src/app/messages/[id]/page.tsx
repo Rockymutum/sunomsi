@@ -33,16 +33,16 @@ export default function DirectMessagePage({ params }: { params: { id: string } }
           .from('profiles')
           .select('id, user_id, full_name, avatar_url')
           .eq('user_id', id)
-          .single();
+          .maybeSingle();
 
         // If not found by user_id, try by id
-        if (error) {
+        if (!data) {
           const retry = await supabase
             .from('profiles')
             .select('id, user_id, full_name, avatar_url')
             .eq('id', id)
-            .single();
-          
+            .maybeSingle();
+
           if (retry.error) {
             console.error('Error fetching user:', retry.error);
             return null;
@@ -64,10 +64,16 @@ export default function DirectMessagePage({ params }: { params: { id: string } }
         return;
       }
 
-      const otherUserData = await getOtherUser(params.id);
+      let otherUserData = await getOtherUser(params.id);
+
+      // If user doesn't have a profile, use a fallback
       if (!otherUserData) {
-        router.push('/messages');
-        return;
+        otherUserData = {
+          id: params.id,
+          user_id: params.id,
+          full_name: 'User',
+          avatar_url: undefined
+        };
       }
 
       setOtherUser(otherUserData);
@@ -98,7 +104,7 @@ export default function DirectMessagePage({ params }: { params: { id: string } }
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">User not found</h2>
           <p className="text-gray-600 mb-4">The user you're trying to message doesn't exist or you don't have permission to view this conversation.</p>
-          <button 
+          <button
             onClick={() => router.push('/messages')}
             className="btn-primary"
           >

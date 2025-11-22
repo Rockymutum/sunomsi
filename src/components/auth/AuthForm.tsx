@@ -20,13 +20,28 @@ export default function AuthForm() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) {
           setMessage(error.message);
-        } else {
+        } else if (data.user) {
+          // Create profile entry for the new user
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: data.user.id,
+              email: data.user.email,
+              full_name: data.user.email?.split('@')[0] || 'User',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+
+          if (profileError) {
+            console.error('Error creating profile:', profileError);
+          }
+
           setMessage('Check your email for verification link!');
           setEmail('');
           setPassword('');
@@ -56,7 +71,7 @@ export default function AuthForm() {
       <h2 className="text-2xl font-bold text-center mb-6">
         {isSignUp ? 'Create Account' : 'Sign In'}
       </h2>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <input
@@ -78,13 +93,12 @@ export default function AuthForm() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
-        
+
         {message && (
-          <div className={`text-center text-sm ${
-            message.includes('successful') || message.includes('Check your email') 
-              ? 'text-green-600' 
+          <div className={`text-center text-sm ${message.includes('successful') || message.includes('Check your email')
+              ? 'text-green-600'
               : 'text-red-600'
-          }`}>
+            }`}>
             {message}
           </div>
         )}

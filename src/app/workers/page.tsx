@@ -54,6 +54,8 @@ export default function WorkersPage() {
   const [bioInput, setBioInput] = useState('');
   const [titleInput, setTitleInput] = useState('');
   const [skillsInput, setSkillsInput] = useState<string[]>([]);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [composeError, setComposeError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0); // 0: Basic, 1: Skills, 2: Review
   const [publishSuccess, setPublishSuccess] = useState<string | null>(null);
@@ -342,6 +344,18 @@ export default function WorkersPage() {
     );
   };
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleClearFilters = () => {
     setFilters({ skills: [], minRating: 0, location: '', searchTerm: '' });
     setSelectedCategory('');
@@ -361,6 +375,35 @@ export default function WorkersPage() {
     }
     setSaving(true);
     try {
+      // Upload avatar if provided
+      let avatarUrl: string | null = null;
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split('.').pop();
+        const fileName = `${userId}/avatar-${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, avatarFile, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
+
+        avatarUrl = publicUrl;
+
+        // Update profile with new avatar
+        const { error: profileUpdateError } = await supabase
+          .from('profiles')
+          .update({
+            avatar_url: avatarUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId);
+
+        if (profileUpdateError) throw profileUpdateError;
+      }
+
       // Insert or update worker profile without relying on ON CONFLICT
       const { data: existing, error: fetchWpErr } = await supabase
         .from('worker_profiles')
@@ -390,24 +433,26 @@ export default function WorkersPage() {
             location: locationInput.trim() || null,
             bio: bioInput.trim() || null,
             skills: skillsInput,
+            rating: 0,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
         if (insErr) throw insErr;
       }
 
-      // Reset inputs and refresh list
-      setTitleInput('');
-      setBioInput('');
-      setLocationInput('');
-      setSkillsInput([]);
+      setPublishSuccess('Portfolio published successfully!');
+      setTimeout(() => setPublishSuccess(null), 3000);
       setShowComposer(false);
-      setPublishSuccess('Your portfolio has been published and will appear in the list shortly.');
-      setFilters({ skills: [], minRating: 0, location: '', searchTerm: '' });
-      setSelectedCategory('');
+      setTitleInput('');
+      setLocationInput('');
+      setBioInput('');
+      setSkillsInput([]);
+      setAvatarFile(null);
+      setAvatarPreview(null);
+      setCurrentStep(0);
       fetchWorkers();
-    } catch (err: any) {
-      setComposeError(err?.message || 'Failed to save portfolio');
+    } catch (error: any) {
+      setComposeError(error.message || 'Failed to publish portfolio');
     } finally {
       setSaving(false);
     }
@@ -466,6 +511,60 @@ export default function WorkersPage() {
                 <form onSubmit={handleCreatePortfolio} className="space-y-3">
                   {currentStep === 0 && (
                     <>
+                      {/* Avatar Upload */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Profile Photo
+                        </label>
+                        <div className="flex items-center gap-4">
+                          {avatarPreview ? (
+                            <div className="relative">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={avatarPreview}
+                                alt="Avatar preview"
+                                className="h-24 w-24 rounded-full object-cover border-2 border-gray-200"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAvatarFile(null);
+                                  setAvatarPreview(null);
+                                }}
+                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                            </div>
+                          )}
+                          <div>
+                            <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              Choose Photo
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleAvatarChange}
+                                className="hidden"
+                              />
+                            </label>
+                            <p className="mt-1 text-xs text-gray-500">
+                              JPG, PNG or GIF (max 5MB)
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <input
                           type="text"

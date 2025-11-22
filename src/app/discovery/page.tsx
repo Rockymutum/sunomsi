@@ -276,14 +276,14 @@ export default function DiscoveryPage() {
     <div className="min-h-[100svh] bg-slate-50">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 pb-24 md:pb-8">
+      <div className="pt-20 pb-24 md:pb-8">
 
         <div className="flex flex-col gap-6">
           {/* Main content */}
           <div className="flex-1">
             {/* Task composer - collapsed/expanded */}
             {!showComposer ? (
-              <div className="mb-6">
+              <div className="mb-6 px-4">
                 <button
                   type="button"
                   onClick={() => setShowComposer(true)}
@@ -310,89 +310,91 @@ export default function DiscoveryPage() {
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Describe the task..."
+                      placeholder="Describe the task in detail..."
                       rows={3}
-                      className="input-field"
+                      className="input-field resize-none"
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input
                       type="number"
-                      step="0.01"
-                      min="0"
                       value={budget}
                       onChange={(e) => setBudget(e.target.value)}
-                      placeholder="Budget (optional)"
+                      placeholder="Budget (₹)"
                       className="input-field"
                     />
                     <input
                       type="text"
                       value={newLocation}
                       onChange={(e) => setNewLocation(e.target.value)}
-                      placeholder="Location (optional)"
+                      placeholder="Location"
                       className="input-field"
                     />
-                    <select
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input
+                      type="text"
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
+                      placeholder="Category"
                       className="input-field"
-                    >
-                      <option value="">Select category (optional)</option>
-                      <option value="Cleaning">Cleaning</option>
-                      <option value="Delivery">Delivery</option>
-                      <option value="Handyman">Handyman</option>
-                      <option value="Moving">Moving</option>
-                      <option value="Technology">Technology</option>
-                      <option value="Design">Design</option>
-                      <option value="Writing">Writing</option>
-                      <option value="Cooking">Cooking</option>
-                      <option value="Gardening">Gardening</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                  <div>
+                    />
                     <input
                       type="date"
                       value={deadline}
                       onChange={(e) => setDeadline(e.target.value)}
                       className="input-field"
-                      placeholder="Deadline"
-                      required
                     />
                   </div>
                   <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Add Images (optional)
+                    </label>
                     <input
                       type="file"
                       accept="image/*"
                       multiple
                       onChange={handleImageChange}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark"
+                      className="input-field"
                     />
                     {imagePreviews.length > 0 && (
-                      <div className="mt-2 grid grid-cols-2 gap-2">
+                      <div className="mt-3 grid grid-cols-3 gap-2">
                         {imagePreviews.map((preview, idx) => (
-                          <div key={idx} className="tile h-32">
-                            <img src={preview} alt={`Task preview ${idx + 1}`} className="w-full h-full object-cover" />
-                          </div>
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img key={idx} src={preview} alt={`Preview ${idx + 1}`} className="w-full h-24 object-cover rounded-md" />
                         ))}
                       </div>
                     )}
                   </div>
                   {createError && (
-                    <div className="text-sm text-red-600">{createError}</div>
+                    <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                      {createError}
+                    </div>
                   )}
-                  <div className="flex justify-end gap-2">
+                  <div className="flex gap-3">
                     <button
                       type="button"
                       onClick={() => {
                         setShowComposer(false);
+                        setTitle('');
+                        setDescription('');
+                        setBudget('');
+                        setNewLocation('');
+                        setCategory('');
+                        setDeadline('');
+                        setImageFiles([]);
+                        setImagePreviews([]);
                         setCreateError(null);
                       }}
-                      className="btn-secondary-compact"
+                      className="btn-secondary flex-1"
                     >
                       Cancel
                     </button>
-                    <button type="submit" className="btn-primary" disabled={creating}>
+                    <button
+                      type="submit"
+                      disabled={creating}
+                      className="btn-primary flex-1"
+                    >
                       {creating ? 'Posting...' : 'Post Task'}
                     </button>
                   </div>
@@ -400,14 +402,14 @@ export default function DiscoveryPage() {
               </div>
             )}
 
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Available Tasks</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 px-4">Available Tasks</h1>
 
             {loading ? (
               <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
               </div>
             ) : !loading && tasks.length > 0 && (
-              <div className="max-w-2xl mx-auto flex flex-col gap-5">
+              <div className="flex flex-col">
                 {tasks.map((task) => (
                   <TaskCard key={task.id} task={task} />
                 ))}

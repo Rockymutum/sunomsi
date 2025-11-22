@@ -58,7 +58,7 @@ export default function MessagesPage() {
               .from('profiles')
               .select('full_name, avatar_url')
               .eq('user_id', partnerId)
-              .single();
+              .maybeSingle();
 
             conversationMap.set(partnerId, {
               partnerId,

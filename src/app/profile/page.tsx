@@ -27,6 +27,8 @@ export default function ProfilePage() {
     phone: '',
     bio: '',
   });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [message, setMessage] = useState('');
 
@@ -119,25 +121,69 @@ export default function ProfilePage() {
     }
   };
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSave = async () => {
     if (!profile || !user) return;
 
     try {
       setMessage('');
+
+      // Upload avatar if provided
+      let avatarUrl: string | undefined = undefined;
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split('.').pop();
+        const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, avatarFile, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
+
+        avatarUrl = publicUrl;
+      }
+
+      const updateData: any = {
+        full_name: formData.full_name,
+        phone: formData.phone,
+        bio: formData.bio,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (avatarUrl) {
+        updateData.avatar_url = avatarUrl;
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: formData.full_name,
-          phone: formData.phone,
-          bio: formData.bio,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('user_id', user.id);
 
       if (error) throw error;
 
-      setProfile(prev => prev ? { ...prev, ...formData } : null);
+      // Update local profile state
+      setProfile(prev => prev ? {
+        ...prev,
+        ...formData,
+        ...(avatarUrl ? { avatar_url: avatarUrl } : {})
+      } : null);
       setEditing(false);
+      setAvatarFile(null);
+      setAvatarPreview(null);
       setMessage('Profile updated successfully!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error: any) {
@@ -218,6 +264,64 @@ export default function ProfilePage() {
                 <h2 className="text-lg font-semibold text-gray-900">Personal Information</h2>
               </div>
               <div className="p-6 space-y-6">
+                {/* Avatar Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Profile Photo
+                  </label>
+                  <div className="flex items-center gap-4">
+                    {avatarPreview || profile?.avatar_url ? (
+                      <div className="relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={avatarPreview || profile?.avatar_url || ''}
+                          alt="Profile photo"
+                          className="h-24 w-24 rounded-full object-cover border-2 border-gray-200"
+                        />
+                        {editing && avatarPreview && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAvatarFile(null);
+                              setAvatarPreview(null);
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                    )}
+                    {editing && (
+                      <div>
+                        <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          Change Photo
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarChange}
+                            className="hidden"
+                          />
+                        </label>
+                        <p className="mt-1 text-xs text-gray-500">
+                          JPG, PNG or GIF (max 5MB)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Email (read-only) */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
