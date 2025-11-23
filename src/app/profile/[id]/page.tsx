@@ -118,7 +118,7 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
     <div className="min-h-[100svh] bg-white text-slate-900">
       <Navbar />
       <div className="relative overflow-hidden">
-        <div className="relative mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+        <div className="relative mx-auto w-full max-w-5xl px-4 py-10 pt-20 pb-24 md:pb-10 sm:px-6 lg:px-8 lg:py-14">
           {loading ? (
             <div className="flex h-64 items-center justify-center">
               <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-primary"></div>
@@ -149,16 +149,6 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
                     </div>
 
                     <div className="mt-6 space-y-4 sm:mt-0">
-                      <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
-                        <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-primary shadow-sm">
-                          Profile
-                        </span>
-                        {profile.role && (
-                          <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 shadow-sm">
-                            {profile.role}
-                          </span>
-                        )}
-                      </div>
                       <div>
                         <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
                           {profile.full_name || 'User'}
@@ -248,6 +238,19 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
                           {profile.place || '—'}
                         </dd>
                       </div>
+                      {profile.phone && (
+                        <div>
+                          <dt className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            Phone
+                          </dt>
+                          <dd className="mt-1 text-base text-slate-700">
+                            {profile.phone}
+                          </dd>
+                        </div>
+                      )}
                       <div>
                         <dt className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
                           <FiMail className="h-4 w-4 text-primary" />

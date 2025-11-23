@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS worker_profiles (
   availability TEXT[] DEFAULT '{}',
   location TEXT,
   bio TEXT,
+  portfolio_images JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

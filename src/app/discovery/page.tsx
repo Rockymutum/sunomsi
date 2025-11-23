@@ -7,6 +7,7 @@ import TaskCard from '@/components/tasks/TaskCard';
 import { Task } from '@/lib/supabase';
 import { useSearchParams } from 'next/navigation';
 import PageShell from '@/components/ui/PageShell';
+import Toast from '@/components/ui/Toast';
 
 export default function DiscoveryPage() {
   const supabase = createClientComponentClient();
@@ -25,6 +26,7 @@ export default function DiscoveryPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [showComposer, setShowComposer] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
 
   useEffect(() => {
@@ -262,9 +264,11 @@ export default function DiscoveryPage() {
         setImagePreviews([]);
         setTasks((prev) => [data, ...prev]);
         setShowComposer(false);
+        setMessage({ text: 'Task posted successfully!', type: 'success' });
       }
     } catch (err: any) {
       setCreateError(err?.message || 'Network error.');
+      setMessage({ text: err?.message || 'Failed to create task. Please try again.', type: 'error' });
     } finally {
       setCreating(false);
     }
@@ -275,6 +279,7 @@ export default function DiscoveryPage() {
   return (
     <div className="min-h-[100svh] bg-slate-50">
       <Navbar />
+      <Toast message={message} onClose={() => setMessage(null)} />
 
       <div className="pt-20 pb-24 md:pb-8">
 

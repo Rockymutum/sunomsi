@@ -428,6 +428,32 @@ export default function WorkerDetailPage() {
               </div>
             )}
 
+            {/* Portfolio Gallery - Past Jobs */}
+            {worker.portfolio_images && Array.isArray(worker.portfolio_images) && worker.portfolio_images.length > 0 && (
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <h2 className="text-lg font-bold text-slate-900">Past Jobs</h2>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {worker.portfolio_images.map((item: any, index: number) => (
+                    <div key={index} className="group relative">
+                      <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-slate-200">
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                        />
+                      </div>
+                      <p className="mt-2 text-sm font-medium text-gray-900">{item.title}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Reviews Section */}
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">

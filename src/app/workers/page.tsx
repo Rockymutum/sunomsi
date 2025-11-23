@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import WorkerCard from '@/components/workers/WorkerCard';
+import Toast from '@/components/ui/Toast';
 
 const BASE_SKILL_OPTIONS = [
   'Carpentry',
@@ -57,8 +58,16 @@ export default function WorkersPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [composeError, setComposeError] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState(0); // 0: Basic, 1: Skills, 2: Review
+  const [currentStep, setCurrentStep] = useState(0); // 0: Basic, 1: Skills, 2: Portfolio, 3: Review
   const [publishSuccess, setPublishSuccess] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  // Portfolio images state (up to 4 images with titles)
+  const [portfolioItems, setPortfolioItems] = useState<Array<{
+    file: File | null;
+    preview: string | null;
+    title: string;
+  }>>([{ file: null, preview: null, title: '' }]);
 
   const availableSkillOptions = useMemo(() => {
     const set = new Set<string>(BASE_SKILL_OPTIONS);
@@ -361,6 +370,38 @@ export default function WorkersPage() {
     setSelectedCategory('');
   };
 
+  const handlePortfolioImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const newItems = [...portfolioItems];
+      newItems[index].file = file;
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const updated = [...portfolioItems];
+        updated[index].preview = reader.result as string;
+        setPortfolioItems(updated);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePortfolioTitleChange = (index: number, title: string) => {
+    const newItems = [...portfolioItems];
+    newItems[index].title = title;
+    setPortfolioItems(newItems);
+  };
+
+  const addPortfolioItem = () => {
+    if (portfolioItems.length < 4) {
+      setPortfolioItems([...portfolioItems, { file: null, preview: null, title: '' }]);
+    }
+  };
+
+  const removePortfolioItem = (index: number) => {
+    setPortfolioItems(portfolioItems.filter((_, i) => i !== index));
+  };
+
   const handleCreatePortfolio = async (e: React.FormEvent) => {
     e.preventDefault();
     setComposeError(null);
@@ -404,6 +445,28 @@ export default function WorkersPage() {
         if (profileUpdateError) throw profileUpdateError;
       }
 
+      // Upload portfolio images
+      const portfolioData = [];
+      for (const item of portfolioItems) {
+        if (item.file && item.title) {
+          const fileName = `${userId}/portfolio/${Date.now()}-${item.file.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from('worker_portfolio')
+            .upload(fileName, item.file);
+
+          if (!uploadError) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('worker_portfolio')
+              .getPublicUrl(fileName);
+
+            portfolioData.push({
+              image: publicUrl,
+              title: item.title
+            });
+          }
+        }
+      }
+
       // Insert or update worker profile without relying on ON CONFLICT
       const { data: existing, error: fetchWpErr } = await supabase
         .from('worker_profiles')
@@ -420,6 +483,7 @@ export default function WorkersPage() {
             location: locationInput.trim() || null,
             bio: bioInput.trim() || null,
             skills: skillsInput,
+            portfolio_images: portfolioData,
             updated_at: new Date().toISOString()
           })
           .eq('id', existing.id);
@@ -433,6 +497,7 @@ export default function WorkersPage() {
             location: locationInput.trim() || null,
             bio: bioInput.trim() || null,
             skills: skillsInput,
+            portfolio_images: portfolioData,
             rating: 0,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -440,6 +505,7 @@ export default function WorkersPage() {
         if (insErr) throw insErr;
       }
 
+      setMessage({ text: 'Portfolio published successfully!', type: 'success' });
       setPublishSuccess('Portfolio published successfully!');
       setTimeout(() => setPublishSuccess(null), 3000);
       setShowComposer(false);
@@ -476,6 +542,7 @@ export default function WorkersPage() {
   return (
     <div className="min-h-[100svh] bg-slate-50">
       <Navbar />
+      <Toast message={message} onClose={() => setMessage(null)} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 pb-24 md:pb-8">
         {publishSuccess && (
@@ -589,6 +656,69 @@ export default function WorkersPage() {
                         className="input-field resize-none"
                         style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
                       />
+
+                      {/* Portfolio Images - Past Jobs */}
+                      <div className="mt-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Portfolio (Past Jobs) - Up to 4 photos
+                        </label>
+                        {portfolioItems.map((item, index) => (
+                          <div key={index} className="mb-4 p-4 border border-gray-200 rounded-lg">
+                            <div className="flex gap-4">
+                              {/* Image Preview */}
+                              <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                {item.preview ? (
+                                  <img src={item.preview} alt="Preview" className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Title and Upload */}
+                              <div className="flex-1">
+                                <input
+                                  type="text"
+                                  placeholder="Job title (e.g., Kitchen Renovation)"
+                                  value={item.title}
+                                  onChange={(e) => handlePortfolioTitleChange(index, e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2 text-sm"
+                                />
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => handlePortfolioImageChange(index, e)}
+                                  className="text-sm"
+                                />
+                              </div>
+
+                              {/* Remove Button */}
+                              {portfolioItems.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removePortfolioItem(index)}
+                                  className="text-red-600 hover:text-red-800 text-xl font-bold"
+                                >
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+
+                        {portfolioItems.length < 4 && (
+                          <button
+                            type="button"
+                            onClick={addPortfolioItem}
+                            className="text-sm text-primary hover:text-primary-dark font-medium"
+                          >
+                            + Add Another Photo
+                          </button>
+                        )}
+                      </div>
                     </>
                   )}
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Navbar from '@/components/layout/Navbar';
 import PageShell from '@/components/ui/PageShell';
+import Toast from '@/components/ui/Toast';
 
 export default function NewTaskPage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function NewTaskPage() {
 
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const CATEGORIES = [
     'Cleaning',
@@ -124,12 +126,17 @@ export default function NewTaskPage() {
         throw error;
       }
 
-      // Redirect to the task page
-      router.push(`/tasks/${data[0].id}`);
+      // Show success message
+      setMessage({ text: 'Task created successfully!', type: 'success' });
+
+      // Redirect after a short delay to show the success message
+      setTimeout(() => {
+        router.push(`/tasks/${data[0].id}`);
+      }, 1000);
 
     } catch (error) {
       console.error('Error creating task:', error);
-      alert('Failed to create task. Please try again.');
+      setMessage({ text: 'Failed to create task. Please try again.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -138,6 +145,7 @@ export default function NewTaskPage() {
   return (
     <div className="min-h-[100svh] bg-background overflow-x-hidden">
       <Navbar />
+      <Toast message={message} onClose={() => setMessage(null)} />
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PageShell

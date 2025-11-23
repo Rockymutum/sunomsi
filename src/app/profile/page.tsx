@@ -16,6 +16,7 @@ interface Profile {
   skills: string[];
   place: string | null;
   title: string | null;
+  contact: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -31,10 +32,20 @@ export default function ProfilePage() {
     place: '',
     title: '',
   });
+  const [socialLinks, setSocialLinks] = useState({
+    behance: '',
+    dribbble: '',
+    linkedin: '',
+    instagram: '',
+    facebook: '',
+    github: '',
+    twitter: '',
+    website: '',
+  });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const supabase = createClientComponentClient();
   const router = useRouter();
@@ -86,10 +97,24 @@ export default function ProfilePage() {
           place: data.place || '',
           title: data.title || '',
         });
+
+        // Parse social links from contact field
+        const contactStr = data.contact || '';
+        setSocialLinks({
+          behance: contactStr.match(/https?:\/\/[^\s]*behance[^\s]*/i)?.[0] || '',
+          dribbble: contactStr.match(/https?:\/\/[^\s]*dribbble[^\s]*/i)?.[0] || '',
+          linkedin: contactStr.match(/https?:\/\/[^\s]*linkedin[^\s]*/i)?.[0] || '',
+          instagram: contactStr.match(/https?:\/\/[^\s]*instagram[^\s]*/i)?.[0] || '',
+          facebook: contactStr.match(/https?:\/\/[^\s]*facebook[^\s]*/i)?.[0] || '',
+          github: contactStr.match(/https?:\/\/[^\s]*github[^\s]*/i)?.[0] || '',
+          twitter: contactStr.match(/https?:\/\/[^\s]*twitter[^\s]*/i)?.[0] || '',
+          website: '',
+        });
       }
     } catch (error: any) {
       console.error('Error in getProfile:', error);
-      setMessage('Error loading profile: ' + error.message);
+      setMessage({ text: 'Error loading profile: ' + error.message, type: 'error' });
+      setTimeout(() => setMessage(null), 5000);
     } finally {
       setLoading(false);
     }
@@ -123,9 +148,20 @@ export default function ProfilePage() {
         place: data.place || '',
         title: data.title || '',
       });
+      setSocialLinks({
+        behance: '',
+        dribbble: '',
+        linkedin: '',
+        instagram: '',
+        facebook: '',
+        github: '',
+        twitter: '',
+        website: '',
+      });
     } catch (error: any) {
       console.error('Error creating profile:', error);
-      setMessage('Error creating profile: ' + error.message);
+      setMessage({ text: 'Error creating profile: ' + error.message, type: 'error' });
+      setTimeout(() => setMessage(null), 5000);
     }
   };
 
@@ -165,12 +201,17 @@ export default function ProfilePage() {
         avatarUrl = publicUrl;
       }
 
+      // Combine social links into contact field
+      const socialLinksArray = Object.values(socialLinks).filter(link => link.trim() !== '');
+      const contactField = socialLinksArray.join(' ');
+
       const updateData: any = {
         full_name: formData.full_name,
         phone: formData.phone,
         bio: formData.bio,
         place: formData.place,
         title: formData.title,
+        contact: contactField,
         updated_at: new Date().toISOString(),
       };
 
@@ -194,11 +235,12 @@ export default function ProfilePage() {
       setEditing(false);
       setAvatarFile(null);
       setAvatarPreview(null);
-      setMessage('Profile updated successfully!');
-      setTimeout(() => setMessage(''), 3000);
+      setMessage({ text: 'Profile updated successfully!', type: 'success' });
+      setTimeout(() => setMessage(null), 3000);
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      setMessage('Error updating profile: ' + error.message);
+      setMessage({ text: 'Error updating profile: ' + error.message, type: 'error' });
+      setTimeout(() => setMessage(null), 5000);
     }
   };
 
@@ -257,12 +299,39 @@ export default function ProfilePage() {
           <p className="text-gray-600 mt-2">Manage your account settings and preferences</p>
         </div>
 
+
+        {/* Success/Error Toast Notification */}
         {message && (
-          <div className={`mb-6 p-4 rounded-md ${message.includes('Error')
-            ? 'bg-red-50 text-red-800 border border-red-200'
-            : 'bg-green-50 text-green-800 border border-green-200'
-            }`}>
-            {message}
+          <div className={`fixed top-24 right-4 z-50 max-w-md animate-slide-in-right ${message.type === 'success'
+            ? 'bg-green-50 text-green-800 border-green-200'
+            : 'bg-red-50 text-red-800 border-red-200'
+            } border-2 rounded-lg shadow-lg p-4 flex items-start gap-3`}>
+            {/* Icon */}
+            <div className="flex-shrink-0">
+              {message.type === 'success' ? (
+                <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              ) : (
+                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+            </div>
+            {/* Message */}
+            <div className="flex-1">
+              <p className="font-semibold">{message.type === 'success' ? 'Success!' : 'Error'}</p>
+              <p className="text-sm mt-1">{message.text}</p>
+            </div>
+            {/* Close button */}
+            <button
+              onClick={() => setMessage(null)}
+              className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         )}
 
@@ -449,6 +518,8 @@ export default function ProfilePage() {
                             full_name: profile?.full_name || '',
                             phone: profile?.phone || '',
                             bio: profile?.bio || '',
+                            place: profile?.place || '',
+                            title: profile?.title || '',
                           });
                         }}
                         className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
