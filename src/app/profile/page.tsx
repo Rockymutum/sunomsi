@@ -298,8 +298,8 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto py-8 px-4 pt-20 pb-24 md:pb-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-          <p className="text-gray-600 mt-2">Manage your account settings and preferences</p>
+          <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Profile</h1>
+          <p className="text-base text-gray-600 mt-3 font-medium">Manage your account settings and preferences</p>
         </div>
 
 
@@ -343,14 +343,12 @@ export default function ProfilePage() {
           <div className="md:col-span-2">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-5 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Personal Information</h2>
+                <h2 className="text-xl font-bold text-gray-900 tracking-tight">Personal Information</h2>
               </div>
               <div className="p-6 space-y-6">
                 {/* Avatar Upload */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Profile Photo
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2 tracking-wide">Profile Picture</label>
                   <div className="flex items-center gap-4">
                     {avatarPreview || profile?.avatar_url ? (
                       <div className="relative">
@@ -406,7 +404,7 @@ export default function ProfilePage() {
 
                 {/* Email (read-only) */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2 tracking-wide">
                     Email Address
                   </label>
                   <input
@@ -419,7 +417,7 @@ export default function ProfilePage() {
 
                 {/* Full Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2 tracking-wide">
                     Full Name
                   </label>
                   {editing ? (
@@ -437,7 +435,7 @@ export default function ProfilePage() {
 
                 {/* Phone */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2 tracking-wide">
                     Phone Number
                   </label>
                   {editing ? (
@@ -455,7 +453,7 @@ export default function ProfilePage() {
 
                 {/* Professional Title */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2 tracking-wide">
                     Professional Title
                   </label>
                   {editing ? (
@@ -473,7 +471,7 @@ export default function ProfilePage() {
 
                 {/* Location */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2 tracking-wide">
                     Location
                   </label>
                   {editing ? (
@@ -491,7 +489,7 @@ export default function ProfilePage() {
 
                 {/* Bio */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2 tracking-wide">
                     Bio
                   </label>
                   {editing ? (
@@ -554,24 +552,24 @@ export default function ProfilePage() {
             {/* Account Info */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-5 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Account</h2>
+                <h2 className="text-xl font-bold text-gray-900 tracking-tight">Account</h2>
               </div>
               <div className="p-6 space-y-4">
                 <div>
-                  <p className="text-sm text-gray-500">Member since</p>
+                  <p className="text-sm font-semibold text-gray-700 mb-1">Member since</p>
                   <p className="text-sm font-medium text-gray-900">
                     {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">User ID</p>
+                  <p className="text-sm font-semibold text-gray-700 mb-1">User ID</p>
                   <p className="text-sm font-medium text-gray-900 font-mono text-xs truncate">
                     {user?.id}
                   </p>
                 </div>
                 <button
                   onClick={handleSignOut}
-                  className="w-full px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-md hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-4 py-2.5 text-sm font-semibold text-red-600 bg-white border-2 border-red-300 rounded-md hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
                 >
                   Sign Out
                 </button>
@@ -581,7 +579,7 @@ export default function ProfilePage() {
             {/* Quick Actions */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-5 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
+                <h2 className="text-xl font-bold text-gray-900 tracking-tight">Quick Actions</h2>
               </div>
               <div className="p-6 space-y-3">
                 <button
