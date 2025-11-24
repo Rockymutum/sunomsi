@@ -61,14 +61,14 @@ self.addEventListener('fetch', (event) => {
         .then((response) => {
           // Clone the response for potential caching
           const responseToCache = response.clone();
-          
+
           // Cache successful API responses
           if (response.status === 200) {
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);
             });
           }
-          
+
           return response;
         })
         .catch(() => {
@@ -127,7 +127,7 @@ self.addEventListener('sync', (event) => {
 async function processPendingRequests() {
   const cache = await caches.open('pending-requests');
   const requests = await cache.keys();
-  
+
   return Promise.all(
     requests.map(async (request) => {
       try {
@@ -147,13 +147,18 @@ self.addEventListener('push', (event) => {
   if (!event.data) return;
 
   const data = event.data.json();
-  const title = data.title || 'New notification';
+  const title = data.title || 'SUNOMSI';
   const options = {
-    body: data.body || '',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge.png',
+    body: data.body || 'You have a new notification',
+    icon: '/icon-192x192.png',
+    badge: '/badge-72x72.png',
     vibrate: [200, 100, 200],
+    tag: data.type || 'general',
+    requireInteraction: false,
     data: {
+      type: data.type,
+      chatId: data.chatId,
+      taskId: data.taskId,
       url: data.url || '/',
     },
   };
@@ -166,19 +171,31 @@ self.addEventListener('push', (event) => {
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  
-  const url = event.notification.data?.url || '/';
-  
+
+  const data = event.notification.data;
+  let url = '/';
+
+  // Route based on notification type
+  if (data.type === 'message' && data.chatId) {
+    url = `/messages/${data.chatId}`;
+  } else if (data.type === 'comment' && data.taskId) {
+    url = `/tasks/${data.taskId}`;
+  } else if (data.type === 'application' && data.taskId) {
+    url = `/tasks/${data.taskId}`;
+  } else if (data.url) {
+    url = data.url;
+  }
+
   event.waitUntil(
-    clients.matchAll({ type: 'window' })
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
         // Check if there's already a window/tab open with the target URL
         for (const client of clientList) {
-          if (client.url === url && 'focus' in client) {
+          if (client.url.includes(url) && 'focus' in client) {
             return client.focus();
           }
         }
-        
+
         // If no matching client, open a new window
         if (clients.openWindow) {
           return clients.openWindow(url);

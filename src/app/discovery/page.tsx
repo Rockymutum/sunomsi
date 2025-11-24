@@ -282,158 +282,159 @@ export default function DiscoveryPage() {
       <Toast message={message} onClose={() => setMessage(null)} />
 
       <div className="pt-20 pb-24 md:pb-8">
-
-        <div className="flex flex-col gap-6">
-          {/* Main content */}
-          <div className="flex-1">
-            {/* Task composer - collapsed/expanded */}
-            {!showComposer ? (
-              <div className="mb-6 px-4">
-                <button
-                  type="button"
-                  onClick={() => setShowComposer(true)}
-                  className="btn-primary"
-                >
-                  Create Task
-                </button>
-              </div>
-            ) : (
-              <div className="bg-white rounded-[28px] shadow-xl border border-slate-200 mb-3 overflow-hidden transition-shadow hover:shadow-2xl">
-                <form onSubmit={handleCreateTask} className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-6">
+            {/* Main content */}
+            <div className="flex-1">
+              {/* Task composer - collapsed/expanded */}
+              {!showComposer ? (
+                <div className="mb-6 px-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowComposer(true)}
+                    className="btn-primary"
+                  >
+                    Create Task
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-white rounded-[28px] shadow-xl border border-slate-200 mb-3 overflow-hidden transition-shadow hover:shadow-2xl">
+                  <form onSubmit={handleCreateTask} className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          placeholder="What's the task?"
+                          className="input-field"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Describe the task in detail..."
+                        rows={3}
+                        className="input-field resize-none"
+                        style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <input
+                        type="number"
+                        value={budget}
+                        onChange={(e) => setBudget(e.target.value)}
+                        placeholder="Budget (₹)"
+                        className="input-field"
+                      />
                       <input
                         type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="What's the task?"
+                        value={newLocation}
+                        onChange={(e) => setNewLocation(e.target.value)}
+                        placeholder="Location"
                         className="input-field"
                       />
                     </div>
-                  </div>
-                  <div>
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Describe the task in detail..."
-                      rows={3}
-                      className="input-field resize-none"
-                      style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input
-                      type="number"
-                      value={budget}
-                      onChange={(e) => setBudget(e.target.value)}
-                      placeholder="Budget (₹)"
-                      className="input-field"
-                    />
-                    <input
-                      type="text"
-                      value={newLocation}
-                      onChange={(e) => setNewLocation(e.target.value)}
-                      placeholder="Location"
-                      className="input-field"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      placeholder="Category"
-                      className="input-field"
-                    />
-                    <input
-                      type="date"
-                      value={deadline}
-                      onChange={(e) => setDeadline(e.target.value)}
-                      className="input-field"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Add Images (optional)
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleImageChange}
-                      className="input-field"
-                    />
-                    {imagePreviews.length > 0 && (
-                      <div className="mt-3 grid grid-cols-3 gap-2">
-                        {imagePreviews.map((preview, idx) => (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img key={idx} src={preview} alt={`Preview ${idx + 1}`} className="w-full h-24 object-cover rounded-md" />
-                        ))}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <input
+                        type="text"
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        placeholder="Category"
+                        className="input-field"
+                      />
+                      <input
+                        type="date"
+                        value={deadline}
+                        onChange={(e) => setDeadline(e.target.value)}
+                        className="input-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Add Images (optional)
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageChange}
+                        className="input-field"
+                      />
+                      {imagePreviews.length > 0 && (
+                        <div className="mt-3 grid grid-cols-3 gap-2">
+                          {imagePreviews.map((preview, idx) => (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img key={idx} src={preview} alt={`Preview ${idx + 1}`} className="w-full h-24 object-cover rounded-md" />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {createError && (
+                      <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                        {createError}
                       </div>
                     )}
-                  </div>
-                  {createError && (
-                    <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                      {createError}
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowComposer(false);
+                          setTitle('');
+                          setDescription('');
+                          setBudget('');
+                          setNewLocation('');
+                          setCategory('');
+                          setDeadline('');
+                          setImageFiles([]);
+                          setImagePreviews([]);
+                          setCreateError(null);
+                        }}
+                        className="btn-secondary flex-1"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={creating}
+                        className="btn-primary flex-1"
+                      >
+                        {creating ? 'Posting...' : 'Post Task'}
+                      </button>
                     </div>
+                  </form>
+                </div>
+              )}
+
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 px-4">Available Tasks</h1>
+
+              {loading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                </div>
+              ) : !loading && tasks.length > 0 && (
+                <div className="flex flex-col">
+                  {tasks.map((task) => (
+                    <TaskCard key={task.id} task={task} />
+                  ))}
+                </div>
+              )}
+              {tasks.length === 0 && !loading && (
+                <div className="card text-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <h3 className="text-lg font-medium text-gray-900">No tasks found</h3>
+                  {fetchError ? (
+                    <p className="mt-1 text-sm text-red-600">{fetchError}</p>
+                  ) : (
+                    <p className="mt-1 text-sm text-gray-500">There are no tasks to display yet.</p>
                   )}
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowComposer(false);
-                        setTitle('');
-                        setDescription('');
-                        setBudget('');
-                        setNewLocation('');
-                        setCategory('');
-                        setDeadline('');
-                        setImageFiles([]);
-                        setImagePreviews([]);
-                        setCreateError(null);
-                      }}
-                      className="btn-secondary flex-1"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={creating}
-                      className="btn-primary flex-1"
-                    >
-                      {creating ? 'Posting...' : 'Post Task'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 px-4">Available Tasks</h1>
-
-            {loading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-              </div>
-            ) : !loading && tasks.length > 0 && (
-              <div className="flex flex-col">
-                {tasks.map((task) => (
-                  <TaskCard key={task.id} task={task} />
-                ))}
-              </div>
-            )}
-            {tasks.length === 0 && !loading && (
-              <div className="card text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h3 className="text-lg font-medium text-gray-900">No tasks found</h3>
-                {fetchError ? (
-                  <p className="mt-1 text-sm text-red-600">{fetchError}</p>
-                ) : (
-                  <p className="mt-1 text-sm text-gray-500">There are no tasks to display yet.</p>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

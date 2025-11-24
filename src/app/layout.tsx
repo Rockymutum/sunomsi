@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { sessionManager } from '@/utils/sessionPersistence';
+import NotificationPrompt from '@/components/notifications/NotificationPrompt';
 import './globals.css';
 
 export default function RootLayout({
@@ -13,6 +14,13 @@ export default function RootLayout({
   useEffect(() => {
     // Initialize session manager when app starts
     sessionManager.initialize();
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registered:', reg))
+        .catch(err => console.error('Service Worker registration failed:', err));
+    }
 
     // Check session on app load
     const checkSession = async () => {
@@ -46,6 +54,7 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           {children}
+          <NotificationPrompt />
         </AuthProvider>
       </body>
     </html>

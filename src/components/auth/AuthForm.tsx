@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
+import Toast from '@/components/ui/Toast';
 
 export default function AuthForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
   const supabase = createClientComponentClient();
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function AuthForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
+    setMessage(null);
 
     try {
       if (isSignUp) {
@@ -25,7 +26,7 @@ export default function AuthForm() {
           password,
         });
         if (error) {
-          setMessage(error.message);
+          setMessage({ text: error.message, type: 'error' });
         } else if (data.user) {
           // Create profile entry for the new user
           const { error: profileError } = await supabase
@@ -42,7 +43,7 @@ export default function AuthForm() {
             console.error('Error creating profile:', profileError);
           }
 
-          setMessage('Check your email for verification link!');
+          setMessage({ text: 'Check your email for verification link!', type: 'success' });
           setEmail('');
           setPassword('');
         }
@@ -52,15 +53,18 @@ export default function AuthForm() {
           password,
         });
         if (error) {
-          setMessage(error.message);
+          setMessage({ text: error.message, type: 'error' });
         } else {
-          setMessage('Sign in successful!');
-          router.push('/discovery');
-          router.refresh();
+          setMessage({ text: 'Sign in successful!', type: 'success' });
+          // Wait for auth state to update before redirecting
+          setTimeout(() => {
+            router.push('/discovery');
+            router.refresh();
+          }, 500);
         }
       }
     } catch (error: any) {
-      setMessage(error.message || 'An error occurred');
+      setMessage({ text: error.message || 'An error occurred', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -68,6 +72,8 @@ export default function AuthForm() {
 
   return (
     <div className="auth-form">
+      <Toast message={message} onClose={() => setMessage(null)} />
+
       <h2 className="text-2xl font-bold text-center mb-6">
         {isSignUp ? 'Create Account' : 'Sign In'}
       </h2>
@@ -93,15 +99,6 @@ export default function AuthForm() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
-
-        {message && (
-          <div className={`text-center text-sm ${message.includes('successful') || message.includes('Check your email')
-              ? 'text-green-600'
-              : 'text-red-600'
-            }`}>
-            {message}
-          </div>
-        )}
 
         <button
           type="submit"

@@ -62,12 +62,10 @@ export default function WorkersPage() {
   const [publishSuccess, setPublishSuccess] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  // Portfolio images state (up to 4 images with titles)
-  const [portfolioItems, setPortfolioItems] = useState<Array<{
-    file: File | null;
-    preview: string | null;
-    title: string;
-  }>>([{ file: null, preview: null, title: '' }]);
+  // Portfolio images state (up to 4 images with one shared title)
+  const [portfolioImages, setPortfolioImages] = useState<File[]>([]);
+  const [portfolioTitle, setPortfolioTitle] = useState('');
+  const [portfolioPreviews, setPortfolioPreviews] = useState<string[]>([]);
 
   const availableSkillOptions = useMemo(() => {
     const set = new Set<string>(BASE_SKILL_OPTIONS);
@@ -370,36 +368,30 @@ export default function WorkersPage() {
     setSelectedCategory('');
   };
 
-  const handlePortfolioImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const newItems = [...portfolioItems];
-      newItems[index].file = file;
+  const handlePortfolioImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const filesArray = Array.from(files).slice(0, 4); // Max 4 images
+      setPortfolioImages(filesArray);
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const updated = [...portfolioItems];
-        updated[index].preview = reader.result as string;
-        setPortfolioItems(updated);
-      };
-      reader.readAsDataURL(file);
+      // Generate previews
+      const previews: string[] = [];
+      filesArray.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          previews.push(reader.result as string);
+          if (previews.length === filesArray.length) {
+            setPortfolioPreviews(previews);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
   };
 
-  const handlePortfolioTitleChange = (index: number, title: string) => {
-    const newItems = [...portfolioItems];
-    newItems[index].title = title;
-    setPortfolioItems(newItems);
-  };
-
-  const addPortfolioItem = () => {
-    if (portfolioItems.length < 4) {
-      setPortfolioItems([...portfolioItems, { file: null, preview: null, title: '' }]);
-    }
-  };
-
-  const removePortfolioItem = (index: number) => {
-    setPortfolioItems(portfolioItems.filter((_, i) => i !== index));
+  const removePortfolioImage = (index: number) => {
+    setPortfolioImages(portfolioImages.filter((_, i) => i !== index));
+    setPortfolioPreviews(portfolioPreviews.filter((_, i) => i !== index));
   };
 
   const handleCreatePortfolio = async (e: React.FormEvent) => {
@@ -432,40 +424,36 @@ export default function WorkersPage() {
           .getPublicUrl(fileName);
 
         avatarUrl = publicUrl;
-
-        // Update profile with new avatar
-        const { error: profileUpdateError } = await supabase
-          .from('profiles')
-          .update({
-            avatar_url: avatarUrl,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', userId);
-
-        if (profileUpdateError) throw profileUpdateError;
+        // Note: Worker avatar is saved to worker_profiles table, not main profile
       }
 
       // Upload portfolio images
       const portfolioData = [];
-      for (const item of portfolioItems) {
-        if (item.file && item.title) {
-          const fileName = `${userId}/portfolio/${Date.now()}-${item.file.name}`;
+      if (portfolioImages.length > 0 && portfolioTitle.trim()) {
+        for (const file of portfolioImages) {
+          const fileName = `${userId}/portfolio/${Date.now()}-${file.name}`;
           const { error: uploadError } = await supabase.storage
             .from('worker_portfolio')
-            .upload(fileName, item.file);
+            .upload(fileName, file);
 
-          if (!uploadError) {
+          if (uploadError) {
+            console.error('Portfolio upload error:', uploadError);
+            setMessage({ text: `Error uploading image: ${uploadError.message}. Make sure 'worker_portfolio' storage bucket exists in Supabase.`, type: 'error' });
+          } else {
             const { data: { publicUrl } } = supabase.storage
               .from('worker_portfolio')
               .getPublicUrl(fileName);
 
+            console.log('Portfolio image uploaded:', publicUrl);
             portfolioData.push({
               image: publicUrl,
-              title: item.title
+              title: portfolioTitle.trim()
             });
           }
         }
       }
+
+      console.log('Portfolio data to save:', portfolioData);
 
       // Insert or update worker profile without relying on ON CONFLICT
       const { data: existing, error: fetchWpErr } = await supabase
@@ -483,6 +471,7 @@ export default function WorkersPage() {
             location: locationInput.trim() || null,
             bio: bioInput.trim() || null,
             skills: skillsInput,
+            avatar_url: avatarUrl,
             portfolio_images: portfolioData,
             updated_at: new Date().toISOString()
           })
@@ -497,6 +486,7 @@ export default function WorkersPage() {
             location: locationInput.trim() || null,
             bio: bioInput.trim() || null,
             skills: skillsInput,
+            avatar_url: avatarUrl,
             portfolio_images: portfolioData,
             rating: 0,
             created_at: new Date().toISOString(),
@@ -656,67 +646,49 @@ export default function WorkersPage() {
                         className="input-field resize-none"
                         style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
                       />
-
                       {/* Portfolio Images - Past Jobs */}
                       <div className="mt-6">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Portfolio (Past Jobs) - Up to 4 photos
                         </label>
-                        {portfolioItems.map((item, index) => (
-                          <div key={index} className="mb-4 p-4 border border-gray-200 rounded-lg">
-                            <div className="flex gap-4">
-                              {/* Image Preview */}
-                              <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                                {item.preview ? (
-                                  <img src={item.preview} alt="Preview" className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                  </div>
-                                )}
-                              </div>
 
-                              {/* Title and Upload */}
-                              <div className="flex-1">
-                                <input
-                                  type="text"
-                                  placeholder="Job title (e.g., Kitchen Renovation)"
-                                  value={item.title}
-                                  onChange={(e) => handlePortfolioTitleChange(index, e.target.value)}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2 text-sm"
-                                />
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => handlePortfolioImageChange(index, e)}
-                                  className="text-sm"
-                                />
-                              </div>
+                        {/* Single Title for All Images */}
+                        <input
+                          type="text"
+                          placeholder="Portfolio title (e.g., Recent Projects, Kitchen Renovations)"
+                          value={portfolioTitle}
+                          onChange={(e) => setPortfolioTitle(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md mb-3 text-sm"
+                        />
 
-                              {/* Remove Button */}
-                              {portfolioItems.length > 1 && (
+                        {/* Multi-file Upload */}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handlePortfolioImagesChange}
+                          className="mb-3 text-sm"
+                        />
+                        <p className="text-xs text-gray-500 mb-3">Select up to 4 images</p>
+
+                        {/* Image Previews */}
+                        {portfolioPreviews.length > 0 && (
+                          <div className="grid grid-cols-2 gap-3">
+                            {portfolioPreviews.map((preview, index) => (
+                              <div key={index} className="relative group">
+                                <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                                  <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+                                </div>
                                 <button
                                   type="button"
-                                  onClick={() => removePortfolioItem(index)}
-                                  className="text-red-600 hover:text-red-800 text-xl font-bold"
+                                  onClick={() => removePortfolioImage(index)}
+                                  className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                   ✕
                                 </button>
-                              )}
-                            </div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-
-                        {portfolioItems.length < 4 && (
-                          <button
-                            type="button"
-                            onClick={addPortfolioItem}
-                            className="text-sm text-primary hover:text-primary-dark font-medium"
-                          >
-                            + Add Another Photo
-                          </button>
                         )}
                       </div>
                     </>
@@ -750,6 +722,46 @@ export default function WorkersPage() {
                       ) : (
                         <div className="mt-3 text-xs text-amber-600">Choose at least one skill to help clients find you faster.</div>
                       )}
+
+                      {/* Add Custom Skill */}
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Add Custom Skill
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Enter a skill (e.g., Video Editing)"
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const input = e.currentTarget;
+                                const skill = input.value.trim();
+                                if (skill && !skillsInput.includes(skill)) {
+                                  setSkillsInput([...skillsInput, skill]);
+                                  input.value = '';
+                                }
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                              const skill = input.value.trim();
+                              if (skill && !skillsInput.includes(skill)) {
+                                setSkillsInput([...skillsInput, skill]);
+                                input.value = '';
+                              }
+                            }}
+                            className="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-primary-dark transition-colors"
+                          >
+                            Add
+                          </button>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500">Press Enter or click Add to include custom skills</p>
+                      </div>
                     </>
                   )}
 

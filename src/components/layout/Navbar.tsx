@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 import Image from 'next/image';
-import { BsGlobeAsiaAustralia, BsChatDots, BsPerson } from 'react-icons/bs';
+import { BsGlobeAsiaAustralia, BsChatDots, BsPerson, BsBell } from 'react-icons/bs';
 import { sessionManager } from '@/utils/sessionPersistence';
 import { useAuth } from '@/components/providers/AuthProvider';
+import NotificationCenter from '@/components/notifications/NotificationCenter';
+import { getUnreadCount } from '@/utils/notifications';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -19,6 +21,8 @@ export default function Navbar() {
   const [searchTerm, setSearchTerm] = useState('');
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showNav, setShowNav] = useState(true);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Initialize and subscribe to auth state changes
   useEffect(() => {
@@ -85,6 +89,37 @@ export default function Navbar() {
     return () => unsubscribe();
   }, [supabase]);
 
+  // Fetch unread notification count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (user) {
+        const count = await getUnreadCount(user.id);
+        setUnreadCount(count);
+      }
+    };
+
+    fetchUnreadCount();
+
+    // Subscribe to new notifications
+    if (user) {
+      const channel = supabase
+        .channel('notification-count')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        }, () => {
+          fetchUnreadCount();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user, supabase]);
+
 
   // Handle scroll behavior
   useEffect(() => {
@@ -105,7 +140,7 @@ export default function Navbar() {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      router.push('/auth');
+      router.push('/'); // Redirect to Get Started page
       router.refresh(); // Ensure the page reloads to reflect signed out state
     } catch (error) {
       console.error('Error signing out:', error);
@@ -172,6 +207,24 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Notification Bell */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 relative"
+                >
+                  <BsBell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                {showNotifications && (
+                  <NotificationCenter onClose={() => setShowNotifications(false)} />
+                )}
+              </div>
+
               <button
                 onClick={() => setShowSearch((v) => !v)}
                 className="p-2 rounded-md text-white bg-primary hover:bg-primary-dark"
@@ -265,6 +318,22 @@ export default function Navbar() {
                   Messages
                 </span>
                 {pathname.startsWith('/messages') && (
+                  <div className="absolute bottom-1 w-1 h-1 rounded-full bg-slate-900" />
+                )}
+              </Link>
+
+              <Link
+                href="/profile"
+                className={`flex flex-col items-center justify-center flex-1 h-full gap-1 rounded-2xl transition-all duration-200 ${pathname === '/profile'
+                  ? 'text-slate-900 scale-105'
+                  : 'text-gray-500 hover:text-gray-700 active:scale-95'
+                  }`}
+              >
+                <BsPerson className={`h-6 w-6 transition-all ${pathname === '/profile' ? 'text-slate-900' : ''}`} />
+                <span className={`text-[10px] font-semibold transition-all ${pathname === '/profile' ? 'text-slate-900' : ''}`}>
+                  Profile
+                </span>
+                {pathname === '/profile' && (
                   <div className="absolute bottom-1 w-1 h-1 rounded-full bg-slate-900" />
                 )}
               </Link>

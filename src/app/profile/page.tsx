@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
+import Toast from '@/components/ui/Toast';
+import { sessionManager } from '@/utils/sessionPersistence';
 
 interface Profile {
   id: string;
@@ -247,7 +249,8 @@ export default function ProfilePage() {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      router.push('/auth');
+      sessionManager.clearSession();
+      router.push('/'); // Redirect to Get Started page
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -257,7 +260,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
-        router.push('/auth');
+        router.push('/'); // Redirect to Get Started page
       }
     });
 

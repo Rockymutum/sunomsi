@@ -15,6 +15,7 @@ interface WorkerProfile {
   bio: string | null;
   skills: string[] | null;
   rating: number | null;
+  portfolio_images?: any[];
   created_at?: string;
   updated_at?: string;
 }
