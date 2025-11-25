@@ -3,29 +3,20 @@ CREATE OR REPLACE FUNCTION notify_new_message()
 RETURNS TRIGGER AS $$
 DECLARE
   sender_name TEXT;
-  receiver_id UUID;
 BEGIN
   -- Get sender name
   SELECT full_name INTO sender_name
   FROM profiles
   WHERE user_id = NEW.sender_id;
 
-  -- Get receiver ID (the other person in the chat)
-  SELECT CASE 
-    WHEN NEW.sender_id = chats.user1_id THEN chats.user2_id
-    ELSE chats.user1_id
-  END INTO receiver_id
-  FROM chats
-  WHERE chats.id = NEW.chat_id;
-
   -- Create notification for receiver
   INSERT INTO notifications (user_id, type, title, body, data)
   VALUES (
-    receiver_id,
+    NEW.receiver_id,
     'message',
     'New Message',
     COALESCE(sender_name, 'Someone') || ' sent you a message',
-    jsonb_build_object('chatId', NEW.chat_id)
+    jsonb_build_object('chatId', NEW.sender_id)
   );
 
   RETURN NEW;
@@ -52,7 +43,7 @@ BEGIN
   WHERE user_id = NEW.user_id;
 
   -- Get task owner
-  SELECT user_id INTO task_owner_id
+  SELECT poster_id INTO task_owner_id
   FROM tasks
   WHERE id = NEW.task_id;
 
@@ -93,7 +84,7 @@ BEGIN
   WHERE user_id = NEW.user_id;
 
   -- Get task owner
-  SELECT user_id INTO task_owner_id
+  SELECT poster_id INTO task_owner_id
   FROM tasks
   WHERE id = NEW.task_id;
 
