@@ -21,7 +21,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create trigger for new messages
 DROP TRIGGER IF EXISTS trigger_notify_new_message ON messages;
@@ -62,7 +62,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create trigger for new comments
 DROP TRIGGER IF EXISTS trigger_notify_new_comment ON comments;
@@ -100,7 +100,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create trigger for new applications
 DROP TRIGGER IF EXISTS trigger_notify_new_application ON applications;
