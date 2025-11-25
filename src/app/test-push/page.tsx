@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+"use client";
+
+import { useState, useEffect } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function TestPushPage() {
     const [status, setStatus] = useState<string>('Initializing...');
@@ -16,10 +20,15 @@ export default function TestPushPage() {
     const checkStatus = async () => {
         try {
             addLog('Checking status...');
+            addLog(`User Agent: ${navigator.userAgent}`);
 
             // Check Notification permission
-            const permission = Notification.permission;
-            addLog(`Notification permission: ${permission}`);
+            if (typeof window !== 'undefined' && 'Notification' in window) {
+                const permission = Notification.permission;
+                addLog(`Notification permission: ${permission}`);
+            } else {
+                addLog('ERROR: Notification API not found');
+            }
 
             // Check Service Worker
             if ('serviceWorker' in navigator) {
@@ -104,7 +113,7 @@ export default function TestPushPage() {
     }, []);
 
     return (
-        <div className="p-8 max-w-2xl mx-auto">
+        <div className="p-8 max-w-2xl mx-auto pt-20">
             <h1 className="text-2xl font-bold mb-4">Push Notification Debugger</h1>
 
             <div className="mb-6 p-4 bg-gray-100 rounded">
