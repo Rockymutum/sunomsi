@@ -1,0 +1,132 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import * as webpush from 'npm:web-push@3.6.6'
+
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+interface NotificationPayload {
+    notification_id: string
+    user_id: string
+    type: string
+    title: string
+    body: string
+    data: any
+}
+
+serve(async (req) => {
+    // Handle CORS preflight requests
+    if (req.method === 'OPTIONS') {
+        return new Response('ok', { headers: corsHeaders })
+    }
+
+    try {
+        const supabaseClient = createClient(
+            Deno.env.get('SUPABASE_URL') ?? '',
+            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        )
+
+        // Configure web-push with VAPID keys
+        const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY') ?? ''
+        const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY') ?? ''
+
+        webpush.setVapidDetails(
+            'mailto:support@sunomsi.app',
+            vapidPublicKey,
+            vapidPrivateKey
+        )
+
+        const payload: NotificationPayload = await req.json()
+
+        console.log('Processing notification:', payload)
+
+        // Get user's push subscriptions
+        const { data: subscriptions, error: subError } = await supabaseClient
+            .from('push_subscriptions')
+            .select('*')
+            .eq('user_id', payload.user_id)
+
+        if (subError) {
+            console.error('Error fetching subscriptions:', subError)
+            throw subError
+        }
+
+        if (!subscriptions || subscriptions.length === 0) {
+            console.log('No push subscriptions found for user:', payload.user_id)
+            return new Response(
+                JSON.stringify({ message: 'No subscriptions found' }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            )
+        }
+
+        console.log(`Found ${subscriptions.length} subscription(s) for user`)
+
+        // Send push notification to each subscription
+        const pushPromises = subscriptions.map(async (subscription) => {
+            try {
+                const pushPayload = JSON.stringify({
+                    title: payload.title,
+                    body: payload.body,
+                    type: payload.type,
+                    icon: '/web-app-manifest-192x192.png',
+                    badge: '/favicon-96x96.png',
+                    ...payload.data
+                })
+
+                // Construct push subscription object
+                const pushSubscription = {
+                    endpoint: subscription.endpoint,
+                    keys: {
+                        p256dh: subscription.p256dh,
+                        auth: subscription.auth
+                    }
+                }
+
+                console.log('Sending push to endpoint:', subscription.endpoint.substring(0, 50) + '...')
+
+                // Send notification using web-push
+                await webpush.sendNotification(pushSubscription, pushPayload)
+
+                console.log('Push sent successfully')
+                return true
+
+            } catch (error) {
+                console.error('Error sending push:', error)
+
+                // If subscription is invalid (410 Gone), remove it
+                if (error.statusCode === 410) {
+                    console.log('Removing invalid subscription')
+                    await supabaseClient
+                        .from('push_subscriptions')
+                        .delete()
+                        .eq('id', subscription.id)
+                }
+
+                return false
+            }
+        })
+
+        const results = await Promise.all(pushPromises)
+        const successCount = results.filter(r => r).length
+
+        console.log(`Sent ${successCount}/${subscriptions.length} push notifications`)
+
+        return new Response(
+            JSON.stringify({
+                success: true,
+                sent: successCount,
+                total: subscriptions.length
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        )
+
+    } catch (error) {
+        console.error('Error in send-push-notification:', error)
+        return new Response(
+            JSON.stringify({ error: error.message }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        )
+    }
+})

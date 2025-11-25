@@ -81,7 +81,7 @@ BEGIN
   -- Get applicant name
   SELECT full_name INTO applicant_name
   FROM profiles
-  WHERE user_id = NEW.user_id;
+  WHERE user_id = NEW.worker_id;
 
   -- Get task owner
   SELECT poster_id INTO task_owner_id

@@ -218,12 +218,21 @@ export default function NewChatWindow({
             {
               event: 'INSERT',
               schema: 'public',
-              table: 'messages',
-              filter: `or(and(sender_id=eq.${currentUser.id},receiver_id=eq.${otherUserIdToUse}),and(sender_id=eq.${otherUserIdToUse},receiver_id=eq.${currentUser.id}))`
+              table: 'messages'
             },
             (payload) => {
               console.log('New message received via realtime:', payload);
               const newMessage = payload.new;
+
+              // Only process messages relevant to this conversation
+              const isRelevant =
+                (newMessage.sender_id === currentUser.id && newMessage.receiver_id === otherUserIdToUse) ||
+                (newMessage.sender_id === otherUserIdToUse && newMessage.receiver_id === currentUser.id);
+
+              if (!isRelevant) {
+                console.log('Ignoring message not relevant to this conversation');
+                return;
+              }
 
               // Add new message to state if it doesn't exist
               setMessages(prev => {
@@ -560,9 +569,9 @@ export default function NewChatWindow({
                       >
                         <div
                           className={`max-w-[75%] lg:max-w-md px-4 py-2.5 rounded-2xl relative group ${isCurrentUser
-                              ? `bg-primary text-white rounded-br-sm shadow-md ${message.isSending ? 'opacity-80' : ''} ${message.error ? 'bg-red-50 border border-red-200' : ''
-                              }`
-                              : 'bg-white text-gray-800 rounded-bl-sm shadow-sm border border-gray-100'
+                            ? `bg-primary text-white rounded-br-sm shadow-md ${message.isSending ? 'opacity-80' : ''} ${message.error ? 'bg-red-50 border border-red-200' : ''
+                            }`
+                            : 'bg-white text-gray-800 rounded-bl-sm shadow-sm border border-gray-100'
                             }`}
                         >
                           <p className="text-sm leading-relaxed break-words">{message.content}</p>
@@ -630,8 +639,8 @@ export default function NewChatWindow({
             type="submit"
             disabled={!newMessage.trim() || sending}
             className={`p-2.5 rounded-full flex-shrink-0 transition-all duration-200 ${newMessage.trim()
-                ? 'bg-primary hover:bg-gray-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              ? 'bg-primary hover:bg-gray-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             aria-label={sending ? 'Sending message...' : 'Send message'}
           >

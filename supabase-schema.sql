@@ -116,16 +116,6 @@ CREATE TABLE IF NOT EXISTS messages (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create notifications table
-CREATE TABLE IF NOT EXISTS notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  type TEXT NOT NULL,
-  content TEXT NOT NULL,
-  read BOOLEAN DEFAULT FALSE,
-  related_id UUID,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
 
 -- Create notes table
 CREATE TABLE IF NOT EXISTS notes (
