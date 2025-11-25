@@ -7,16 +7,11 @@ const PRECACHE_URLS = [
   '/offline.html',
   '/manifest.json',
   '/favicon.ico',
-  '/favicon-16x16.png',
-  '/favicon-32x32.png',
   '/favicon-96x96.png',
   '/apple-touch-icon.png',
-  '/splash-screens/iphone5_splash.png',
-  '/splash-screens/iphone6_splash.png',
-  '/splash-screens/iphoneplus_splash.png',
-  '/fonts/Inter.var.woff2',
-  '/images/logo.svg',
-  '/images/og-image.jpg',
+  '/logo.svg',
+  '/web-app-manifest-192x192.png',
+  '/web-app-manifest-512x512.png',
 ];
 
 // Install event - cache static assets
