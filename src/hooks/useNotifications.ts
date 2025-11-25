@@ -30,32 +30,58 @@ export function useNotifications() {
 
     const subscribeToPush = async () => {
         try {
+            console.log('Attempting to subscribe to push...');
             const registration = await navigator.serviceWorker.ready;
+            console.log('Service Worker ready:', registration);
 
             // Subscribe with VAPID key for production-ready push
             const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+            console.log('VAPID Key present:', !!vapidPublicKey);
+
+            if (!vapidPublicKey) {
+                console.error('Missing VAPID public key');
+                alert('Error: Missing VAPID public key');
+                return;
+            }
 
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: vapidPublicKey ? urlBase64ToUint8Array(vapidPublicKey) : undefined,
             });
 
+            console.log('Push subscription created:', subscription);
+
             // Save subscription to database
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+            if (userError) {
+                console.error('Error getting user:', userError);
+                return;
+            }
+
             if (user) {
+                console.log('Saving subscription for user:', user.id);
                 const subscriptionJSON = subscription.toJSON();
 
-                await supabase.from('push_subscriptions').upsert({
+                const { error: insertError } = await supabase.from('push_subscriptions').upsert({
                     user_id: user.id,
                     endpoint: subscription.endpoint,
                     p256dh: subscriptionJSON.keys?.p256dh || '',
                     auth: subscriptionJSON.keys?.auth || ''
                 });
 
-                setIsSubscribed(true);
+                if (insertError) {
+                    console.error('Supabase insert error:', insertError);
+                    alert('Failed to save subscription: ' + insertError.message);
+                } else {
+                    console.log('Subscription saved successfully!');
+                    setIsSubscribed(true);
+                    alert('Notifications enabled successfully!');
+                }
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error subscribing to push:', error);
+            alert('Error subscribing: ' + error.message);
         }
     };
 
