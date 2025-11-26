@@ -61,6 +61,28 @@ export default function TestPushPage() {
         }
     };
 
+    const sendTestNotification = async () => {
+        try {
+            addLog('Sending test notification...');
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not logged in');
+
+            const { data, error } = await supabase.functions.invoke('send-push-notification', {
+                body: {
+                    user_id: user.id,
+                    title: 'Test Notification',
+                    body: 'This is a test from the debug page! 🚀',
+                    type: 'test'
+                }
+            });
+
+            if (error) throw error;
+            addLog('Notification sent! Result: ' + JSON.stringify(data));
+        } catch (error: any) {
+            addLog(`Send Error: ${error.message}`);
+        }
+    };
+
     const forceSubscribe = async () => {
         try {
             addLog('Starting force subscription...');
@@ -182,6 +204,12 @@ export default function TestPushPage() {
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
                     Force Subscribe
+                </button>
+                <button
+                    onClick={sendTestNotification}
+                    className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+                >
+                    Send Test
                 </button>
                 <button
                     onClick={resetServiceWorker}
