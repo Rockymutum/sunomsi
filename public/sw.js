@@ -1,6 +1,6 @@
 // Service Worker for SUNOMSI - Caching and Offline Support
 
-const CACHE_NAME = 'sunomsi-v1';
+const CACHE_NAME = 'sunomsi-v2';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE_URLS = [
   '/',

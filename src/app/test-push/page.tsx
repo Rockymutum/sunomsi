@@ -130,7 +130,7 @@ export default function TestPushPage() {
 
     return (
         <div className="p-8 max-w-2xl mx-auto pt-20">
-            <h1 className="text-2xl font-bold mb-4">Push Notification Debugger</h1>
+            <h1 className="text-2xl font-bold mb-4">Push Notification Debugger v2.0</h1>
 
             <div className="mb-6 p-4 bg-gray-100 rounded">
                 <p className="font-bold">Status: {status}</p>
