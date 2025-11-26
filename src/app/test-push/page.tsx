@@ -42,6 +42,9 @@ export default function TestPushPage() {
             // Check VAPID Key
             const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
             addLog(`VAPID Key present: ${!!vapidKey}`);
+            if (vapidKey) {
+                addLog(`Key Prefix: ${vapidKey.substring(0, 5)}...`);
+            }
 
             setStatus('Ready');
         } catch (error: any) {
@@ -122,6 +125,7 @@ export default function TestPushPage() {
                 outputArray[i] = rawData.charCodeAt(i);
             }
             addLog(`VAPID Key length: ${outputArray.length} bytes`);
+            addLog(`Key Prefix: ${vapidPublicKey.substring(0, 5)}...`);
 
             addLog('Subscribing to push manager...');
             const subscription = await registration.pushManager.subscribe({
