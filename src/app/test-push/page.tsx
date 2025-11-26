@@ -50,6 +50,17 @@ export default function TestPushPage() {
         }
     };
 
+    const registerSW = async () => {
+        try {
+            addLog('Registering Service Worker...');
+            const reg = await navigator.serviceWorker.register('/sw.js');
+            addLog('SW Registered: ' + reg.scope);
+            checkStatus();
+        } catch (e: any) {
+            addLog('SW Registration failed: ' + e.message);
+        }
+    };
+
     const forceSubscribe = async () => {
         try {
             addLog('Starting force subscription...');
@@ -58,8 +69,24 @@ export default function TestPushPage() {
                 throw new Error('No Service Worker support');
             }
 
-            const registration = await navigator.serviceWorker.ready;
+            // Ensure SW is ready
+            let registration = await navigator.serviceWorker.getRegistration();
+            if (!registration) {
+                addLog('No SW found, registering...');
+                registration = await navigator.serviceWorker.register('/sw.js');
+                await navigator.serviceWorker.ready;
+            }
+
+            registration = await navigator.serviceWorker.ready;
             addLog('Service Worker ready');
+
+            // Check for existing subscription
+            const existingSub = await registration.pushManager.getSubscription();
+            if (existingSub) {
+                addLog('Found existing subscription. Unsubscribing...');
+                await existingSub.unsubscribe();
+                addLog('Unsubscribed successfully.');
+            }
 
             const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
             if (!vapidPublicKey) throw new Error('Missing VAPID key');
@@ -101,7 +128,7 @@ export default function TestPushPage() {
             alert('Success! Subscription saved.');
 
         } catch (error: any) {
-            addLog(`ERROR: ${error.message}`);
+            addLog(`ERROR (${error.name}): ${error.message}`);
             alert(`Error: ${error.message}`);
         }
     };
@@ -143,6 +170,12 @@ export default function TestPushPage() {
                     className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
                 >
                     Refresh Status
+                </button>
+                <button
+                    onClick={registerSW}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                    Register SW
                 </button>
                 <button
                     onClick={forceSubscribe}
