@@ -49,7 +49,7 @@ export default function RootLayout({
         {/* Prevent text size adjustment on orientation change */}
         <meta name="format-detection" content="telephone=no" />
 
-        <link rel="manifest" href="/manifest.json" />
+        <link rel="manifest" href="/manifest.json?v=2" />
         <title>Sunomsi</title>
       </head>
       <body>

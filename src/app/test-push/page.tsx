@@ -72,6 +72,7 @@ export default function TestPushPage() {
             for (let i = 0; i < rawData.length; ++i) {
                 outputArray[i] = rawData.charCodeAt(i);
             }
+            addLog(`VAPID Key length: ${outputArray.length} bytes`);
 
             addLog('Subscribing to push manager...');
             const subscription = await registration.pushManager.subscribe({
