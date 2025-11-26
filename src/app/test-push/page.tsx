@@ -46,6 +46,15 @@ export default function TestPushPage() {
                 addLog(`Key Prefix: ${vapidKey.substring(0, 5)}...`);
             }
 
+            // Check Manifest
+            try {
+                const manifestRes = await fetch('/manifest.json');
+                const manifest = await manifestRes.json();
+                addLog(`Manifest Sender ID: ${manifest.gcm_sender_id || 'MISSING'}`);
+            } catch (e) {
+                addLog('Error fetching manifest');
+            }
+
             setStatus('Ready');
         } catch (error: any) {
             addLog(`Error checking status: ${error.message}`);
