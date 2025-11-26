@@ -91,7 +91,14 @@ export default function TestPushPage() {
             if (error) throw error;
             addLog('Notification sent! Result: ' + JSON.stringify(data));
         } catch (error: any) {
+            console.error('Full error object:', error);
             addLog(`Send Error: ${error.message}`);
+            if (error.context) {
+                addLog(`Context: ${JSON.stringify(error.context)}`);
+            }
+            if (error.cause) {
+                addLog(`Cause: ${JSON.stringify(error.cause)}`);
+            }
         }
     };
 

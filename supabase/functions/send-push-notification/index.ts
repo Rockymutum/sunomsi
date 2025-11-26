@@ -32,11 +32,19 @@ serve(async (req) => {
         const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY') ?? ''
         const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY') ?? ''
 
-        webpush.setVapidDetails(
-            'mailto:support@sunomsi.app',
-            vapidPublicKey,
-            vapidPrivateKey
-        )
+        console.log('VAPID Public Key length:', vapidPublicKey?.length)
+        console.log('VAPID Private Key length:', vapidPrivateKey?.length)
+
+        try {
+            webpush.setVapidDetails(
+                'mailto:support@sunomsi.app',
+                vapidPublicKey,
+                vapidPrivateKey
+            )
+        } catch (err) {
+            console.error('Error setting VAPID details:', err)
+            throw err
+        }
 
         const payload: NotificationPayload = await req.json()
 
@@ -104,12 +112,12 @@ serve(async (req) => {
                         .eq('id', subscription.id)
                 }
 
-                return false
+                return { error: error.message, statusCode: error.statusCode }
             }
         })
 
         const results = await Promise.all(pushPromises)
-        const successCount = results.filter(r => r).length
+        const successCount = results.filter(r => r === true).length
 
         console.log(`Sent ${successCount}/${subscriptions.length} push notifications`)
 
@@ -117,7 +125,8 @@ serve(async (req) => {
             JSON.stringify({
                 success: true,
                 sent: successCount,
-                total: subscriptions.length
+                total: subscriptions.length,
+                errors: results.filter(r => r !== true)
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         )
