@@ -105,6 +105,24 @@ export default function TestPushPage() {
         }
     };
 
+    const resetServiceWorker = async () => {
+        try {
+            addLog('Unregistering Service Worker...');
+            const registration = await navigator.serviceWorker.getRegistration();
+            if (registration) {
+                await registration.unregister();
+                addLog('Service Worker unregistered');
+            } else {
+                addLog('No Service Worker found to unregister');
+            }
+
+            addLog('Reloading page in 2 seconds...');
+            setTimeout(() => window.location.reload(), 2000);
+        } catch (error: any) {
+            addLog(`Error resetting: ${error.message}`);
+        }
+    };
+
     useEffect(() => {
         checkStatus();
     }, []);
@@ -115,9 +133,10 @@ export default function TestPushPage() {
 
             <div className="mb-6 p-4 bg-gray-100 rounded">
                 <p className="font-bold">Status: {status}</p>
+                <p className="text-sm mt-2">Permission: {typeof Notification !== 'undefined' ? Notification.permission : 'Unknown'}</p>
             </div>
 
-            <div className="flex gap-4 mb-8">
+            <div className="flex flex-wrap gap-4 mb-8">
                 <button
                     onClick={checkStatus}
                     className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
@@ -129,6 +148,12 @@ export default function TestPushPage() {
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
                     Force Subscribe
+                </button>
+                <button
+                    onClick={resetServiceWorker}
+                    className="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 border border-red-300"
+                >
+                    Reset Service Worker
                 </button>
             </div>
 
