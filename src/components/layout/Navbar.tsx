@@ -8,7 +8,6 @@ import Image from 'next/image';
 import { BsGlobeAsiaAustralia, BsChatDots, BsPerson, BsBell } from 'react-icons/bs';
 import { sessionManager } from '@/utils/sessionPersistence';
 import { useAuth } from '@/components/providers/AuthProvider';
-import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { getUnreadCount } from '@/utils/notifications';
 
 export default function Navbar() {
@@ -21,7 +20,6 @@ export default function Navbar() {
   const [searchTerm, setSearchTerm] = useState('');
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showNav, setShowNav] = useState(true);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Initialize and subscribe to auth state changes
@@ -209,9 +207,9 @@ export default function Navbar() {
             <div className="flex items-center gap-2">
               {/* Notification Bell */}
               <div className="relative">
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 relative"
+                <Link
+                  href="/notifications"
+                  className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 relative block"
                 >
                   <BsBell className="h-5 w-5" />
                   {unreadCount > 0 && (
@@ -219,10 +217,7 @@ export default function Navbar() {
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
-                </button>
-                {showNotifications && (
-                  <NotificationCenter onClose={() => setShowNotifications(false)} />
-                )}
+                </Link>
               </div>
 
               <button
