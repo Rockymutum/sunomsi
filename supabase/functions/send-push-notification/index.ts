@@ -103,9 +103,9 @@ serve(async (req) => {
             } catch (error) {
                 console.error('Error sending push:', error)
 
-                // If subscription is invalid (410 Gone), remove it
-                if (error.statusCode === 410) {
-                    console.log('Removing invalid subscription')
+                // If subscription is invalid (410 Gone) or Forbidden (403), remove it
+                if (error.statusCode === 410 || error.statusCode === 403) {
+                    console.log(`Removing invalid subscription (Status: ${error.statusCode})`)
                     await supabaseClient
                         .from('push_subscriptions')
                         .delete()
