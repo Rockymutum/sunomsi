@@ -131,10 +131,10 @@ export default function TestPushPage() {
                 addLog('Unsubscribed successfully.');
             }
 
-            const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-            if (!vapidPublicKey) throw new Error('Missing VAPID key');
+            // HARDCODED KEY FOR DEBUGGING
+            const vapidPublicKey = 'BFQXj2fP38tpKjNKFI68PkJPYBfCJE_ACqPgVvEub0p9NOuEIxSuHHHFPUQ-9LlduP7CkOPKgBpOTV23YYhjjF8';
 
-            addLog(`Using VAPID Key: ${vapidPublicKey}`);
+            addLog(`Using HARDCODED VAPID Key: ${vapidPublicKey}`);
 
             // Robust conversion function
             const urlBase64ToUint8Array = (base64String: string) => {
