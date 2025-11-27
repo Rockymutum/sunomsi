@@ -52,3 +52,16 @@ export async function getUnreadCount(userId: string) {
 
     return count || 0;
 }
+
+export async function deleteNotification(notificationId: string) {
+    const supabase = createClientComponentClient();
+
+    const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+
+    if (error) {
+        console.error('Error deleting notification:', error);
+    }
+}
