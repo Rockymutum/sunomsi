@@ -132,7 +132,7 @@ export default function TestPushPage() {
             }
 
             // HARDCODED KEY FOR DEBUGGING
-            const vapidPublicKey = 'BFQXj2fP38tpKjNKFI68PkJPYBfCJE_ACqPgVvEub0p9NOuEIxSuHHHFPUQ-9LlduP7CkOPKgBpOTV23YYhjjF8';
+            const vapidPublicKey = 'BIr9vQ1nhVFfdfn0OG4suSLK04A_AitQhVrZl8vtD0_itfEAhknrIk8EFakqQLoehiaYdDGDUR9LN7NolrFPZgU';
 
             addLog(`Using HARDCODED VAPID Key: ${vapidPublicKey}`);
 
