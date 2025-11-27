@@ -131,11 +131,19 @@ serve(async (req) => {
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         )
 
-    } catch (error) {
-        console.error('Error in send-push-notification:', error)
+    } catch (error: any) {
+        console.error('Edge Function Error:', error)
         return new Response(
-            JSON.stringify({ error: error.message }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+            JSON.stringify({
+                success: false,
+                error: error.message,
+                stack: error.stack,
+                details: error
+            }),
+            {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 200, // Return 200 so client can read the error body
+            }
         )
     }
 })
