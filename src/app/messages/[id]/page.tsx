@@ -116,8 +116,8 @@ export default function DirectMessagePage({ params }: { params: { id: string } }
   }
 
   return (
-    <div className="fixed inset-0 pt-16 pb-20 md:pb-0 bg-white">
-      <div className="h-full w-full bg-white">
+    <div className="fixed inset-0 pt-16 pb-20 md:pb-0 bg-[#efe7dd]">
+      <div className="h-[100dvh] w-full">
         <NewChatWindow
           key={otherUser.id}
           otherUserId={otherUser.id}

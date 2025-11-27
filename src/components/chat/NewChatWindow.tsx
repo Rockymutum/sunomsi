@@ -503,7 +503,7 @@ export default function NewChatWindow({
   }
 
   return (
-    <div className={`flex flex-col h-full bg-gray-50 ${className}`}>
+    <div className={`flex flex-col h-full bg-[#efe7dd] ${className}`} style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundRepeat: 'repeat', backgroundSize: '400px' }}>
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-200 bg-white shadow-sm">
         <div className="flex items-center justify-between">
@@ -568,10 +568,10 @@ export default function NewChatWindow({
                         className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} transition-all duration-150 ease-in-out`}
                       >
                         <div
-                          className={`max-w-[75%] lg:max-w-md px-4 py-2.5 rounded-2xl relative group ${isCurrentUser
-                            ? `bg-primary text-white rounded-br-sm shadow-md ${message.isSending ? 'opacity-80' : ''} ${message.error ? 'bg-red-50 border border-red-200' : ''
+                          className={`max-w-[75%] lg:max-w-md px-3 py-1.5 rounded-lg relative shadow-sm ${isCurrentUser
+                            ? `bg-[#d9fdd3] text-gray-900 rounded-tr-none ${message.isSending ? 'opacity-80' : ''} ${message.error ? 'bg-red-50 border border-red-200' : ''
                             }`
-                            : 'bg-white text-gray-800 rounded-bl-sm shadow-sm border border-gray-100'
+                            : 'bg-white text-gray-900 rounded-tl-none'
                             }`}
                         >
                           <p className="text-sm leading-relaxed break-words">{message.content}</p>
@@ -585,13 +585,13 @@ export default function NewChatWindow({
                                 Sending...
                               </span>
                             ) : null}
-                            <span className={`text-xs ${isCurrentUser ? 'text-blue-100' : 'text-gray-400'
+                            <span className={`text-[10px] min-w-[45px] text-right ${isCurrentUser ? 'text-gray-500' : 'text-gray-500'
                               }`}>
                               {formatMessageTime(message.created_at)}
                             </span>
                             {isCurrentUser && !message.error && !message.isSending && (
-                              <span className="text-xs text-blue-100">
-                                ✓
+                              <span className="text-[10px] text-blue-500 ml-1">
+                                ✓✓
                               </span>
                             )}
                           </div>
@@ -613,12 +613,12 @@ export default function NewChatWindow({
       </div>
 
       {/* Message input */}
-      <div className="p-4 border-t border-gray-200 bg-white shadow-sm">
+      <div className="p-2 border-t border-gray-200 bg-gray-100">
         <form
           onSubmit={sendMessage}
           className="flex items-end space-x-2"
         >
-          <div className="flex-1 bg-gray-50 rounded-2xl px-4 py-2.5 border border-gray-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-200 min-w-0">
+          <div className="flex-1 bg-white rounded-full px-4 py-2 border border-gray-200 focus-within:border-gray-300 focus-within:ring-0 transition-all duration-200 min-w-0 shadow-sm">
             <textarea
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
@@ -638,9 +638,9 @@ export default function NewChatWindow({
           <button
             type="submit"
             disabled={!newMessage.trim() || sending}
-            className={`p-2.5 rounded-full flex-shrink-0 transition-all duration-200 ${newMessage.trim()
-              ? 'bg-primary hover:bg-gray-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            className={`p-3 rounded-full flex-shrink-0 transition-all duration-200 ${newMessage.trim()
+              ? 'bg-[#00a884] hover:bg-[#008f6f] text-white shadow-md transform hover:scale-105'
+              : 'text-gray-400 cursor-not-allowed'
               }`}
             aria-label={sending ? 'Sending message...' : 'Send message'}
           >

@@ -404,7 +404,7 @@ export default function ProfilePage() {
 
                 {/* Email (read-only) */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Email Address
                   </label>
                   <div className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 font-medium">
@@ -414,7 +414,7 @@ export default function ProfilePage() {
 
                 {/* Full Name */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Full Name
                   </label>
                   {editing ? (
@@ -434,7 +434,7 @@ export default function ProfilePage() {
 
                 {/* Phone */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Phone Number
                   </label>
                   {editing ? (
@@ -454,7 +454,7 @@ export default function ProfilePage() {
 
                 {/* Professional Title */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Professional Title
                   </label>
                   {editing ? (
@@ -474,7 +474,7 @@ export default function ProfilePage() {
 
                 {/* Location */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Location
                   </label>
                   {editing ? (
@@ -494,7 +494,7 @@ export default function ProfilePage() {
 
                 {/* Bio */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Bio
                   </label>
                   {editing ? (

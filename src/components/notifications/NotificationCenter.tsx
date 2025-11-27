@@ -88,7 +88,7 @@ export default function NotificationCenter({ onClose }: { onClose: () => void })
     };
 
     return (
-        <div className="absolute top-full right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto z-50">
+        <div className="absolute top-full right-[-4rem] sm:right-0 mt-2 w-[90vw] sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 max-h-[80vh] overflow-y-auto z-50">
             <div className="p-3 border-b border-gray-200 flex items-center justify-between">
                 <h3 className="font-semibold text-gray-900">Notifications</h3>
                 <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
@@ -107,12 +107,12 @@ export default function NotificationCenter({ onClose }: { onClose: () => void })
                         >
                             <button
                                 onClick={() => handleNotificationClick(notification)}
-                                className="flex-1 flex gap-3 text-left"
+                                className="flex-1 flex gap-3 text-left min-w-0"
                             >
                                 <div className="text-2xl flex-shrink-0">{getIcon(notification.type)}</div>
-                                <div className="min-w-0">
-                                    <p className="font-medium text-gray-900 text-sm">{notification.title}</p>
-                                    <p className="text-gray-600 text-xs mt-0.5 break-words">{notification.body}</p>
+                                <div className="min-w-0 flex-1">
+                                    <p className="font-medium text-gray-900 text-sm truncate">{notification.title}</p>
+                                    <p className="text-gray-600 text-xs mt-0.5 break-words whitespace-pre-wrap">{notification.body}</p>
                                     <p className="text-gray-400 text-xs mt-1">
                                         {new Date(notification.created_at).toLocaleDateString()}
                                     </p>
