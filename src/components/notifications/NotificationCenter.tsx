@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
-import { markAsRead } from '@/utils/notifications';
+import { markAsRead, deleteNotification } from '@/utils/notifications';
 
 interface Notification {
     id: string;
@@ -95,13 +95,14 @@ export default function NotificationCenter({ onClose }: { onClose: () => void })
             ) : (
                 <div>
                     {notifications.map((notification) => (
-                        <button
+                        <div
                             key={notification.id}
-                            onClick={() => handleNotificationClick(notification)}
-                            className={`w-full p-3 text-left hover:bg-gray-50 border-b border-gray-100 transition-colors ${!notification.read ? 'bg-blue-50' : ''
-                                }`}
+                            className={`w-full p-3 border-b border-gray-100 transition-colors flex gap-3 ${!notification.read ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
                         >
-                            <div className="flex gap-3">
+                            <button
+                                onClick={() => handleNotificationClick(notification)}
+                                className="flex-1 text-left flex gap-3 min-w-0"
+                            >
                                 <div className="text-2xl flex-shrink-0">{getIcon(notification.type)}</div>
                                 <div className="flex-1 min-w-0">
                                     <p className="font-medium text-gray-900 text-sm truncate">{notification.title}</p>
@@ -113,8 +114,23 @@ export default function NotificationCenter({ onClose }: { onClose: () => void })
                                 {!notification.read && (
                                     <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-2"></div>
                                 )}
-                            </div>
-                        </button>
+                            </button>
+                            <button
+                                onClick={async (e) => {
+                                    e.stopPropagation();
+                                    try {
+                                        await deleteNotification(notification.id);
+                                        setNotifications(prev => prev.filter(n => n.id !== notification.id));
+                                    } catch (error) {
+                                        console.error('Error deleting:', error);
+                                    }
+                                }}
+                                className="flex-shrink-0 text-gray-400 hover:text-red-500 self-center p-2"
+                                title="Delete"
+                            >
+                                🗑️
+                            </button>
+                        </div>
                     ))}
                 </div>
             )}
