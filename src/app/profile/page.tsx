@@ -545,6 +545,33 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
+
+            {/* App Update Section */}
+            <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-5 border-b border-gray-200">
+                <h2 className="text-xl font-bold text-gray-900 tracking-tight">App Update</h2>
+              </div>
+              <div className="p-6">
+                <p className="text-sm text-gray-600 mb-4">
+                  Press here to update the app to the latest version.
+                </p>
+                <button
+                  onClick={async () => {
+                    if ('serviceWorker' in navigator) {
+                      const registrations = await navigator.serviceWorker.getRegistrations();
+                      for (const registration of registrations) {
+                        await registration.unregister();
+                      }
+                      window.location.reload();
+                    }
+                  }}
+                  className="w-full sm:w-auto px-4 py-2.5 text-sm font-semibold text-white bg-slate-800 rounded-md hover:bg-slate-900 transition-colors flex items-center justify-center gap-2"
+                >
+                  <span>🔄</span>
+                  Update App
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Sidebar */}
