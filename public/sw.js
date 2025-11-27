@@ -145,8 +145,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'SUNOMSI';
   const options = {
     body: data.body || 'You have a new notification',
-    icon: '/icon-192x192.png',
-    badge: '/badge-72x72.png',
+    icon: '/web-app-manifest-192x192.png',
+    badge: '/web-app-manifest-192x192.png',
     vibrate: [200, 100, 200],
     tag: data.type || 'general',
     requireInteraction: false,
