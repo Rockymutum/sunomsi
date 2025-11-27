@@ -29,7 +29,8 @@ BEGIN
     email,
     full_name,
     created_at,
-    updated_at
+    updated_at,
+    role
   )
   VALUES (
     NEW.id,
@@ -39,7 +40,8 @@ BEGIN
       split_part(NEW.email, '@', 1)
     ),
     NOW(),
-    NOW()
+    NOW(),
+    COALESCE(NEW.raw_user_meta_data->>'role', 'poster')
   );
   
   RETURN NEW;

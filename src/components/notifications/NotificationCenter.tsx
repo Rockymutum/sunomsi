@@ -104,7 +104,7 @@ export default function NotificationCenter({ onClose }: { onClose: () => void })
                             <div className="flex gap-3">
                                 <div className="text-2xl flex-shrink-0">{getIcon(notification.type)}</div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-gray-900 text-sm">{notification.title}</p>
+                                    <p className="font-medium text-gray-900 text-sm truncate">{notification.title}</p>
                                     <p className="text-gray-600 text-xs mt-0.5 truncate">{notification.body}</p>
                                     <p className="text-gray-400 text-xs mt-1">
                                         {new Date(notification.created_at).toLocaleDateString()}

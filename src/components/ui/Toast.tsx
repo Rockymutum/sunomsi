@@ -25,8 +25,8 @@ export default function Toast({ message, onClose }: ToastProps) {
 
     return (
         <div className={`fixed top-24 right-4 z-50 max-w-md animate-slide-in-right ${message.type === 'success'
-                ? 'bg-green-50 text-green-800 border-green-200'
-                : 'bg-red-50 text-red-800 border-red-200'
+            ? 'bg-green-50 text-green-800 border-green-200'
+            : 'bg-red-50 text-red-800 border-red-200'
             } border-2 rounded-lg shadow-lg p-4 flex items-start gap-3`}>
             {/* Icon */}
             <div className="flex-shrink-0">
@@ -43,7 +43,7 @@ export default function Toast({ message, onClose }: ToastProps) {
             {/* Message */}
             <div className="flex-1">
                 <p className="font-semibold">{message.type === 'success' ? 'Success!' : 'Error'}</p>
-                <p className="text-sm mt-1">{message.text}</p>
+                <p className="text-sm mt-1 break-words">{message.text}</p>
             </div>
             {/* Close button */}
             <button

@@ -43,9 +43,7 @@ export default function AuthForm() {
             console.error('Error creating profile:', profileError);
           }
 
-          setMessage({ text: 'Check your email for verification link!', type: 'success' });
-          setEmail('');
-          setPassword('');
+          router.push('/auth/check-email');
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
