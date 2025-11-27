@@ -345,7 +345,7 @@ export default function ProfilePage() {
               <div className="px-6 py-5 border-b border-gray-200">
                 <h2 className="text-xl font-bold text-gray-900 tracking-tight">Personal Information</h2>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-6">
                 {/* Avatar Upload */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2 tracking-wide">Profile Picture</label>
@@ -404,17 +404,20 @@ export default function ProfilePage() {
 
                 {/* Email (read-only) */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2 tracking-wide">
                     Email Address
                   </label>
-                  <div className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 font-medium">
-                    {user?.email || ''}
-                  </div>
+                  <input
+                    type="email"
+                    value={user?.email || ''}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
+                  />
                 </div>
 
                 {/* Full Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2 tracking-wide">
                     Full Name
                   </label>
                   {editing ? (
@@ -422,19 +425,17 @@ export default function ProfilePage() {
                       type="text"
                       value={formData.full_name}
                       onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 transition-all"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter your full name"
                     />
                   ) : (
-                    <div className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-gray-900">
-                      {profile?.full_name || 'Not set'}
-                    </div>
+                    <p className="px-3 py-2 text-gray-900">{profile?.full_name || 'Not set'}</p>
                   )}
                 </div>
 
                 {/* Phone */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2 tracking-wide">
                     Phone Number
                   </label>
                   {editing ? (
@@ -442,19 +443,17 @@ export default function ProfilePage() {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 transition-all"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter your phone number"
                     />
                   ) : (
-                    <div className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-gray-900">
-                      {profile?.phone || 'Not set'}
-                    </div>
+                    <p className="px-3 py-2 text-gray-900">{profile?.phone || 'Not set'}</p>
                   )}
                 </div>
 
                 {/* Professional Title */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2 tracking-wide">
                     Professional Title
                   </label>
                   {editing ? (
@@ -462,19 +461,17 @@ export default function ProfilePage() {
                       type="text"
                       value={formData.title}
                       onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 transition-all"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="e.g., Graphic Designer, Developer"
                     />
                   ) : (
-                    <div className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-gray-900">
-                      {profile?.title || 'Not set'}
-                    </div>
+                    <p className="px-3 py-2 text-gray-900">{profile?.title || 'Not set'}</p>
                   )}
                 </div>
 
                 {/* Location */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2 tracking-wide">
                     Location
                   </label>
                   {editing ? (
@@ -482,19 +479,17 @@ export default function ProfilePage() {
                       type="text"
                       value={formData.place}
                       onChange={(e) => setFormData(prev => ({ ...prev, place: e.target.value }))}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 transition-all"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="e.g., New York, NY"
                     />
                   ) : (
-                    <div className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-gray-900">
-                      {profile?.place || 'Not set'}
-                    </div>
+                    <p className="px-3 py-2 text-gray-900">{profile?.place || 'Not set'}</p>
                   )}
                 </div>
 
                 {/* Bio */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2 tracking-wide">
                     Bio
                   </label>
                   {editing ? (
@@ -502,14 +497,14 @@ export default function ProfilePage() {
                       value={formData.bio}
                       onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                       rows={4}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 transition-all resize-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                       placeholder="Tell us about yourself..."
                       style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
                     />
                   ) : (
-                    <div className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-gray-900 whitespace-pre-wrap min-h-[100px]">
+                    <p className="px-3 py-2 text-gray-900 whitespace-pre-wrap">
                       {profile?.bio || 'No bio provided'}
-                    </div>
+                    </p>
                   )}
                 </div>
 
