@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
 import { markAsRead, deleteNotification } from '@/utils/notifications';
 import Link from 'next/link';
+import Navbar from '@/components/layout/Navbar';
 
 interface Notification {
   id: string;
@@ -98,6 +99,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
+      <Navbar />
       <div className="max-w-2xl mx-auto pt-20 px-4">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-4 border-b border-gray-100 flex justify-between items-center">
@@ -124,20 +126,20 @@ export default function NotificationsPage() {
                 <div
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`group p-4 flex gap-4 cursor-pointer transition-colors ${!notification.read ? 'bg-blue-50/50 hover:bg-blue-50' : 'hover:bg-gray-50'
+                  className={`group p-3 flex gap-3 cursor-pointer transition-colors ${!notification.read ? 'bg-blue-50/50 hover:bg-blue-50' : 'hover:bg-gray-50'
                     }`}
                 >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0 ${!notification.read ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0 ${!notification.read ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'
                     }`}>
                     {getIcon(notification.type)}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start gap-2">
-                      <p className="text-gray-900 font-medium leading-snug">
+                      <p className="text-gray-900 font-medium text-sm leading-snug">
                         {notification.title}
                       </p>
-                      <span className="text-xs text-gray-400 whitespace-nowrap flex-shrink-0">
+                      <span className="text-[10px] text-gray-400 whitespace-nowrap flex-shrink-0 mt-0.5">
                         {new Date(notification.created_at).toLocaleDateString(undefined, {
                           month: 'short',
                           day: 'numeric',
@@ -146,18 +148,18 @@ export default function NotificationsPage() {
                         })}
                       </span>
                     </div>
-                    <p className="text-gray-600 text-sm mt-1 line-clamp-2">
+                    <p className="text-gray-600 text-xs mt-0.5 line-clamp-2">
                       {notification.body}
                     </p>
                   </div>
 
                   <div className="flex flex-col items-end justify-between opacity-0 group-hover:opacity-100 transition-opacity">
                     {!notification.read && (
-                      <div className="w-3 h-3 bg-blue-600 rounded-full mb-2"></div>
+                      <div className="w-2 h-2 bg-blue-600 rounded-full mb-1"></div>
                     )}
                     <button
                       onClick={(e) => handleDelete(e, notification.id)}
-                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
                       title="Delete notification"
                     >
                       🗑️

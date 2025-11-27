@@ -1,6 +1,6 @@
 // Service Worker for SUNOMSI - Caching and Offline Support
 
-const CACHE_NAME = 'sunomsi-v2';
+const CACHE_NAME = 'sunomsi-v3';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE_URLS = [
   '/',
@@ -16,6 +16,9 @@ const PRECACHE_URLS = [
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
+  // Force the waiting service worker to become the active service worker
+  self.skipWaiting();
+
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -27,6 +30,9 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
+  // Claim any clients immediately, so they don't wait for a reload
+  event.waitUntil(self.clients.claim());
+
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
