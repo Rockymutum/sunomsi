@@ -183,7 +183,7 @@ export default function ProfilePage() {
     if (!profile || !user) return;
 
     try {
-      setMessage('');
+      setMessage(null);
 
       // Upload avatar if provided
       let avatarUrl: string | undefined = undefined;
