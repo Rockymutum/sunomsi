@@ -1,6 +1,6 @@
 // Service Worker for SUNOMSI - Caching and Offline Support
 
-const CACHE_NAME = 'sunomsi-v6'; // Bumped version to force update
+const CACHE_NAME = 'sunomsi-v3';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE_URLS = [
   '/',
@@ -39,7 +39,6 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
-            console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -56,57 +55,32 @@ self.addEventListener('fetch', (event) => {
   // Skip non-http(s) requests
   if (!event.request.url.startsWith('http')) return;
 
-  const url = new URL(event.request.url);
-
-  // 1. Handle Navigation Requests (HTML) - Network First, Fallback to Cache
-  // This ensures users always get the latest version of the page
-  if (event.request.mode === 'navigate') {
+  // Handle API requests
+  if (event.request.url.includes('/api/')) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Check if we received a valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-
-          // Clone and cache the fresh version
+          // Clone the response for potential caching
           const responseToCache = response.clone();
-          caches.open(CACHE_NAME)
-            .then((cache) => {
+
+          // Cache successful API responses
+          if (response.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);
             });
+          }
 
           return response;
         })
         .catch(() => {
           // If network fails, try to get from cache
-          return caches.match(event.request)
-            .then((cachedResponse) => {
-              if (cachedResponse) {
-                return cachedResponse;
-              }
-              // If not in cache, show offline page
-              return caches.match(OFFLINE_URL);
-            });
-        })
-    );
-    return;
-  }
-
-  // 2. Handle API requests - Network First, Fallback to Cache (if appropriate)
-  // For now, we'll keep API requests Network Only or Network First to ensure data freshness
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/')) {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => {
           return caches.match(event.request);
         })
     );
     return;
   }
 
-  // 3. Handle Static Assets (Images, CSS, JS) - Cache First, Fallback to Network
-  // These usually have hashes in filenames or don't change often
+  // For non-API requests, try cache first, then network
   event.respondWith(
     caches.match(event.request)
       .then((cachedResponse) => {
@@ -134,7 +108,10 @@ self.addEventListener('fetch', (event) => {
             return response;
           })
           .catch(() => {
-            // Optional: Return placeholder image for failed image requests
+            // If both cache and network fail, show offline page for HTML requests
+            if (event.request.headers.get('accept').includes('text/html')) {
+              return caches.match(OFFLINE_URL);
+            }
           });
       })
   );
@@ -227,4 +204,3 @@ self.addEventListener('notificationclick', (event) => {
       })
   );
 });
-

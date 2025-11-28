@@ -17,52 +17,9 @@ export default function RootLayout({
 
     // Register service worker
     if ('serviceWorker' in navigator) {
-      // Check if we've already forced an update for v6
-      const hasForcedUpdate = localStorage.getItem('sunomsi_force_update_v6');
-
-      if (!hasForcedUpdate) {
-        console.log('Force updating Service Worker to v6...');
-        // Unregister all SWs and reload
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-          for (let registration of registrations) {
-            registration.unregister();
-          }
-          // Clear caches (optional but recommended for hard reset)
-          caches.keys().then(names => {
-            for (let name of names) {
-              caches.delete(name);
-            }
-          });
-
-          // Register with cache busting to force download
-          navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`)
-            .then(() => {
-              localStorage.setItem('sunomsi_force_update_v6', 'true');
-              window.location.reload();
-            });
-        });
-      } else {
-        // Standard registration
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => {
-            console.log('Service Worker registered:', reg);
-
-            // Check for updates periodically
-            setInterval(() => {
-              reg.update();
-            }, 60 * 60 * 1000); // Check every hour
-          })
-          .catch(err => console.error('Service Worker registration failed:', err));
-
-        // Reload when a new service worker takes control
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            window.location.reload();
-            refreshing = true;
-          }
-        });
-      }
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registered:', reg))
+        .catch(err => console.error('Service Worker registration failed:', err));
     }
 
     // Check session on app load

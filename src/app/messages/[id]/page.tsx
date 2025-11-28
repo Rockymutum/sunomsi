@@ -85,8 +85,10 @@ export default function DirectMessagePage({ params }: { params: { id: string } }
 
   if (loading) {
     return (
-      <div className="h-full flex justify-center items-center bg-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="min-h-[100svh] bg-background">
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
       </div>
     );
   }
@@ -98,13 +100,13 @@ export default function DirectMessagePage({ params }: { params: { id: string } }
 
   if (!otherUser) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-4 bg-white">
+      <div className="min-h-[100svh] bg-background flex flex-col items-center justify-center p-4">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">User not found</h2>
           <p className="text-gray-600 mb-4">The user you're trying to message doesn't exist or you don't have permission to view this conversation.</p>
           <button
             onClick={() => router.push('/messages')}
-            className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
+            className="btn-primary"
           >
             Back to Messages
           </button>
@@ -114,14 +116,16 @@ export default function DirectMessagePage({ params }: { params: { id: string } }
   }
 
   return (
-    <div className="h-full w-full bg-white">
-      <NewChatWindow
-        key={otherUser.id}
-        otherUserId={otherUser.id}
-        otherUserName={otherUser.full_name || 'User'}
-        onClose={() => router.push('/messages')}
-        className="h-full"
-      />
+    <div className="h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-2xl h-[80vh] bg-white rounded-lg shadow-lg overflow-hidden">
+        <NewChatWindow
+          key={otherUser.id}
+          otherUserId={otherUser.id}
+          otherUserName={otherUser.full_name || 'User'}
+          onClose={() => router.push('/messages')}
+          className="h-full"
+        />
+      </div>
     </div>
   );
 }
