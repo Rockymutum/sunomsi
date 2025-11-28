@@ -18,8 +18,24 @@ export default function RootLayout({
     // Register service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered:', reg))
+        .then(reg => {
+          console.log('Service Worker registered:', reg);
+
+          // Check for updates periodically
+          setInterval(() => {
+            reg.update();
+          }, 60 * 60 * 1000); // Check every hour
+        })
         .catch(err => console.error('Service Worker registration failed:', err));
+
+      // Reload when a new service worker takes control
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          window.location.reload();
+          refreshing = true;
+        }
+      });
     }
 
     // Check session on app load
