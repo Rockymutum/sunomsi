@@ -15,27 +15,18 @@ export default function RootLayout({
     // Initialize session manager when app starts
     sessionManager.initialize();
 
-    // Register service worker with aggressive update strategy
+    // Register service worker
     if ('serviceWorker' in navigator) {
-      // 1. Unregister any existing service workers to ensure a clean slate
-      navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (let registration of registrations) {
-          registration.unregister();
-        }
-      }).then(() => {
-        // 2. Register new service worker with cache-busting timestamp
-        // This forces the browser to fetch the new file instead of using a cached one
-        navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`)
-          .then(reg => {
-            console.log('Service Worker registered:', reg);
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => {
+          console.log('Service Worker registered:', reg);
 
-            // Check for updates periodically
-            setInterval(() => {
-              reg.update();
-            }, 60 * 60 * 1000); // Check every hour
-          })
-          .catch(err => console.error('Service Worker registration failed:', err));
-      });
+          // Check for updates periodically
+          setInterval(() => {
+            reg.update();
+          }, 60 * 60 * 1000); // Check every hour
+        })
+        .catch(err => console.error('Service Worker registration failed:', err));
 
       // Reload when a new service worker takes control
       let refreshing = false;
