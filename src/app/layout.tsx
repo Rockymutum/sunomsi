@@ -17,11 +17,11 @@ export default function RootLayout({
 
     // Register service worker
     if ('serviceWorker' in navigator) {
-      // Check if we've already forced an update for v5
-      const hasForcedUpdate = localStorage.getItem('sunomsi_force_update_v5');
+      // Check if we've already forced an update for v6
+      const hasForcedUpdate = localStorage.getItem('sunomsi_force_update_v6');
 
       if (!hasForcedUpdate) {
-        console.log('Force updating Service Worker to v5...');
+        console.log('Force updating Service Worker to v6...');
         // Unregister all SWs and reload
         navigator.serviceWorker.getRegistrations().then(registrations => {
           for (let registration of registrations) {
@@ -34,8 +34,12 @@ export default function RootLayout({
             }
           });
 
-          localStorage.setItem('sunomsi_force_update_v5', 'true');
-          window.location.reload();
+          // Register with cache busting to force download
+          navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`)
+            .then(() => {
+              localStorage.setItem('sunomsi_force_update_v6', 'true');
+              window.location.reload();
+            });
         });
       } else {
         // Standard registration
