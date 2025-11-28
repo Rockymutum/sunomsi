@@ -17,25 +17,48 @@ export default function RootLayout({
 
     // Register service worker
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => {
-          console.log('Service Worker registered:', reg);
+      // Check if we've already forced an update for v5
+      const hasForcedUpdate = localStorage.getItem('sunomsi_force_update_v5');
 
-          // Check for updates periodically
-          setInterval(() => {
-            reg.update();
-          }, 60 * 60 * 1000); // Check every hour
-        })
-        .catch(err => console.error('Service Worker registration failed:', err));
+      if (!hasForcedUpdate) {
+        console.log('Force updating Service Worker to v5...');
+        // Unregister all SWs and reload
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+          // Clear caches (optional but recommended for hard reset)
+          caches.keys().then(names => {
+            for (let name of names) {
+              caches.delete(name);
+            }
+          });
 
-      // Reload when a new service worker takes control
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
+          localStorage.setItem('sunomsi_force_update_v5', 'true');
           window.location.reload();
-          refreshing = true;
-        }
-      });
+        });
+      } else {
+        // Standard registration
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => {
+            console.log('Service Worker registered:', reg);
+
+            // Check for updates periodically
+            setInterval(() => {
+              reg.update();
+            }, 60 * 60 * 1000); // Check every hour
+          })
+          .catch(err => console.error('Service Worker registration failed:', err));
+
+        // Reload when a new service worker takes control
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            window.location.reload();
+            refreshing = true;
+          }
+        });
+      }
     }
 
     // Check session on app load
