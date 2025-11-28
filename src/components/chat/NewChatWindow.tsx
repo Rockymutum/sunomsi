@@ -370,7 +370,7 @@ export default function NewChatWindow({
   }
 
   return (
-    <div className={`flex flex-col h-full bg-[#efeae2] ${className}`}>
+    <div className={`flex flex-col h-full bg-[#efeae2] md:pb-0 pb-24 ${className}`}>
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 shadow-sm flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-3">
@@ -440,8 +440,8 @@ export default function NewChatWindow({
                       >
                         <div
                           className={`max-w-[85%] sm:max-w-[70%] px-3 py-1.5 rounded-lg relative shadow-sm text-[15px] leading-relaxed ${isCurrentUser
-                              ? 'bg-[#d9fdd3] text-gray-900 rounded-tr-none'
-                              : 'bg-white text-gray-900 rounded-tl-none'
+                            ? 'bg-[#d9fdd3] text-gray-900 rounded-tr-none'
+                            : 'bg-white text-gray-900 rounded-tl-none'
                             }`}
                         >
                           <p className="whitespace-pre-wrap break-words">{message.content}</p>
@@ -459,8 +459,8 @@ export default function NewChatWindow({
                           {/* Triangle for bubble tail */}
                           {isLastInGroup && (
                             <div className={`absolute top-0 w-0 h-0 border-[6px] border-transparent ${isCurrentUser
-                                ? 'right-[-6px] border-t-[#d9fdd3] border-l-[#d9fdd3]'
-                                : 'left-[-6px] border-t-white border-r-white'
+                              ? 'right-[-6px] border-t-[#d9fdd3] border-l-[#d9fdd3]'
+                              : 'left-[-6px] border-t-white border-r-white'
                               }`}></div>
                           )}
                         </div>
