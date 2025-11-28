@@ -370,7 +370,7 @@ export default function NewChatWindow({
   }
 
   return (
-    <div className={`flex flex-col h-full bg-[#efeae2] md:pb-0 pb-24 ${className}`}>
+    <div className={`flex flex-col h-full bg-[#efeae2] ${className}`}>
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 shadow-sm flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-3">
