@@ -1,7 +1,7 @@
 // Service Worker for SUNOMSI - Pinterest-like Instant Navigation
 // Aggressive caching strategy for instant page loads
 
-const CACHE_NAME = 'sunomsi-v6';
+const CACHE_NAME = 'sunomsi-v7';
 const OFFLINE_URL = '/offline.html';
 
 // Precache essential routes and assets for instant navigation
@@ -127,26 +127,45 @@ self.addEventListener('fetch', (event) => {
   // Aggressively cache Supabase storage images (avatars, task images, etc.)
   if (url.hostname.includes('supabase.co') && url.pathname.includes('/storage/v1/object/public/')) {
     event.respondWith(
-      caches.open(CACHE_NAME).then((cache) => {
-        return cache.match(event.request).then((cachedResponse) => {
+      (async () => {
+        try {
+          const cache = await caches.open(CACHE_NAME);
+          const cachedResponse = await cache.match(event.request);
+
           if (cachedResponse) {
-            // Return cached image immediately - no revalidation needed for images
+            console.log('[SW] Image from cache:', url.pathname.split('/').pop());
             return cachedResponse;
           }
 
-          // Fetch and cache for future use
-          return fetch(event.request).then((response) => {
-            if (response && response.status === 200) {
-              // Clone and cache with long TTL
-              cache.put(event.request, response.clone());
-            }
-            return response;
-          }).catch(() => {
-            // Return a placeholder if offline and no cache
-            return new Response('', { status: 404 });
+          console.log('[SW] Fetching image:', url.pathname.split('/').pop());
+
+          // Fetch with no-cors mode to handle CORS issues
+          const fetchRequest = new Request(event.request.url, {
+            mode: 'cors',
+            credentials: 'omit',
+            cache: 'default'
           });
-        });
-      })
+
+          const response = await fetch(fetchRequest);
+
+          // Cache successful responses (including opaque responses)
+          if (response && (response.status === 200 || response.type === 'opaque')) {
+            console.log('[SW] Caching image:', url.pathname.split('/').pop());
+            cache.put(event.request, response.clone());
+          }
+
+          return response;
+        } catch (error) {
+          console.error('[SW] Image fetch error:', error);
+          // Try to return from cache if fetch fails
+          const cache = await caches.open(CACHE_NAME);
+          const cachedResponse = await cache.match(event.request);
+          if (cachedResponse) return cachedResponse;
+
+          // Return empty response if all else fails
+          return new Response('', { status: 404 });
+        }
+      })()
     );
     return;
   }
@@ -194,7 +213,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Handle API requests with stale-while-revalidate
-  if (url.pathname.includes('/api/') || url.hostname.includes('supabase')) {
+  if (url.pathname.includes('/api/') || (url.hostname.includes('supabase') && !url.pathname.includes('/storage/'))) {
     event.respondWith(
       staleWhileRevalidate(event.request, CACHE_NAME, CACHE_TTL.api)
         .catch(() => caches.match(event.request))
@@ -207,13 +226,16 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         if (cachedResponse) {
+          console.log('[SW] Generic image from cache:', url.pathname);
           return cachedResponse;
         }
+        console.log('[SW] Fetching generic image:', url.pathname);
         return fetch(event.request).then((response) => {
-          if (response && response.status === 200) {
+          if (response && (response.status === 200 || response.type === 'opaque')) {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);
+              console.log('[SW] Cached generic image:', url.pathname);
             });
           }
           return response;
