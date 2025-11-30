@@ -1,7 +1,7 @@
 // Service Worker for SUNOMSI - Pinterest-like Instant Navigation
 // Aggressive caching strategy for instant page loads
 
-const CACHE_NAME = 'sunomsi-v5';
+const CACHE_NAME = 'sunomsi-v6';
 const OFFLINE_URL = '/offline.html';
 
 // Precache essential routes and assets for instant navigation
@@ -124,6 +124,33 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
+  // Aggressively cache Supabase storage images (avatars, task images, etc.)
+  if (url.hostname.includes('supabase.co') && url.pathname.includes('/storage/v1/object/public/')) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then((cache) => {
+        return cache.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            // Return cached image immediately - no revalidation needed for images
+            return cachedResponse;
+          }
+
+          // Fetch and cache for future use
+          return fetch(event.request).then((response) => {
+            if (response && response.status === 200) {
+              // Clone and cache with long TTL
+              cache.put(event.request, response.clone());
+            }
+            return response;
+          }).catch(() => {
+            // Return a placeholder if offline and no cache
+            return new Response('', { status: 404 });
+          });
+        });
+      })
+    );
+    return;
+  }
+
   // Cache-first for Next.js static resources (instant loading)
   if (url.pathname.startsWith('/_next/static/')) {
     event.respondWith(
@@ -175,7 +202,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle images with long cache (cache-first for instant loading)
+  // Handle all other images with aggressive caching (cache-first for instant loading)
   if (event.request.destination === 'image') {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
@@ -184,7 +211,7 @@ self.addEventListener('fetch', (event) => {
         }
         return fetch(event.request).then((response) => {
           if (response && response.status === 200) {
-            const responseToCache = addCacheTimestamp(response.clone());
+            const responseToCache = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);
             });

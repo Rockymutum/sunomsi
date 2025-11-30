@@ -340,7 +340,7 @@ export default function TaskCard({ task }: TaskCardProps) {
           <div className="h-9 w-9 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
             {(task as any).poster?.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={(task as any).poster.avatar_url as string} alt={(task as any).poster.full_name as string} className="h-full w-full object-cover" />
+              <img src={(task as any).poster.avatar_url as string} alt={(task as any).poster.full_name as string} className="h-full w-full object-cover" loading="lazy" decoding="async" />
             ) : (
               <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary text-sm font-bold">
                 {((task as any).poster?.full_name || 'U').charAt(0).toUpperCase()}
@@ -378,6 +378,8 @@ export default function TaskCard({ task }: TaskCardProps) {
             src={task.images[0]}
             alt={task.title}
             className="w-full h-full object-cover block"
+            loading="lazy"
+            decoding="async"
           />
           {/* Category badge overlay */}
           <div className="absolute top-3 left-3">
@@ -478,7 +480,7 @@ export default function TaskCard({ task }: TaskCardProps) {
                     <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
                       {c.user?.avatar_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={c.user.avatar_url} alt={c.user.full_name} className="h-full w-full object-cover" />
+                        <img src={c.user.avatar_url} alt={c.user.full_name} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary text-xs font-bold">
                           {(c.user?.full_name || 'U').charAt(0).toUpperCase()}
