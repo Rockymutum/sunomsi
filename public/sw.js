@@ -1,9 +1,17 @@
-// Service Worker for SUNOMSI - Enhanced Caching and Offline Support
+// Service Worker for SUNOMSI - Pinterest-like Instant Navigation
+// Aggressive caching strategy for instant page loads
 
-const CACHE_NAME = 'sunomsi-v4';
+const CACHE_NAME = 'sunomsi-v5';
 const OFFLINE_URL = '/offline.html';
+
+// Precache essential routes and assets for instant navigation
 const PRECACHE_URLS = [
   '/',
+  '/discovery',
+  '/workers',
+  '/messages',
+  '/profile',
+  '/notifications',
   '/offline.html',
   '/manifest.json',
   '/favicon.ico',
@@ -19,6 +27,7 @@ const CACHE_TTL = {
   api: 5 * 60 * 1000, // 5 minutes
   images: 7 * 24 * 60 * 60 * 1000, // 7 days
   static: 30 * 24 * 60 * 60 * 1000, // 30 days
+  pages: 10 * 60 * 1000, // 10 minutes for pages
 };
 
 // Install event - cache static assets
@@ -105,7 +114,7 @@ async function staleWhileRevalidate(request, cacheName, ttl) {
   return fetchPromise;
 }
 
-// Fetch event - serve from cache with stale-while-revalidate
+// Fetch event - Pinterest-like instant loading with aggressive caching
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
@@ -114,6 +123,48 @@ self.addEventListener('fetch', (event) => {
   if (!event.request.url.startsWith('http')) return;
 
   const url = new URL(event.request.url);
+
+  // Cache-first for Next.js static resources (instant loading)
+  if (url.pathname.startsWith('/_next/static/')) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(event.request).then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // Cache-first for Next.js data files (instant page transitions)
+  if (url.pathname.startsWith('/_next/data/')) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        // Return cached immediately, update in background
+        const fetchPromise = fetch(event.request).then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        }).catch(() => cachedResponse);
+
+        return cachedResponse || fetchPromise;
+      })
+    );
+    return;
+  }
 
   // Handle API requests with stale-while-revalidate
   if (url.pathname.includes('/api/') || url.hostname.includes('supabase')) {
@@ -124,29 +175,59 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle images with long cache
+  // Handle images with long cache (cache-first for instant loading)
   if (event.request.destination === 'image') {
     event.respondWith(
-      staleWhileRevalidate(event.request, CACHE_NAME, CACHE_TTL.images)
-        .catch(() => caches.match(event.request))
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(event.request).then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = addCacheTimestamp(response.clone());
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        });
+      })
     );
     return;
   }
 
-  // Handle navigation requests
+  // Handle navigation requests - cache-first for instant page loads
   if (event.request.mode === 'navigate') {
     event.respondWith(
       (async () => {
         try {
-          // Try navigation preload first
-          const preloadResponse = await event.preloadResponse;
-          if (preloadResponse) {
-            return preloadResponse;
+          // Check cache first for instant navigation
+          const cache = await caches.open(CACHE_NAME);
+          const cachedResponse = await cache.match(event.request);
+
+          // Fetch in background to update cache
+          const fetchPromise = fetch(event.request).then((response) => {
+            if (response && response.status === 200) {
+              cache.put(event.request, response.clone());
+            }
+            return response;
+          }).catch(() => null);
+
+          // Return cached response immediately if available
+          if (cachedResponse) {
+            // Update cache in background
+            fetchPromise;
+            return cachedResponse;
           }
 
-          // Fall back to network
-          const networkResponse = await fetch(event.request);
-          return networkResponse;
+          // If no cache, wait for network
+          const networkResponse = await fetchPromise;
+          if (networkResponse) {
+            return networkResponse;
+          }
+
+          // Fallback to offline page
+          return cache.match(OFFLINE_URL);
         } catch (error) {
           // If offline, show offline page
           const cache = await caches.open(CACHE_NAME);
@@ -158,11 +239,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For other requests, try cache first, then network
+  // For other requests, cache-first strategy
   event.respondWith(
     caches.match(event.request)
       .then((cachedResponse) => {
         if (cachedResponse) {
+          // Update cache in background
+          fetch(event.request).then((response) => {
+            if (response && response.status === 200) {
+              const responseToCache = addCacheTimestamp(response.clone());
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
+            }
+          }).catch(() => { });
+
           return cachedResponse;
         }
 
@@ -184,7 +275,7 @@ self.addEventListener('fetch', (event) => {
           })
           .catch(() => {
             // If both cache and network fail, show offline page for HTML requests
-            if (event.request.headers.get('accept').includes('text/html')) {
+            if (event.request.headers.get('accept')?.includes('text/html')) {
               return caches.match(OFFLINE_URL);
             }
           });

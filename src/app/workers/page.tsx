@@ -6,6 +6,8 @@ import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import WorkerCard from '@/components/workers/WorkerCard';
 import Toast from '@/components/ui/Toast';
+import { useAppStore } from '@/store/store';
+import { SkeletonList } from '@/components/ui/SkeletonLoader';
 
 const BASE_SKILL_OPTIONS = [
   'Carpentry',
@@ -38,8 +40,14 @@ export default function WorkersPage() {
   const searchParams = useSearchParams();
   const initialQ = (searchParams.get('q') || '').trim();
 
-  const [workers, setWorkers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Use Zustand store for caching
+  const cachedWorkers = useAppStore((state) => state.getCachedWorkers());
+  const setCachedWorkers = useAppStore((state) => state.setCachedWorkers);
+  const isCacheValid = useAppStore((state) => state.isCacheValid);
+  const updateLastFetch = useAppStore((state) => state.updateLastFetch);
+
+  const [workers, setWorkers] = useState<any[]>(cachedWorkers);
+  const [loading, setLoading] = useState(cachedWorkers.length === 0);
   const [filters, setFilters] = useState<FilterState>({
     skills: [],
     minRating: 0,
@@ -175,7 +183,17 @@ export default function WorkersPage() {
   }, [initialQ]);
 
   const fetchWorkers = async () => {
-    setLoading(true);
+    // If we have valid cached data, use it immediately (no loading state)
+    if (isCacheValid('workers') && cachedWorkers.length > 0) {
+      setWorkers(cachedWorkers);
+      setLoading(false);
+      // Still fetch in background to update cache
+    }
+
+    // Only show loading if we have no cached data at all
+    if (cachedWorkers.length === 0) {
+      setLoading(true);
+    }
 
     // Fetch worker profiles (without relational select to avoid FK dependency)
     let baseQuery = () => supabase
@@ -323,6 +341,9 @@ export default function WorkersPage() {
       });
 
       setWorkers(enrichedWorkers);
+      setCachedWorkers(enrichedWorkers);
+      updateLastFetch('workers');
+
       const skillsSet = new Set<string>();
       enrichedWorkers.forEach((w: any) => {
         if (Array.isArray(w.skills)) {
@@ -839,30 +860,25 @@ export default function WorkersPage() {
             )}
 
             {loading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-              </div>
+              <SkeletonList count={3} type="worker" />
             ) : workers.length > 0 ? (
-              <div className="max-w-2xl mx-auto flex flex-col gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {workers.map((worker) => (
                   <WorkerCard key={worker.id} worker={worker} />
                 ))}
               </div>
-            ) : (
+            ) : null}
+            {workers.length === 0 && !loading && (
               <div className="card text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 <h3 className="text-lg font-medium text-gray-900">No workers found</h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Try adjusting your filters or check back later for new workers.
+                  {filters.searchTerm || filters.skills.length > 0 || filters.location || filters.minRating > 0
+                    ? 'Try adjusting your filters'
+                    : 'Be the first to create a worker profile!'}
                 </p>
-                <button
-                  onClick={handleClearFilters}
-                  className="mt-4 btn-secondary"
-                >
-                  Clear Filters
-                </button>
               </div>
             )}
           </div>

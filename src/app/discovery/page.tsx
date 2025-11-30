@@ -37,13 +37,19 @@ export default function DiscoveryPage() {
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
 
-  // Fetch tasks with caching
+  // Fetch tasks with caching - instant display from cache
   useEffect(() => {
     const fetchTasks = async () => {
-      // Check if cache is valid
-      if (isCacheValid('tasks')) {
+      // If we have valid cached data, use it immediately (no loading state)
+      if (isCacheValid('tasks') && cachedTasks.length > 0) {
+        setTasks(cachedTasks);
         setIsInitialLoad(false);
         return;
+      }
+
+      // Only show loading if we have no cached data at all
+      if (cachedTasks.length === 0) {
+        setIsInitialLoad(true);
       }
 
       try {

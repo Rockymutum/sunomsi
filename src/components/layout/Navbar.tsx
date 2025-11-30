@@ -174,25 +174,25 @@ const NavbarContent = memo(function NavbarContent() {
                 🔍
               </button>
 
-              {showAuthUI && (
-                <>
-                  {user ? (
-                    <Link href="/profile" className="flex items-center">
-                      <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                        {avatarUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="h-5 w-5 text-gray-600">👤</div>
-                        )}
-                      </div>
-                    </Link>
-                  ) : (
-                    <Link href="/auth" className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark">
-                      Sign In
-                    </Link>
-                  )}
-                </>
+              {/* Always render auth UI to prevent flickering */}
+              {!isAuthHydrated ? (
+                // Placeholder during hydration to prevent layout shift
+                <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+              ) : user ? (
+                <Link href="/profile" className="flex items-center">
+                  <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                    {avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-5 w-5 text-gray-600">👤</div>
+                    )}
+                  </div>
+                </Link>
+              ) : (
+                <Link href="/auth" className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark">
+                  Sign In
+                </Link>
               )}
             </div>
           </div>
