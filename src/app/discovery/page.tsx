@@ -1,19 +1,27 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Navbar from '@/components/layout/Navbar';
 import TaskCard from '@/components/tasks/TaskCard';
 import { Task } from '@/lib/supabase';
 import { useSearchParams } from 'next/navigation';
-import PageShell from '@/components/ui/PageShell';
 import Toast from '@/components/ui/Toast';
+import { SkeletonList } from '@/components/ui/SkeletonLoader';
+import { useAppStore } from '@/store/store';
+import { cacheManager } from '@/lib/cache';
 
 export default function DiscoveryPage() {
   const supabase = createClientComponentClient();
 
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Use Zustand store for caching
+  const cachedTasks = useAppStore((state) => state.getCachedTasks());
+  const setCachedTasks = useAppStore((state) => state.setCachedTasks);
+  const isCacheValid = useAppStore((state) => state.isCacheValid);
+  const updateLastFetch = useAppStore((state) => state.updateLastFetch);
+
+  const [tasks, setTasks] = useState<any[]>(cachedTasks);
+  const [isInitialLoad, setIsInitialLoad] = useState(cachedTasks.length === 0);
   const [creating, setCreating] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -29,17 +37,63 @@ export default function DiscoveryPage() {
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
 
+  // Fetch tasks with caching
   useEffect(() => {
-    (async () => {
-      await supabase.auth.getSession();
-      fetchTasks();
-    })();
-  }, []);
+    const fetchTasks = async () => {
+      // Check if cache is valid
+      if (isCacheValid('tasks')) {
+        setIsInitialLoad(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('tasks')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const tasksData = data || [];
+
+        // Fetch profiles for task posters
+        const posterIds = Array.from(new Set(tasksData.map((t: any) => t.poster_id).filter(Boolean)));
+        let profilesMap: Record<string, any> = {};
+
+        if (posterIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('user_id, full_name, avatar_url')
+            .in('user_id', posterIds);
+          profilesMap = (profiles || []).reduce((acc: any, p: any) => {
+            acc[p.user_id] = p;
+            return acc;
+          }, {} as Record<string, any>);
+        }
+
+        const enriched = tasksData.map((t: any) => ({ ...t, poster: profilesMap[t.poster_id] || null }));
+
+        // Update cache
+        setTasks(enriched);
+        setCachedTasks(enriched);
+        updateLastFetch('tasks');
+
+        // Cache in IndexedDB
+        await cacheManager.setAll('tasks', enriched);
+      } catch (error: any) {
+        console.error('Error fetching tasks:', error);
+        setFetchError(error.message || 'Failed to load tasks');
+      } finally {
+        setIsInitialLoad(false);
+      }
+    };
+
+    fetchTasks();
+  }, [supabase, isCacheValid, setCachedTasks, updateLastFetch]);
 
   // Scroll restoration - restore after tasks are loaded
   useEffect(() => {
-    if (!loading && tasks.length > 0) {
-      // Restore scroll position after content is loaded
+    if (!isInitialLoad && tasks.length > 0) {
       const savedScroll = sessionStorage.getItem('discoveryScroll');
       if (savedScroll) {
         const scrollY = parseInt(savedScroll, 10);
@@ -55,7 +109,7 @@ export default function DiscoveryPage() {
         }
       }
     }
-  }, [loading, tasks.length]);
+  }, [isInitialLoad, tasks.length]);
 
   // Save scroll position
   useEffect(() => {
@@ -72,64 +126,6 @@ export default function DiscoveryPage() {
     return () => {
       window.removeEventListener('scroll', handleScroll);
       if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, []);
-
-  const fetchTasks = async () => {
-    setLoading(true);
-    setFetchError(null);
-    const run = async () => {
-      return await supabase
-        .from('tasks')
-        .select('*')
-        .order('created_at', { ascending: false });
-    };
-    let { data, error } = await run();
-    if (error && (error.message?.toLowerCase().includes('jwt') || error.message?.toLowerCase().includes('token'))) {
-      try {
-        await supabase.auth.refreshSession();
-        ({ data, error } = await run());
-      } catch (_e) {
-        // ignore and fall through to existing error handling
-      }
-    }
-
-    if (error) {
-      console.error('Error fetching tasks:', error);
-      setTasks([]);
-      setFetchError(error.message || 'Failed to load tasks');
-    } else {
-      const tasksData = data || [];
-      const posterIds = Array.from(new Set(tasksData.map((t: any) => t.poster_id).filter(Boolean)));
-      let profilesMap: Record<string, any> = {};
-      if (posterIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, avatar_url')
-          .in('user_id', posterIds);
-        profilesMap = (profiles || []).reduce((acc: any, p: any) => {
-          acc[p.user_id] = p;
-          return acc;
-        }, {} as Record<string, any>);
-      }
-      const enriched = tasksData.map((t: any) => ({ ...t, poster: profilesMap[t.poster_id] || null }));
-      setTasks(enriched);
-    }
-
-    setLoading(false);
-  };
-
-  // Refetch when the page regains focus or becomes visible (handles back navigation)
-  useEffect(() => {
-    const onFocus = () => fetchTasks();
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') fetchTasks();
-    };
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', onVisibility);
-    return () => {
-      window.removeEventListener('focus', onFocus);
-      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
 
@@ -152,30 +148,33 @@ export default function DiscoveryPage() {
           setTasks((prev) => {
             const next = [withPoster, ...prev.filter((t: any) => t.id !== payload.new.id)];
             next.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+            // Update cache with computed value
+            setCachedTasks(next);
             return next;
           });
         })();
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks' }, (payload: any) => {
-        setTasks((prev) => prev.map((t: any) => (t.id === payload.new.id ? { ...t, ...payload.new } : t)));
+        setTasks((prev) => {
+          const updated = prev.map((t: any) => (t.id === payload.new.id ? { ...t, ...payload.new } : t));
+          setCachedTasks(updated);
+          return updated;
+        });
       })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'tasks' }, (payload: any) => {
-        setTasks((prev) => prev.filter((t: any) => t.id !== payload.old.id));
+        setTasks((prev) => {
+          const filtered = prev.filter((t: any) => t.id !== payload.old.id);
+          setCachedTasks(filtered);
+          return filtered;
+        });
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase]);
-
-  // Refetch on auth state changes (handles JWT refresh/sign-in/sign-out)
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, _session) => {
-      fetchTasks();
-    });
-    return () => subscription.unsubscribe();
-  }, [supabase]);
+  }, [supabase, setCachedTasks]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -410,18 +409,16 @@ export default function DiscoveryPage() {
 
               <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 px-4">Available Tasks</h1>
 
-              {loading ? (
-                <div className="flex justify-center items-center h-64">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                </div>
-              ) : !loading && tasks.length > 0 && (
+              {isInitialLoad ? (
+                <SkeletonList count={3} type="task" />
+              ) : tasks.length > 0 ? (
                 <div className="flex flex-col">
                   {tasks.map((task) => (
                     <TaskCard key={task.id} task={task} />
                   ))}
                 </div>
-              )}
-              {tasks.length === 0 && !loading && (
+              ) : null}
+              {tasks.length === 0 && !isInitialLoad && (
                 <div className="card text-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

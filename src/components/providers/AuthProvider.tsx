@@ -1,54 +1,107 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
-import { Session } from '@supabase/supabase-js';
+import { useAppStore } from '@/store/store';
 
 const AuthContext = createContext<any>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
   const supabase = createClientComponentClient();
   const router = useRouter();
 
+  const {
+    user,
+    profile,
+    setUser,
+    setProfile,
+    setAuthLoading,
+    setAuthHydrated,
+    isAuthHydrated,
+    clearAuth,
+    setCachedProfile
+  } = useAppStore();
+
   useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    let mounted = true;
+
+    const initAuth = async () => {
+      try {
+        // Get current session
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        if (session?.user) {
+          setUser(session.user);
+
+          // Fetch profile
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single();
+
+          if (mounted && profileData) {
+            setProfile(profileData);
+            setCachedProfile(session.user.id, profileData);
+          }
+        } else {
+          setUser(null);
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        if (mounted) {
+          setAuthLoading(false);
+          setAuthHydrated(true);
+        }
+      }
     };
 
-    getSession();
-
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+        if (!mounted) return;
 
-        if (event === 'SIGNED_IN') {
-          router.refresh();
-        }
+        if (event === 'SIGNED_IN' && session?.user) {
+          setUser(session.user);
 
-        if (event === 'SIGNED_OUT') {
-          router.push('/auth');
+          // Fetch profile
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single();
+
+          if (profileData) {
+            setProfile(profileData);
+            setCachedProfile(session.user.id, profileData);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          clearAuth();
+        } else if (session?.user) {
+          setUser(session.user);
         }
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, [supabase, router]);
+    initAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase, setUser, setProfile, setAuthLoading, setAuthHydrated, clearAuth, setCachedProfile]);
 
   const value = {
     user,
-    session,
-    loading,
+    session: user ? { user } : null,
+    loading: !isAuthHydrated,
     signOut: () => supabase.auth.signOut(),
-    supabase, // Provide supabase client with session
+    supabase,
   };
 
   return (

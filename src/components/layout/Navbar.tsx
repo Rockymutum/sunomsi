@@ -1,91 +1,38 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { User } from '@supabase/supabase-js';
 import Image from 'next/image';
 import { BsGlobeAsiaAustralia, BsChatDots, BsPerson, BsBell } from 'react-icons/bs';
-import { sessionManager } from '@/utils/sessionPersistence';
+import { useAppStore } from '@/store/store';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { getUnreadCount } from '@/utils/notifications';
 
-export default function Navbar() {
+const NavbarContent = memo(function NavbarContent() {
   const pathname = usePathname();
   const router = useRouter();
-  const { supabase } = useAuth(); // Get supabase from AuthProvider
-  const [user, setUser] = useState<User | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const { supabase } = useAuth();
+
+  // Get user and profile from Zustand store (prevents flickering)
+  const user = useAppStore((state) => state.user);
+  const profile = useAppStore((state) => state.profile);
+  const isAuthHydrated = useAppStore((state) => state.isAuthHydrated);
+
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showNav, setShowNav] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Initialize and subscribe to auth state changes
-  useEffect(() => {
-    const fetchUserAndProfile = async () => {
-      const currentUser = await sessionManager.getCurrentUser();
-      setUser(currentUser);
+  // Memoize avatar URL with proper caching
+  const avatarUrl = useMemo(() => {
+    if (!profile?.avatar_url) return null;
 
-      if (currentUser) {
-        // Try to load avatar from cache first
-        const cachedAvatar = sessionStorage.getItem(`avatar_${currentUser.id}`);
-        if (cachedAvatar) {
-          setAvatarUrl(cachedAvatar);
-        }
-
-        // Fetch user profile (in background)
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('avatar_url, updated_at')
-          .eq('user_id', currentUser.id)
-          .single();
-
-        if (profile?.avatar_url) {
-          const ts = profile.updated_at ? `?t=${encodeURIComponent(profile.updated_at)}` : '';
-          const fullAvatarUrl = `${profile.avatar_url}${ts}`;
-          setAvatarUrl(fullAvatarUrl);
-          // Cache the avatar URL
-          sessionStorage.setItem(`avatar_${currentUser.id}`, fullAvatarUrl);
-        }
-      } else {
-        setAvatarUrl(null);
-      }
-    };
-
-    fetchUserAndProfile();
-
-    const unsubscribe = sessionManager.subscribe(async (updatedUser) => {
-      setUser(updatedUser);
-      if (updatedUser) {
-        // Try to load avatar from cache first
-        const cachedAvatar = sessionStorage.getItem(`avatar_${updatedUser.id}`);
-        if (cachedAvatar) {
-          setAvatarUrl(cachedAvatar);
-        }
-
-        // Fetch user profile on auth changes
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('avatar_url, updated_at')
-          .eq('user_id', updatedUser.id)
-          .single();
-
-        if (profile?.avatar_url) {
-          const ts = profile.updated_at ? `?t=${encodeURIComponent(profile.updated_at)}` : '';
-          const fullAvatarUrl = `${profile.avatar_url}${ts}`;
-          setAvatarUrl(fullAvatarUrl);
-          // Cache the avatar URL
-          sessionStorage.setItem(`avatar_${updatedUser.id}`, fullAvatarUrl);
-        }
-      } else {
-        setAvatarUrl(null);
-      }
-    });
-
-    return () => unsubscribe();
-  }, [supabase]);
+    // Use cached avatar with timestamp to prevent stale images
+    const timestamp = profile.updated_at ? `?t=${encodeURIComponent(profile.updated_at)}` : '';
+    return `${profile.avatar_url}${timestamp}`;
+  }, [profile?.avatar_url, profile?.updated_at]);
 
   // Fetch unread notification count
   useEffect(() => {
@@ -118,7 +65,6 @@ export default function Navbar() {
     }
   }, [user, supabase]);
 
-
   // Handle scroll behavior
   useEffect(() => {
     const handleScroll = () => {
@@ -135,17 +81,16 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     try {
       await supabase.auth.signOut();
-      router.push('/'); // Redirect to Get Started page
-      router.refresh(); // Ensure the page reloads to reflect signed out state
+      router.push('/');
     } catch (error) {
       console.error('Error signing out:', error);
     }
-  };
+  }, [supabase, router]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     const q = searchTerm.trim();
     const targetBase = pathname.startsWith('/workers') ? '/workers' : '/discovery';
@@ -156,8 +101,10 @@ export default function Navbar() {
     }
     setShowSearch(false);
     setSearchTerm('');
-  };
+  }, [searchTerm, pathname, router]);
 
+  // Don't render auth-dependent UI until hydrated (prevents flickering)
+  const showAuthUI = isAuthHydrated;
 
   return (
     <>
@@ -227,21 +174,25 @@ export default function Navbar() {
                 🔍
               </button>
 
-              {user ? (
-                <Link href="/profile" className="flex items-center">
-                  <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                    {avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-5 w-5 text-gray-600">👤</div>
-                    )}
-                  </div>
-                </Link>
-              ) : (
-                <Link href="/auth" className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark">
-                  Sign In
-                </Link>
+              {showAuthUI && (
+                <>
+                  {user ? (
+                    <Link href="/profile" className="flex items-center">
+                      <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                        {avatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-5 w-5 text-gray-600">👤</div>
+                        )}
+                      </div>
+                    </Link>
+                  ) : (
+                    <Link href="/auth" className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark">
+                      Sign In
+                    </Link>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -338,4 +289,6 @@ export default function Navbar() {
       </nav>
     </>
   );
-}
+});
+
+export default NavbarContent;

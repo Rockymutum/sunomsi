@@ -1,6 +1,6 @@
-// Service Worker for SUNOMSI - Caching and Offline Support
+// Service Worker for SUNOMSI - Enhanced Caching and Offline Support
 
-const CACHE_NAME = 'sunomsi-v3';
+const CACHE_NAME = 'sunomsi-v4';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE_URLS = [
   '/',
@@ -13,6 +13,13 @@ const PRECACHE_URLS = [
   '/web-app-manifest-192x192.png',
   '/web-app-manifest-512x512.png',
 ];
+
+// Cache TTL for different resource types
+const CACHE_TTL = {
+  api: 5 * 60 * 1000, // 5 minutes
+  images: 7 * 24 * 60 * 60 * 1000, // 7 days
+  static: 30 * 24 * 60 * 60 * 1000, // 30 days
+};
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
@@ -28,26 +35,77 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and enable navigation preload
 self.addEventListener('activate', (event) => {
-  // Claim any clients immediately, so they don't wait for a reload
+  // Claim any clients immediately
   event.waitUntil(self.clients.claim());
 
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    Promise.all([
+      // Clean up old caches
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheWhitelist.indexOf(cacheName) === -1) {
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      // Enable navigation preload if available
+      self.registration.navigationPreload?.enable(),
+    ])
   );
 });
 
-// Fetch event - serve from cache, falling back to network
+// Helper function to check if cache is expired
+function isCacheExpired(cachedResponse, ttl) {
+  if (!cachedResponse) return true;
+
+  const cachedTime = cachedResponse.headers.get('sw-cache-time');
+  if (!cachedTime) return true;
+
+  return Date.now() - parseInt(cachedTime) > ttl;
+}
+
+// Helper function to add cache timestamp
+function addCacheTimestamp(response) {
+  const clonedResponse = response.clone();
+  const headers = new Headers(clonedResponse.headers);
+  headers.set('sw-cache-time', Date.now().toString());
+
+  return new Response(clonedResponse.body, {
+    status: clonedResponse.status,
+    statusText: clonedResponse.statusText,
+    headers: headers,
+  });
+}
+
+// Stale-while-revalidate strategy
+async function staleWhileRevalidate(request, cacheName, ttl) {
+  const cache = await caches.open(cacheName);
+  const cachedResponse = await cache.match(request);
+
+  // Fetch fresh data in background
+  const fetchPromise = fetch(request)
+    .then((response) => {
+      if (response && response.status === 200) {
+        cache.put(request, addCacheTimestamp(response.clone()));
+      }
+      return response;
+    })
+    .catch(() => cachedResponse);
+
+  // Return cached response if valid, otherwise wait for fetch
+  if (cachedResponse && !isCacheExpired(cachedResponse, ttl)) {
+    return cachedResponse;
+  }
+
+  return fetchPromise;
+}
+
+// Fetch event - serve from cache with stale-while-revalidate
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
@@ -55,51 +113,68 @@ self.addEventListener('fetch', (event) => {
   // Skip non-http(s) requests
   if (!event.request.url.startsWith('http')) return;
 
-  // Handle API requests
-  if (event.request.url.includes('/api/')) {
+  const url = new URL(event.request.url);
+
+  // Handle API requests with stale-while-revalidate
+  if (url.pathname.includes('/api/') || url.hostname.includes('supabase')) {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          // Clone the response for potential caching
-          const responseToCache = response.clone();
-
-          // Cache successful API responses
-          if (response.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-
-          return response;
-        })
-        .catch(() => {
-          // If network fails, try to get from cache
-          return caches.match(event.request);
-        })
+      staleWhileRevalidate(event.request, CACHE_NAME, CACHE_TTL.api)
+        .catch(() => caches.match(event.request))
     );
     return;
   }
 
-  // For non-API requests, try cache first, then network
+  // Handle images with long cache
+  if (event.request.destination === 'image') {
+    event.respondWith(
+      staleWhileRevalidate(event.request, CACHE_NAME, CACHE_TTL.images)
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Handle navigation requests
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      (async () => {
+        try {
+          // Try navigation preload first
+          const preloadResponse = await event.preloadResponse;
+          if (preloadResponse) {
+            return preloadResponse;
+          }
+
+          // Fall back to network
+          const networkResponse = await fetch(event.request);
+          return networkResponse;
+        } catch (error) {
+          // If offline, show offline page
+          const cache = await caches.open(CACHE_NAME);
+          const cachedResponse = await cache.match(event.request);
+          return cachedResponse || cache.match(OFFLINE_URL);
+        }
+      })()
+    );
+    return;
+  }
+
+  // For other requests, try cache first, then network
   event.respondWith(
     caches.match(event.request)
       .then((cachedResponse) => {
-        // Return cached response if found
         if (cachedResponse) {
           return cachedResponse;
         }
 
-        // Otherwise, fetch from network
         return fetch(event.request)
           .then((response) => {
-            // Check if we received a valid response
+            // Check if valid response
             if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
 
-            // Clone the response for caching
-            const responseToCache = response.clone();
-
+            // Clone and cache the response
+            const responseToCache = addCacheTimestamp(response.clone());
             caches.open(CACHE_NAME)
               .then((cache) => {
                 cache.put(event.request, responseToCache);
@@ -117,14 +192,14 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Background sync for failed requests when coming back online
+// Background sync for failed requests
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-requests') {
     event.waitUntil(processPendingRequests());
   }
 });
 
-// Process any pending requests that failed while offline
+// Process pending requests
 async function processPendingRequests() {
   const cache = await caches.open('pending-requests');
   const requests = await cache.keys();
@@ -137,7 +212,7 @@ async function processPendingRequests() {
         return response;
       } catch (error) {
         console.error('Failed to process pending request:', error);
-        throw error; // Will retry on next sync event
+        throw error;
       }
     })
   );
