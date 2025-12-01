@@ -26,10 +26,47 @@ export default function MessagesPage() {
 
   useEffect(() => {
     const fetchConversations = async () => {
-      // Use cache if valid
+      // Use cache if valid - don't show loading
       if (isCacheValid('messages') && cachedMessages.length > 0) {
         setConversations(cachedMessages);
         setLoading(false);
+
+        // Fetch fresh data in background
+        const { data: { session } } = await supabase.auth.getSession();
+        const currentUserId = session?.user?.id;
+        if (!currentUserId) return;
+
+        const { data: messagesData } = await supabase
+          .from('messages')
+          .select(`id, sender_id, receiver_id, created_at, content, read`)
+          .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
+          .order('created_at', { ascending: false });
+
+        const conversationMap = new Map();
+        for (const message of messagesData || []) {
+          const partnerId = message.sender_id === currentUserId ? message.receiver_id : message.sender_id;
+          if (!conversationMap.has(partnerId)) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('full_name, avatar_url')
+              .eq('user_id', partnerId)
+              .maybeSingle();
+
+            conversationMap.set(partnerId, {
+              partnerId,
+              partnerName: profile?.full_name || 'Unknown User',
+              partnerAvatar: profile?.avatar_url,
+              lastMessage: message.content,
+              lastMessageTime: message.created_at,
+              unread: message.receiver_id === currentUserId && !message.read ? 1 : 0
+            });
+          }
+        }
+
+        const conversationsArray = Array.from(conversationMap.values());
+        setConversations(conversationsArray);
+        setCachedMessages(conversationsArray);
+        updateLastFetch('messages');
         return;
       }
 
@@ -103,7 +140,7 @@ export default function MessagesPage() {
     };
 
     fetchConversations();
-  }, [router, supabase, isCacheValid, cachedMessages.length, setCachedMessages, updateLastFetch]);
+  }, [router, supabase]);
 
   // Preload all avatar images
   const avatarUrls = useMemo(() => {
