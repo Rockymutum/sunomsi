@@ -15,6 +15,20 @@ export default function Home() {
     // Check if user is authenticated
     const checkAuth = async () => {
       try {
+        // Handle OAuth callback on root if needed
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+
+        if (code) {
+          // If we have a code, let supabase handle the exchange
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (!error && data.session) {
+            setIsAuthenticated(true);
+            router.replace('/discovery');
+            return;
+          }
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           setIsAuthenticated(true);
@@ -57,10 +71,10 @@ export default function Home() {
       {/* Hero Section */}
       <section className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="max-w-6xl mx-auto text-center">
-          <img 
-            src="/logo.png.PNG" 
-            alt="SUNOMSI logo" 
-            className="mx-auto mb-3 object-contain w-[113px] h-[113px] md:w-[192px] md:h-[192px]" 
+          <img
+            src="/logo.png.PNG"
+            alt="SUNOMSI logo"
+            className="mx-auto mb-3 object-contain w-[113px] h-[113px] md:w-[192px] md:h-[192px]"
             loading="eager"
             fetchPriority="high"
           />
@@ -71,8 +85,8 @@ export default function Home() {
             For the people by the people.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link 
-              href="/auth?new=1" 
+            <Link
+              href="/auth?new=1"
               className="btn-primary px-6 py-2 text-base rounded-lg shadow-sm hover:bg-gray-700 transition-colors"
               prefetch={false}
             >
