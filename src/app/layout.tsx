@@ -16,10 +16,36 @@ export default function RootLayout({
     sessionManager.initialize();
 
     // Register service worker
+    // Register service worker with update handling
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered:', reg))
-        .catch(err => console.error('Service Worker registration failed:', err));
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        console.log('Service Worker registered:', reg);
+
+        // Check for updates
+        reg.update();
+
+        // Handle updates
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New content available, force reload
+                window.location.reload();
+              }
+            });
+          }
+        });
+      }).catch(err => console.error('Service Worker registration failed:', err));
+
+      // Reload when new service worker takes control
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
     }
 
     // Check session on app load
