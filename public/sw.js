@@ -1,7 +1,7 @@
 // Service Worker for SUNOMSI - Pinterest-like Instant Navigation
 // Aggressive caching strategy for instant page loads
 
-const CACHE_NAME = 'sunomsi-v7';
+const CACHE_NAME = 'sunomsi-v8';
 const OFFLINE_URL = '/offline.html';
 
 // Precache essential routes and assets for instant navigation
@@ -116,18 +116,24 @@ async function staleWhileRevalidate(request, cacheName, ttl) {
 
 // Fetch event - Pinterest-like instant loading with aggressive caching
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // CRITICAL: Skip auth-related requests to prevent "response served by service worker has redirections" error
+  // This must be the VERY FIRST check
+  if (
+    url.pathname.startsWith('/auth/') ||
+    url.searchParams.has('code') ||
+    url.searchParams.has('error') ||
+    event.request.mode === 'navigate' && url.pathname.includes('/auth')
+  ) {
+    return; // Let the browser handle it directly
+  }
+
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
   // Skip non-http(s) requests
   if (!event.request.url.startsWith('http')) return;
-
-  const url = new URL(event.request.url);
-
-  // Skip auth-related requests to prevent "response served by service worker has redirection" error
-  if (url.pathname.startsWith('/auth/') || url.searchParams.has('code')) {
-    return;
-  }
 
   // Aggressively cache Supabase storage images (avatars, task images, etc.)
   if (url.hostname.includes('supabase.co') && url.pathname.includes('/storage/v1/object/public/')) {
