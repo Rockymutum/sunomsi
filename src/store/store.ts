@@ -48,6 +48,8 @@ interface AppState {
     // Cache getters
     getCachedTasks: () => any[];
     getCachedWorkers: () => any[];
+    getCachedMessages: () => any[];
+    getCachedNotifications: () => any[];
     getCachedProfile: (userId: string) => Profile | null;
     isCacheValid: (key: string, ttlMs?: number) => boolean;
 
@@ -122,6 +124,8 @@ export const useAppStore = create<AppState>()(
             // Cache getters
             getCachedTasks: () => get().cachedData.tasks,
             getCachedWorkers: () => get().cachedData.workers,
+            getCachedMessages: () => get().cachedData.messages,
+            getCachedNotifications: () => get().cachedData.notifications,
             getCachedProfile: (userId) => get().cachedData.profiles[userId] || null,
 
             isCacheValid: (key, ttlMs = CACHE_TTL) => {

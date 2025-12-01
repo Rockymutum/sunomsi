@@ -1,22 +1,42 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Navbar from '@/components/layout/Navbar';
 import { formatDistanceToNow } from '@/utils/dateUtils';
+import { useAppStore } from '@/store/store';
+import { useImagePreloader } from '@/hooks/useImagePreloader';
+import { SkeletonList } from '@/components/ui/SkeletonLoader';
+import CachedImage from '@/components/ui/CachedImage';
 
 export default function MessagesPage() {
   const router = useRouter();
   const supabase = createClientComponentClient();
 
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Zustand caching
+  const cachedMessages = useAppStore((state) => state.getCachedMessages());
+  const setCachedMessages = useAppStore((state) => state.setCachedMessages);
+  const isCacheValid = useAppStore((state) => state.isCacheValid);
+  const updateLastFetch = useAppStore((state) => state.updateLastFetch);
+
+  const [conversations, setConversations] = useState<any[]>(cachedMessages);
+  const [loading, setLoading] = useState(cachedMessages.length === 0);
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchConversations = async () => {
-      setLoading(true);
+      // Use cache if valid
+      if (isCacheValid('messages') && cachedMessages.length > 0) {
+        setConversations(cachedMessages);
+        setLoading(false);
+        return;
+      }
+
+      // Only show loading if no cached data
+      if (cachedMessages.length === 0) {
+        setLoading(true);
+      }
 
       try {
         // Check authentication status
@@ -71,7 +91,10 @@ export default function MessagesPage() {
           }
         }
 
-        setConversations(Array.from(conversationMap.values()));
+        const conversationsArray = Array.from(conversationMap.values());
+        setConversations(conversationsArray);
+        setCachedMessages(conversationsArray);
+        updateLastFetch('messages');
       } catch (error) {
         console.error('Error fetching conversations:', error);
       } finally {
@@ -80,16 +103,55 @@ export default function MessagesPage() {
     };
 
     fetchConversations();
-  }, [router, supabase]);
+  }, [router, supabase, isCacheValid, cachedMessages.length, setCachedMessages, updateLastFetch]);
+
+  // Preload all avatar images
+  const avatarUrls = useMemo(() => {
+    return conversations
+      .map(conv => conv.partnerAvatar)
+      .filter(Boolean);
+  }, [conversations]);
+
+  useImagePreloader(avatarUrls);
+
+  // Scroll restoration
+  useEffect(() => {
+    if (!loading && conversations.length > 0) {
+      requestAnimationFrame(() => {
+        const savedPosition = sessionStorage.getItem('messages-scroll');
+        if (savedPosition) {
+          window.scrollTo({
+            top: parseInt(savedPosition, 10),
+            behavior: 'instant' as ScrollBehavior,
+          });
+          console.log('[Scroll] Restored messages position:', savedPosition);
+        }
+      });
+    }
+  }, [loading, conversations.length]);
+
+  // Save scroll position
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        sessionStorage.setItem('messages-scroll', window.scrollY.toString());
+      }, 150);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (timeout) clearTimeout(timeout);
+    };
+  }, []);
 
   if (loading) {
     return (
       <div className="min-h-[100svh] bg-background">
         <Navbar />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-20 pb-24 md:pb-12">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
+          <SkeletonList count={5} type="message" />
         </div>
       </div>
     );
@@ -115,7 +177,7 @@ export default function MessagesPage() {
                 >
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 ring-1 ring-gray-200 flex-shrink-0">
                     {conversation.partnerAvatar ? (
-                      <img
+                      <CachedImage
                         src={conversation.partnerAvatar}
                         alt={conversation.partnerName}
                         className="h-full w-full object-cover"
@@ -174,4 +236,3 @@ export default function MessagesPage() {
     </div>
   );
 }
-// End of MessagesPage component

@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { markAsRead, deleteNotification } from '@/utils/notifications';
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
+import { useAppStore } from '@/store/store';
+import { SkeletonList } from '@/components/ui/SkeletonLoader';
 
 interface Notification {
   id: string;
@@ -20,8 +22,40 @@ interface Notification {
 export default function NotificationsPage() {
   const supabase = createClientComponentClient();
   const router = useRouter();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // Zustand caching
+  const cachedNotifications = useAppStore((state) => state.getCachedNotifications());
+  const setCachedNotifications = useAppStore((state) => state.setCachedNotifications);
+  const isCacheValid = useAppStore((state) => state.isCacheValid);
+  const updateLastFetch = useAppStore((state) => state.updateLastFetch);
+
+  const [notifications, setNotifications] = useState<Notification[]>(cachedNotifications);
+  const [loading, setLoading] = useState(cachedNotifications.length === 0);
+
+  const fetchNotifications = async () => {
+    // Use cache if valid
+    if (isCacheValid('notifications') && cachedNotifications.length > 0) {
+      setNotifications(cachedNotifications);
+      setLoading(false);
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    const notificationsData = data || [];
+    setNotifications(notificationsData);
+    setCachedNotifications(notificationsData);
+    updateLastFetch('notifications');
+    setLoading(false);
+  };
 
   useEffect(() => {
     fetchNotifications();
@@ -42,20 +76,36 @@ export default function NotificationsPage() {
     };
   }, []);
 
-  const fetchNotifications = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+  // Scroll restoration
+  useEffect(() => {
+    if (!loading && notifications.length > 0) {
+      requestAnimationFrame(() => {
+        const savedPosition = sessionStorage.getItem('notifications-scroll');
+        if (savedPosition) {
+          window.scrollTo({
+            top: parseInt(savedPosition, 10),
+            behavior: 'instant' as ScrollBehavior,
+          });
+        }
+      });
+    }
+  }, [loading, notifications.length]);
 
-    const { data } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    setNotifications(data || []);
-    setLoading(false);
-  };
+  // Save scroll position
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        sessionStorage.setItem('notifications-scroll', window.scrollY.toString());
+      }, 150);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (timeout) clearTimeout(timeout);
+    };
+  }, []);
 
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.read) {
@@ -113,7 +163,9 @@ export default function NotificationsPage() {
           </div>
 
           {loading ? (
-            <div className="p-8 text-center text-gray-500">Loading...</div>
+            <div className="p-4">
+              <SkeletonList count={5} type="notification" />
+            </div>
           ) : notifications.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-4xl mb-4">📭</div>
