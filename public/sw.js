@@ -124,6 +124,11 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
+  // Skip auth-related requests to prevent "response served by service worker has redirection" error
+  if (url.pathname.startsWith('/auth/') || url.searchParams.has('code')) {
+    return;
+  }
+
   // Aggressively cache Supabase storage images (avatars, task images, etc.)
   if (url.hostname.includes('supabase.co') && url.pathname.includes('/storage/v1/object/public/')) {
     event.respondWith(
