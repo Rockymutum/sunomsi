@@ -98,28 +98,35 @@ export default function DiscoveryPage() {
     fetchTasks();
   }, [supabase, isCacheValid, setCachedTasks, updateLastFetch]);
 
+
   // Scroll restoration - restore after tasks are loaded
   useEffect(() => {
     if (!isInitialLoad && tasks.length > 0) {
-      const timer = setTimeout(() => {
+      // Use requestAnimationFrame for smooth restoration
+      requestAnimationFrame(() => {
         const savedPosition = sessionStorage.getItem('discovery-scroll');
         if (savedPosition) {
-          window.scrollTo(0, parseInt(savedPosition, 10));
+          const scrollY = parseInt(savedPosition, 10);
+          console.log('[Scroll] Restoring position:', scrollY);
+          window.scrollTo({
+            top: scrollY,
+            behavior: 'instant' as ScrollBehavior,
+          });
         }
-      }, 100);
-      return () => clearTimeout(timer);
+      });
     }
   }, [isInitialLoad, tasks.length]);
 
-  // Save scroll position
+  // Save scroll position with throttling
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     const handleScroll = () => {
       if (timeoutId) clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
         const scrollY = window.scrollY;
-        sessionStorage.setItem('discoveryScroll', scrollY.toString());
-      }, 100);
+        sessionStorage.setItem('discovery-scroll', scrollY.toString());
+        console.log('[Scroll] Saved position:', scrollY);
+      }, 150); // Throttle to 150ms
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
