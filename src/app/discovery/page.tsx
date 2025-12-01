@@ -10,6 +10,7 @@ import Toast from '@/components/ui/Toast';
 import { SkeletonList } from '@/components/ui/SkeletonLoader';
 import { useAppStore } from '@/store/store';
 import { cacheManager } from '@/lib/cache';
+import { useImagePreloader } from '@/hooks/useImagePreloader';
 
 export default function DiscoveryPage() {
   const supabase = createClientComponentClient();
@@ -100,20 +101,13 @@ export default function DiscoveryPage() {
   // Scroll restoration - restore after tasks are loaded
   useEffect(() => {
     if (!isInitialLoad && tasks.length > 0) {
-      const savedScroll = sessionStorage.getItem('discoveryScroll');
-      if (savedScroll) {
-        const scrollY = parseInt(savedScroll, 10);
-        if (scrollY > 0) {
-          requestAnimationFrame(() => {
-            setTimeout(() => {
-              window.scrollTo({
-                top: scrollY,
-                behavior: 'instant' as ScrollBehavior,
-              });
-            }, 150);
-          });
+      const timer = setTimeout(() => {
+        const savedPosition = sessionStorage.getItem('discovery-scroll');
+        if (savedPosition) {
+          window.scrollTo(0, parseInt(savedPosition, 10));
         }
-      }
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [isInitialLoad, tasks.length]);
 

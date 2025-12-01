@@ -8,6 +8,7 @@ import WorkerCard from '@/components/workers/WorkerCard';
 import Toast from '@/components/ui/Toast';
 import { useAppStore } from '@/store/store';
 import { SkeletonList } from '@/components/ui/SkeletonLoader';
+import { useImagePreloader } from '@/hooks/useImagePreloader';
 
 const BASE_SKILL_OPTIONS = [
   'Carpentry',
@@ -105,6 +106,25 @@ export default function WorkersPage() {
       document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
+
+  // Preload all worker images for instant subsequent loads
+  const imageUrls = useMemo(() => {
+    const urls: string[] = [];
+    workers.forEach((worker: any) => {
+      // Add worker avatar
+      if (worker.profiles?.avatar_url) {
+        urls.push(worker.profiles.avatar_url);
+      }
+      // Add portfolio images
+      if (worker.portfolio_images && Array.isArray(worker.portfolio_images)) {
+        urls.push(...worker.portfolio_images);
+      }
+    });
+    return urls.filter(Boolean);
+  }, [workers]);
+
+  // Preload all images
+  useImagePreloader(imageUrls);
 
   // Realtime sync for worker profiles
   useEffect(() => {
