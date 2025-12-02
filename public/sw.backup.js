@@ -12,7 +12,10 @@ self.addEventListener('activate', () => {
   self.registration.unregister()
     .then(() => {
       console.log('Service Worker unregistered successfully.');
-      // Take control of the page immediately (which effectively removes SW control since this one has no fetch handler)
-      return self.clients.claim();
+      return self.clients.matchAll();
+    })
+    .then((clients) => {
+      // Force reload all open tabs to clear the old SW control
+      clients.forEach(client => client.navigate(client.url));
     });
 });

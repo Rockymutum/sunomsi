@@ -15,10 +15,10 @@ export default function RootLayout({
     // Initialize session manager when app starts
     sessionManager.initialize();
 
-    // Register service worker
     // Register service worker with update handling
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then(reg => {
+      // Add timestamp to force update
+      navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`).then(reg => {
         console.log('Service Worker registered:', reg);
 
         // Check for updates
