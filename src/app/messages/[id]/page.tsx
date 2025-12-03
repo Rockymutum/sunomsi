@@ -58,26 +58,31 @@ export default function DirectMessagePage({ params }: { params: { id: string } }
     };
 
     const initialize = async () => {
-      const user = await getCurrentUser();
-      if (!user) {
-        router.push('/login');
-        return;
+      try {
+        const user = await getCurrentUser();
+        if (!user) {
+          router.push('/login');
+          return;
+        }
+
+        let otherUserData = await getOtherUser(params.id);
+
+        // If user doesn't have a profile, use a fallback
+        if (!otherUserData) {
+          otherUserData = {
+            id: params.id,
+            user_id: params.id,
+            full_name: 'User',
+            avatar_url: undefined
+          };
+        }
+
+        setOtherUser(otherUserData);
+      } catch (error) {
+        console.error('Error initializing chat:', error);
+      } finally {
+        setLoading(false);
       }
-
-      let otherUserData = await getOtherUser(params.id);
-
-      // If user doesn't have a profile, use a fallback
-      if (!otherUserData) {
-        otherUserData = {
-          id: params.id,
-          user_id: params.id,
-          full_name: 'User',
-          avatar_url: undefined
-        };
-      }
-
-      setOtherUser(otherUserData);
-      setLoading(false);
     };
 
     initialize();
