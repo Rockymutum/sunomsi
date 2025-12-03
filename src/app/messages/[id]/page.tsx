@@ -81,7 +81,7 @@ export default function DirectMessagePage({ params }: { params: { id: string } }
     };
 
     initialize();
-  }, [params.id, router, supabase]);
+  }, [params.id, router]);
 
   if (loading) {
     return (

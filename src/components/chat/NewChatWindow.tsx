@@ -100,7 +100,7 @@ export default function NewChatWindow({
     };
 
     fetchData();
-  }, [otherUserId, supabase]);
+  }, [otherUserId]);
 
   // Set up real-time subscription for new messages
   useEffect(() => {
@@ -297,7 +297,7 @@ export default function NewChatWindow({
     };
 
     setupSubscription();
-  }, [currentUser, otherUserId, supabase]);
+  }, [currentUser, otherUserId]);
 
   // Group messages by date
   const groupMessagesByDate = useCallback((messages: any[]) => {
