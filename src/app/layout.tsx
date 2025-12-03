@@ -18,7 +18,7 @@ export default function RootLayout({
     // Register service worker with update handling
     if ('serviceWorker' in navigator) {
       // Add timestamp to force update
-      navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`).then(reg => {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
         console.log('Service Worker registered:', reg);
 
         // Check for updates
