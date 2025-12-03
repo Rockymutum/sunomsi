@@ -46,9 +46,42 @@ serve(async (req) => {
             throw err
         }
 
-        const payload: NotificationPayload = await req.json()
+        let payload: NotificationPayload = await req.json()
 
-        console.log('Processing notification:', payload)
+        console.log('Received payload:', JSON.stringify(payload))
+
+        // Check if this is a Supabase Webhook payload
+        // @ts-ignore
+        if (payload.type === 'INSERT' && payload.table === 'messages' && payload.record) {
+            console.log('Detected Webhook payload')
+            // @ts-ignore
+            const record = payload.record
+
+            // Fetch sender's profile to get their name
+            const { data: senderProfile } = await supabaseClient
+                .from('profiles')
+                .select('full_name')
+                .eq('user_id', record.sender_id)
+                .single()
+
+            const senderName = senderProfile?.full_name || 'Someone'
+
+            payload = {
+                notification_id: record.id,
+                user_id: record.receiver_id,
+                type: 'message',
+                title: `New message from ${senderName}`,
+                body: record.content,
+                data: {
+                    url: `/messages/${record.sender_id}`,
+                    sender_id: record.sender_id
+                }
+            }
+
+            console.log('Normalized webhook payload:', payload)
+        } else {
+            console.log('Processing standard payload:', payload)
+        }
 
         // Get user's push subscriptions
         const { data: subscriptions, error: subError } = await supabaseClient
