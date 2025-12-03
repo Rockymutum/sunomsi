@@ -8,18 +8,28 @@ import { BsBehance, BsDribbble, BsLinkedin, BsInstagram } from 'react-icons/bs';
 import { FaGithub, FaTwitter, FaFacebook } from 'react-icons/fa';
 import { FiCalendar, FiMail, FiMapPin, FiLink } from 'react-icons/fi';
 import type { IconType } from 'react-icons';
+import { useAppStore } from '@/store/store';
 
 export default function ProfilePage({ params }: { params: { id: string } }) {
   const { id } = params;
   const supabase = createClientComponentClient();
 
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<any | null>(null);
+  // Zustand caching
+  const getCachedProfile = useAppStore((state) => state.getCachedProfile);
+  const setCachedProfile = useAppStore((state) => state.setCachedProfile);
+  const cachedProfile = getCachedProfile(id);
+
+  const [loading, setLoading] = useState(!cachedProfile);
+  const [profile, setProfile] = useState<any | null>(cachedProfile || null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true);
+      // If we have a cached profile, we're already showing it.
+      // But we still want to fetch fresh data in the background.
+      if (!cachedProfile) {
+        setLoading(true);
+      }
 
       // Get current user
       const { data: { session } } = await supabase.auth.getSession();
@@ -31,11 +41,45 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
         .select('*')
         .eq('user_id', id)
         .maybeSingle();
-      setProfile(data || null);
+
+      if (data) {
+        setProfile(data);
+        // Update cache
+        setCachedProfile(id, {
+          user_id: data.user_id,
+          full_name: data.full_name,
+          avatar_url: data.avatar_url,
+          bio: data.bio,
+          phone: data.phone,
+          location: data.place,
+          updated_at: data.updated_at,
+          // @ts-ignore
+          title: data.title,
+          // @ts-ignore
+          contact: data.contact,
+          // @ts-ignore
+          behance: data.behance,
+          // @ts-ignore
+          dribbble: data.dribbble,
+          // @ts-ignore
+          linkedin: data.linkedin,
+          // @ts-ignore
+          instagram: data.instagram,
+          // @ts-ignore
+          facebook: data.facebook,
+          // @ts-ignore
+          github: data.github,
+          // @ts-ignore
+          twitter: data.twitter,
+          // @ts-ignore
+          website: data.website
+        });
+      }
+
       setLoading(false);
     };
     load();
-  }, [id, supabase]);
+  }, [id, supabase, setCachedProfile]);
 
   const deriveProfileDetails = (details: any) => {
     if (!details) {

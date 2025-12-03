@@ -10,6 +10,8 @@ import { useImagePreloader } from '@/hooks/useImagePreloader';
 import { SkeletonList } from '@/components/ui/SkeletonLoader';
 import CachedImage from '@/components/ui/CachedImage';
 
+import { cacheManager } from '@/lib/cache';
+
 export default function MessagesPage() {
   const router = useRouter();
   const supabase = createClientComponentClient();
@@ -67,6 +69,7 @@ export default function MessagesPage() {
         setConversations(conversationsArray);
         setCachedMessages(conversationsArray);
         updateLastFetch('messages');
+        await cacheManager.setAll('messages', conversationsArray);
         return;
       }
 
@@ -132,6 +135,8 @@ export default function MessagesPage() {
         setConversations(conversationsArray);
         setCachedMessages(conversationsArray);
         updateLastFetch('messages');
+        // Cache in IndexedDB
+        await cacheManager.setAll('messages', conversationsArray);
       } catch (error) {
         console.error('Error fetching conversations:', error);
       } finally {
@@ -140,7 +145,7 @@ export default function MessagesPage() {
     };
 
     fetchConversations();
-  }, [router, supabase]);
+  }, [router, supabase, isCacheValid, setCachedMessages, updateLastFetch, cachedMessages]);
 
   // Preload all avatar images
   const avatarUrls = useMemo(() => {

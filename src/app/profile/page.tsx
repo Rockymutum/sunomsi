@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import Toast from '@/components/ui/Toast';
 import { sessionManager } from '@/utils/sessionPersistence';
+import { useAppStore } from '@/store/store';
+import { cacheManager } from '@/lib/cache';
 
 interface Profile {
   id: string;
@@ -24,8 +26,12 @@ interface Profile {
 }
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Zustand store
+  const storedProfile = useAppStore((state) => state.profile);
+  const setStoredProfile = useAppStore((state) => state.setProfile);
+
+  const [profile, setProfile] = useState<Profile | null>(storedProfile as Profile | null);
+  const [loading, setLoading] = useState(!storedProfile);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
@@ -53,8 +59,33 @@ export default function ProfilePage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Initialize form data if profile exists in store
+    if (storedProfile) {
+      setProfile(storedProfile as Profile);
+      setFormData({
+        full_name: storedProfile.full_name || '',
+        phone: storedProfile.phone || '',
+        bio: storedProfile.bio || '',
+        place: storedProfile.location || '', // Note: store uses 'location', DB uses 'place'
+        title: (storedProfile as any).title || '',
+      });
+
+      // Parse social links
+      const contactStr = (storedProfile as any).contact || '';
+      setSocialLinks({
+        behance: contactStr.match(/https?:\/\/[^\s]*behance[^\s]*/i)?.[0] || '',
+        dribbble: contactStr.match(/https?:\/\/[^\s]*dribbble[^\s]*/i)?.[0] || '',
+        linkedin: contactStr.match(/https?:\/\/[^\s]*linkedin[^\s]*/i)?.[0] || '',
+        instagram: contactStr.match(/https?:\/\/[^\s]*instagram[^\s]*/i)?.[0] || '',
+        facebook: contactStr.match(/https?:\/\/[^\s]*facebook[^\s]*/i)?.[0] || '',
+        github: contactStr.match(/https?:\/\/[^\s]*github[^\s]*/i)?.[0] || '',
+        twitter: contactStr.match(/https?:\/\/[^\s]*twitter[^\s]*/i)?.[0] || '',
+        website: '',
+      });
+    }
+
     checkAuth();
-  }, []);
+  }, []); // Run once on mount
 
   const checkAuth = async () => {
     try {
@@ -75,7 +106,8 @@ export default function ProfilePage() {
 
   const getProfile = async (userId: string) => {
     try {
-      setLoading(true);
+      // Only show loading if we don't have a profile yet
+      if (!profile) setLoading(true);
 
       const { data, error } = await supabase
         .from('profiles')
@@ -92,6 +124,23 @@ export default function ProfilePage() {
         throw error;
       } else {
         setProfile(data);
+
+        // Update store
+        const profileForStore = {
+          user_id: data.user_id,
+          full_name: data.full_name,
+          avatar_url: data.avatar_url,
+          bio: data.bio,
+          phone: data.phone,
+          location: data.place,
+          updated_at: data.updated_at,
+          // Add extra fields that might not be in the interface but are useful
+          title: data.title,
+          contact: data.contact,
+          skills: data.skills
+        };
+        setStoredProfile(profileForStore);
+
         setFormData({
           full_name: data.full_name || '',
           phone: data.phone || '',
@@ -143,6 +192,18 @@ export default function ProfilePage() {
       if (error) throw error;
 
       setProfile(data);
+
+      // Update store
+      setStoredProfile({
+        user_id: data.user_id,
+        full_name: data.full_name,
+        avatar_url: data.avatar_url,
+        bio: data.bio,
+        phone: data.phone,
+        location: data.place,
+        updated_at: data.updated_at
+      });
+
       setFormData({
         full_name: data.full_name || '',
         phone: data.phone || '',
@@ -229,11 +290,31 @@ export default function ProfilePage() {
       if (error) throw error;
 
       // Update local profile state
-      setProfile(prev => prev ? {
-        ...prev,
+      const updatedProfile = profile ? {
+        ...profile,
         ...formData,
         ...(avatarUrl ? { avatar_url: avatarUrl } : {})
-      } : null);
+      } : null;
+
+      setProfile(updatedProfile);
+
+      // Update store
+      if (updatedProfile) {
+        setStoredProfile({
+          user_id: updatedProfile.user_id,
+          full_name: updatedProfile.full_name,
+          avatar_url: updatedProfile.avatar_url,
+          bio: updatedProfile.bio,
+          phone: updatedProfile.phone,
+          location: updatedProfile.place,
+          updated_at: updatedProfile.updated_at,
+          // @ts-ignore
+          title: updatedProfile.title,
+          // @ts-ignore
+          contact: updatedProfile.contact
+        });
+      }
+
       setEditing(false);
       setAvatarFile(null);
       setAvatarPreview(null);
